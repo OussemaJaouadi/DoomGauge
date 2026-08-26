@@ -31,13 +31,13 @@ Commits are prefixed with a meaningful icon + a Conventional Commits type:
 | 🐛 | `fix` | bug fix |
 | ♻️ | `refactor` | restructure, no behavior change |
 | ✅ | `test` | tests |
-| 🔧 | `chore` | tooling, deps, config |
+| 🔧 | `setup` | tooling, deps, config, package install |
 | 🔒 | `security` | permissions, privacy |
 | ⚡ | `perf` | speed/memory |
 | 🏗️ | `build` | WXT/build setup |
 | 🚨 | `lint` | lint/style |
 | 📝 | `docs` | specs, README, repo meta |
-| 🌱 | `chore` | initial project setup (first commit only) |
+| 🌱 | `init` | initial project setup (first commit only) |
 | 🗄️ | `backend` | server / DuckDB / API side |
 
 Format: `<icon> <type>: <short present-tense summary>`
