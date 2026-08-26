@@ -11,7 +11,8 @@ flowchart LR
   FB[Facebook content script] --> BG
   BG --> DB[(IndexedDB<br/>events + rollups)]
   BG -->|chrome.alarms daily| ROLL[Aggregate rollups]
-  DB --> DASH[Dashboard popup]
+  DB --> DASH[Popup (glance)]
+  DASH -->|open full| FULL[Full telemetry page (new-tab)]
   DASH -->|export| JSON[(Minified JSON)]
 ```
 

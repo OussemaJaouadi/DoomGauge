@@ -80,11 +80,27 @@ DoomGauge uses an EEG/Neuro-Spike Telemetry visual system designed specifically 
 Monospace-first across all metrics, timestamps, and headers. Numbers and telemetry values are strictly monospaced to prevent layout jitter during live count changes.
 
 ## Layout
-- **Container**: Compact Chrome Extension Popup (400px × 540px).
-- **Header**: Telemetry channel status + total active attention lost.
-- **Waveform Chamber**: Multi-channel frequency trace graphing scroll bursts per platform.
-- **Summary Metrics**: Monospace grid with large digits, unit badges, and platform badges.
-- **Controls Footer**: Export JSON button and 7-day mini sparkline.
+
+### Surface A — Popup (glance)
+- **Container**: Chrome popup, max 400×540px, treated as a constrained glance surface.
+- **Contents**:
+  - Doom Score (display type, large)
+  - Today's total active time
+  - One status line (e.g. attention lost today)
+  - 7-day mini sparkline
+  - Prominent `Open full telemetry →` affordance (opens Surface B)
+- Strictly monospaced, high-contrast, no gamification.
+
+### Surface B — Full Telemetry Page (new-tab)
+- **Container**: Full browser tab, opened via `chrome.tabs.create({ url })`. Responsive, full-width.
+- **Contents**:
+  - Header: telemetry channel status + total active attention lost
+  - Spike Waveform: multi-channel scroll-burst trace
+  - Platform Stat Rows: `CH-01 // YT` … count, duration, colored track
+  - 7-day / 30-day toggle views
+  - Brain Composition (future)
+  - Export JSON button
+- Reuses the same tokens, components, and Do's/Don'ts.
 
 ## Elevation & Depth
 Flat dark-panel layering. Depth is communicated through hairline border contrasts (`#1c2838`) and subtle phosphor glows rather than blurry drop shadows.
