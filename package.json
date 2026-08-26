@@ -1,0 +1,19 @@
+{
+  "name": "doomgauge",
+  "private": true,
+  "type": "module",
+  "author": "Oussema Jaouadi",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "uplot": "^1.6.32"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "wxt": "^0.21.4"
+  }
+}
