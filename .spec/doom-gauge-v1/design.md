@@ -7,7 +7,7 @@
 
 ## Overview
 
-DoomGauge v1 is a Chrome extension built with WXT + TypeScript + Bun. It consists of three content scripts (one per platform), a Background Service Worker, a popup entry-point (Surface A), and a full-tab telemetry page (Surface B). All state lives in IndexedDB (`doomgauge-v1`). No server. No network calls. No `chrome.storage`.
+DoomGauge v1 is a Chrome extension built with WXT + React + TypeScript + Bun. It consists of three content scripts (one per platform), a Background Service Worker, a popup entry-point (Surface A, React), and a full-tab telemetry page (Surface B, React). All state lives in IndexedDB (`doomgauge-v1`). No server. No network calls. No `chrome.storage`.
 
 The design follows an incremental, PR-by-PR delivery strategy — no big-bang scaffold. Each component is small enough to review and test in isolation.
 
@@ -79,11 +79,13 @@ src/
 
   popup/
     index.html
-    index.ts              # mount — vanilla TS + DOM for v1
+    main.tsx              # React mount (WXT + React)
+    App.tsx               # orchestrator — tabs + states (loading/success/empty/error)
+    UPlotChart.tsx        # uPlot wrapper (responsive, tooltip, filterable legend)
     components/
-      DoomScore.ts        # headline metrics (time + count side by side)
-      PlatformRow.ts      # CH-01 // YT row
-      Sparkline.ts        # 7-day uPlot chart
+      DoomScore.tsx       # headline metrics (time + count side by side, icon: value)
+      PlatformRow.tsx     # platform row — icon + name (no CH-), count + time + bar
+      Sparkline.tsx       # 7-day uPlot chart (combined + per-platform, filterable)
 
   entrypoints/
     telemetry/
@@ -213,7 +215,7 @@ visibilitychange visible → timer.start() (if intersecting && playing)
 Detection strategy:
 - MutationObserver on `document.body` watching for video elements entering/leaving the Reels feed.
 - IntersectionObserver (50 % threshold) on `<video>` candidates to detect which reel is active.
-- URL pattern: `/reels/` or `/reel/`.
+- URL pattern: `/reels/`.
 - 500 ms tick via ReelTimer; `videoDurationMs` from `video.duration`.
 
 ```
@@ -230,7 +232,7 @@ MutationObserver sees new <video> in /reels/ feed
 ### Facebook Content Script (content/facebook.ts)
 
 Detection strategy: same pattern as Instagram — MutationObserver + IntersectionObserver (50 %).
-Facebook Reels URL pattern: `/reel/` or Reels section within the feed. 500 ms tick + `videoDurationMs`.
+Facebook Reels URL pattern: `/reels/` or Reels section within the feed. 500 ms tick + `videoDurationMs`.
 
 ---
 
@@ -299,9 +301,9 @@ function isEarlyExit(e: ReelViewEvent, threshold = 0.5): boolean {
 
 ### Popup — Surface A
 
-WXT popup entry point. Pure TypeScript + DOM (no framework dependency for v1 — keeps bundle tiny).
+WXT popup entry point. React (WXT + @wxt-dev/module-react) — vanilla was a brainstorm error; popup needs query/state handling, frequent data changes, and component decomposition.
 
-Layout (400 px max-width, dark panel):
+Layout — size under study (≈540 px width, height derived from tab content — not fixed 400×540):
 ```
 ┌─────────────────────────────────────────────────┐
 │  DOOMGAUGE                         [today]       │
@@ -309,15 +311,22 @@ Layout (400 px max-width, dark panel):
 │   1h 23m           │   47 reels                 │
 │   ACTIVE TIME      │   REEL COUNT               │
 ├─────────────────────────────────────────────────┤
-│  CH-01 // YT   23  ██████░░░░  18m 40s          │
-│  CH-02 // IG   15  ████░░░░░░  12m 10s          │
-│  CH-03 // FB    9  ██░░░░░░░░   8m 05s          │
+│  [tabs: Today | Signals | Trends] — under study │
 ├─────────────────────────────────────────────────┤
-│  [sparkline: 7-day combined + per-platform]     │
+│  (Today) icon YT  23  ██████░░░░  18m 40s       │
+│          IG  15  ████░░░░░░  12m 10s            │
+│          FB   9  ██░░░░░░░░   8m 05s            │
+│  (Signals) Velocity / Impatience cards          │
+│  (Trends) sparkline 7-day + filterable legend   │
+├─────────────────────────────────────────────────┤
+│  [sparkline: 7-day combined + per-platform      │
+│   — icon: value legend, tooltip per point,      │
+│   click-to-filter series]                       │
 ├─────────────────────────────────────────────────┤
 │              Open full telemetry →              │
 └─────────────────────────────────────────────────┘
 ```
+No `CH-` codes — platform rows use `lucide-react` icon + name. Legend uses `icon: value`, own line for time, and tooltip on hover; legend entries are filter toggles.
 
 Render pipeline (Option A):
 1. On popup open: send `get_today_stats` to SW → render headline metrics + platform rows
@@ -331,8 +340,8 @@ WXT `entrypoints/telemetry` page. Opens in a new tab. All data via SW messages.
 
 Layout sections:
 1. **Header bar**: `DOOMGAUGE TELEMETRY` + total active time today
-2. **Spike Waveform**: multi-channel uPlot line chart (per-platform reel count per day)
-3. **Platform Stat Rows**: `CH-01 // YT` — count, skips, early exits (<50 % watch when length known), total time, coloured track
+2. **Spike Waveform**: multi-channel uPlot line chart (per-platform reel count per day) — filterable legend (icon: value, click to toggle), tooltip per point
+3. **Platform Stat Rows**: platform icon + name — count, skips, early exits (<50 % watch when length known), total time, coloured track (no `CH-` codes)
 4. **Time range toggle**: 7-day / 30-day
 5. **Export JSON** button
 
@@ -393,7 +402,7 @@ Tests live in `src/__tests__/` and run with `bun test`.
 
 | Decision | Rationale |
 |----------|-----------|
-| No framework (Preact/React) in popup v1 | Keeps popup bundle < 20 KB; DOM manipulation is sufficient for a single-screen glance view |
+| React (WXT + @wxt-dev/module-react) in popup/telemetry | Vanilla was brainstorm error — popup needs query handling, frequent data changes, state management, and component decomposition; React bundle impact is negligible vs DX |
 | Shared `ReelTimer` class (500 ms tick + intersection) | Avoids duplicating pause-aware logic across 3 content scripts; matches spec increments |
 | Pure `rollup.ts` functions | Trivially testable with `bun test` without needing a real browser |
 | Compound IndexedDB key on rollups (local date) | Eliminates secondary index query; ADHD-friendly "today" matches wall clock |

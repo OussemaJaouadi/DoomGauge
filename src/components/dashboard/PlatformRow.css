@@ -1,0 +1,92 @@
+.platform-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  position: relative;
+  font-family: var(--font-mono);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.platform-row-chevron {
+  position: absolute;
+  right: 10px;
+  top: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.platform-row:hover .platform-row-chevron {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.platform-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.platform-row[data-platform="youtube"] { background: rgba(255, 51, 68, 0.06); border-color: rgba(255, 51, 68, 0.14); }
+.platform-row[data-platform="youtube"]:hover { background: rgba(255, 51, 68, 0.1); border-color: rgba(255, 51, 68, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(255,51,68,0.14); }
+
+.platform-row[data-platform="instagram"] { background: rgba(168, 85, 247, 0.06); border-color: rgba(168, 85, 247, 0.14); }
+.platform-row[data-platform="instagram"]:hover { background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(168,85,247,0.14); }
+
+.platform-row[data-platform="facebook"] { background: rgba(0, 180, 216, 0.06); border-color: rgba(0, 180, 216, 0.14); }
+.platform-row[data-platform="facebook"]:hover { background: rgba(0, 180, 216, 0.1); border-color: rgba(0, 180, 216, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(0,180,216,0.14); }
+
+.platform-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+}
+
+.platform-row-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.platform-row-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+
+.platform-row-count {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  min-width: 28px;
+  text-align: right;
+}
+
+.platform-row-time {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 64px;
+  text-align: right;
+}
+
+.platform-row-bar {
+  height: 4px;
+  background: var(--border-grid);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.platform-row-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}

@@ -1,0 +1,15 @@
+.hourly { display:flex; flex-direction:column; gap:8px; }
+.hourly-head { display:flex; align-items:center; justify-content:space-between; }
+.hourly-title { font-family:var(--font-mono); font-size:0.62rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); }
+.hourly-toggle { font-family:var(--font-mono); font-size:0.62rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:4px 8px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--bg-surface); color:var(--text-muted); cursor:pointer; }
+.hourly-toggle.active { background:var(--bg-surface-raised); color:var(--text-primary); box-shadow:0 0 8px rgba(0,255,136,0.12); }
+.hourly-chart { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:4px; }
+.hour-tooltip { background:var(--bg-surface-raised); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:8px 10px; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-primary); box-shadow:0 8px 24px rgba(0,0,0,0.6); }
+.hour-tooltip-title { font-size:0.62rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:4px; }
+.hour-tooltip-grid { display:flex; gap:8px; font-weight:600; }
+.hour-dot { width:8px; height:8px; border-radius:2px; display:inline-block; }
+.hourly-legend { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+.hourly-legend-item { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle); background:var(--bg-surface); color:var(--text-secondary); font-family:var(--font-mono); font-size:0.62rem; font-weight:700; cursor:pointer; transition: opacity 0.15s, border-color 0.15s; }
+.hourly-legend-item:hover { border-color:var(--text-muted); color:var(--text-primary); }
+.hourly-legend-item.off { opacity:0.35; text-decoration:line-through; }
+.hint { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); text-align:center; }

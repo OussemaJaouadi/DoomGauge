@@ -1,0 +1,17 @@
+.platform-detail { display:flex; flex-direction:column; gap:12px; animation: tabs-in 0.15s ease-out; }
+.detail-back { display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:6px 10px; font-family:var(--font-mono); font-size:0.68rem; font-weight:700; color:var(--text-secondary); cursor:pointer; align-self:flex-start; }
+.detail-back:hover { color:var(--text-primary); border-color:var(--text-muted); background:var(--bg-surface); }
+.detail-header { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-left:3px solid; border-radius:var(--radius-sm); }
+.detail-dot { width:8px; height:8px; border-radius:2px; }
+.detail-title { font-family:var(--font-mono); font-size:0.75rem; font-weight:800; letter-spacing:0.04em; }
+.detail-sub { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); }
+.detail-hero { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.detail-grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.detail-section { display:flex; flex-direction:column; gap:8px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:12px; }
+.detail-section-title { font-family:var(--font-mono); font-size:0.62rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); }
+.filmstrip { display:flex; align-items:center; gap:4px; }
+.film-cell { width:18px; height:14px; border-radius:3px; border:1px solid; flex-shrink:0; }
+.film-label { font-family:var(--font-mono); font-size:0.62rem; font-weight:700; color:var(--text-secondary); margin-left:4px; }
+.detail-meta { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); }
+.detail-chart { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:4px; }
+.hint { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); text-align:center; }

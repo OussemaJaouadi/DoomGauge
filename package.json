@@ -1,5 +1,6 @@
 {
   "name": "doomgauge",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "author": "Oussema Jaouadi",
@@ -10,9 +11,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "lucide-react": "^1.38.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^3.10.1",
     "uplot": "^1.6.32"
   },
   "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@wxt-dev/module-react": "^1.2.2",
     "typescript": "^7.0.2",
     "wxt": "^0.21.4"
   }

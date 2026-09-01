@@ -13,8 +13,8 @@ colors:
   accent-green: "#00ff88"
   accent-cyan: "#00b4d8"
   accent-magenta: "#ff0055"
-  platform-yt: "#ff3366"
-  platform-ig: "#d62976"
+  platform-yt: "#ff3344"
+  platform-ig: "#a855f7"
   platform-fb: "#00b4d8"
 typography:
   display:
@@ -71,9 +71,9 @@ DoomGauge uses an EEG/Neuro-Spike Telemetry visual system designed specifically 
 - **Ground / Chassis**: Abyssal charcoal `#090d13` with subtle grid lines `#16222f`.
 - **Text / Readouts**: Crisp high-contrast white `#f0f6fc` and muted slate `#8b949e`.
 - **Telemetry Channels**:
-  - **YouTube Shorts**: High-voltage crimson `#ff3366`
-  - **Instagram Reels**: Electric magenta/purple `#d62976`
-  - **Facebook Reels**: Signal cyan `#00b4d8`
+  - **YouTube Shorts**: Signal red `#ff3344` — hue 356°, high-voltage crimson
+  - **Instagram Reels**: Violet-purple `#a855f7` — hue 270°, ~86° from YT for instant distinguish
+  - **Facebook Reels**: Signal cyan `#00b4d8` — hue 192°, far from both
   - **Global Status / Awareness**: Phosphor green `#00ff88`
 
 ## Typography
@@ -82,21 +82,20 @@ Monospace-first across all metrics, timestamps, and headers. Numbers and telemet
 ## Layout
 
 ### Surface A — Popup (glance)
-- **Container**: Chrome popup, max 400×540px, treated as a constrained glance surface.
-- **Contents**:
-  - Doom Score (display type, large)
-  - Today's total active time
-  - One status line (e.g. attention lost today)
-  - 7-day mini sparkline
+- **Container**: Chrome popup — size under study (≈540 px width in current mock; final derived from tab content → tabs → layout → size). Treated as a glance surface with tabs (Today / Signals / Trends) under study.
+- **Contents** (tabbed, under study):
+  - Doom Score (time + count side-by-side, `icon: value` legend line)
+  - Per-platform rows (icon + name, no `CH-` codes) + Velocity / Impatience cards (Signals tab)
+  - 7-day sparkline (combined + per-platform, filterable legend with tooltip)
   - Prominent `Open full telemetry →` affordance (opens Surface B)
-- Strictly monospaced, high-contrast, no gamification.
+- Strictly monospaced, high-contrast, no gamification. Legend uses `icon: value` + own line for time; legend entries toggle series.
 
 ### Surface B — Full Telemetry Page (new-tab)
 - **Container**: Full browser tab, opened via `chrome.tabs.create({ url })`. Responsive, full-width.
 - **Contents**:
   - Header: telemetry channel status + total active attention lost
-  - Spike Waveform: multi-channel scroll-burst trace
-  - Platform Stat Rows: `CH-01 // YT` … count, duration, colored track
+  - Spike Waveform: multi-channel scroll-burst trace (filterable legend `icon: value`, tooltip per point)
+  - Platform Stat Rows: platform icon + name … count, duration, colored track (no `CH-` codes)
   - 7-day / 30-day toggle views
   - Brain Composition (future)
   - Export JSON button
@@ -110,8 +109,8 @@ Crisp, engineered geometry with small radiuses (4px–8px). No pill-shaped butto
 
 ## Components
 - **Telemetry Card**: Dark pane with 1px border and optional channel accent indicator.
-- **Spike Waveform**: SVG-rendered multi-channel line chart mapping scroll bursts over time.
-- **Platform Stat Row**: Fixed-width platform code (`CH-01 // YT`), reel count, duration, and colored progress track.
+- **Spike Waveform**: SVG-rendered multi-channel line chart mapping scroll bursts over time (filterable via legend, tooltip per point).
+- **Platform Stat Row**: Platform icon + name, reel count, duration, and colored progress track (no `CH-` codes).
 - **Action Button**: Low-profile dark button with crisp hover border.
 
 ## Do's and Don'ts

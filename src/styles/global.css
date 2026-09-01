@@ -1,0 +1,68 @@
+:root {
+  /* Colors */
+  --bg-root: #090d13;
+  --bg-surface: #0f141c;
+  --bg-surface-raised: #161d28;
+  --border-subtle: #1c2838;
+  --border-grid: #16222f;
+  
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #545d68;
+  
+  /* Telemetry Channels */
+  --accent-green: #00ff88;
+  --accent-cyan: #00b4d8;
+  --accent-magenta: #ff0055;
+  --platform-yt: #ff3344; /* YT: true red — hue 356°, distinct from IG */
+  --platform-ig: #a855f7; /* IG: violet-purple — hue 270°, ~86° from YT */
+  --platform-fb: #00b4d8; /* FB: signal cyan — hue 192°, far from both */
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  
+  /* Rounded & Spacing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+}
+
+body {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  margin: 0;
+  padding: var(--spacing-md);
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(0,180,216,0.06), transparent 60%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.card-panel {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  padding: var(--spacing-md);
+}
+
+.button-primary {
+  background-color: var(--bg-surface-raised);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+.button-primary:hover {
+  border-color: var(--text-secondary);
+}

@@ -9,7 +9,7 @@ type-checking. Build/transpile is handled by esbuild via WXT/Vite, so the
 toolchain carries no API-risk from the native port.
 
 ## Framework
-**WXT** — TypeScript WebExtension framework (Chrome now; multi-browser ready).
+**WXT + React** (`@wxt-dev/module-react`) — TypeScript WebExtension framework (Chrome now; multi-browser ready). Vanilla was a brainstorm error; popup needs state/query handling, frequent data churn, and component decomposition.
 
 ## Build
 WXT → Vite → **esbuild** (Go, fast). No webpack/Turbopack needed.
@@ -24,7 +24,9 @@ WXT → Vite → **esbuild** (Go, fast). No webpack/Turbopack needed.
 - Single source of truth: `.spec/doom-gauge-v1/spec.md` + `design.md`.
 - **Option A:** Only Background SW reads/writes IndexedDB; UI surfaces use `chrome.runtime.sendMessage`.
 - **Local dates:** `YYYY-MM-DD` is local wall-clock; `chrome.alarms` at local midnight.
-- Scaffold adds `wxt.config.ts` (not yet committed) — `bun run build` depends on it.
+- Popup size is under study: content → tabs → layout → size (current mock ≈540×580); spec `400×540` cap is deferred.
+- No `CH-` codes — platform rows use `lucide-react` icon + name.
+- Mock layer: `DEV`-only typed factories (e.g. `src/mocks/fixtures.ts`) injected via props; `createClient` abstraction deferred until data schema settles.
 
 ## Rationale
 - Local-first; no server. Multi-window safe via shared IndexedDB.

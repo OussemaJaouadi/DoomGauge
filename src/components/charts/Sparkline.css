@@ -1,0 +1,86 @@
+.sparkline {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sparkline-chart {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 4px;
+}
+
+.sparkline-tooltip {
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+
+.sparkline-tooltip-title {
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.sparkline-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sparkline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sparkline-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sparkline-legend-item:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.sparkline-legend-item.legend-off {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+
+.sparkline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
