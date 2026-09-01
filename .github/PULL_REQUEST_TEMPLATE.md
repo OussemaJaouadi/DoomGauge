@@ -1,8 +1,8 @@
 ## Summary
-<!-- What and why. Link the spec item in docs/ it implements. -->
+<!-- What and why. Link the spec item in .spec/doom-gauge-v1/spec.md it implements. -->
 
 ## Spec item
-<!-- e.g. docs/FEATURES.md > v1 > Daily rollup -->
+<!-- e.g. .spec/doom-gauge-v1/spec.md > Requirement 5 > Daily rollup (or docs/FEATURES.md > v1) -->
 
 ## Acceptance criteria met
 - [ ]

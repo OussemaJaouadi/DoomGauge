@@ -9,17 +9,18 @@ per platform, to reduce its impact on my ADHD. v1 is analysis-only
 (local, in-browser). Future versions add richer "brain metrics".
 
 ## How to work (spec-driven)
-- `docs/` is the single source of truth. Do not implement without a spec item.
-- Each feature has acceptance criteria. Validate before marking done.
+- `.spec/<version>/` is the implementation source of truth (per-version spec + design with AC). `docs/` is the product/design companion.
+- Do not implement without a spec item in the active `.spec/<version>/`.
+- Each feature has acceptance criteria in `.spec/<version>/spec.md`. Validate before marking done.
 - Amend `docs/FEATURES.md` + `docs/ARCHITECTURE.md` as scope grows — never rewrite.
 
 ## Docs
-- docs/PRODUCT.md       — product purpose, users, constraints & principles
+- .spec/doom-gauge-v1/spec.md   — v1 requirements + acceptance criteria (SSOT for build)
+- .spec/doom-gauge-v1/design.md — v1 module, data & component design (SSOT for build)
 - docs/DESIGN.md        — visual system (Neuro-Spike Telemetry) & design tokens
-- docs/FEATURES.md      — what we build (v1 + roadmap), visual
-- docs/ARCHITECTURE.md  — system shape, data flow, storage (mermaid)
+- docs/FEATURES.md      — vision map v1 vs future (points to .spec/ for AC)
+- docs/ARCHITECTURE.md  — system shape, data flow, storage (overview; details in .spec/)
 - docs/STACK.md         — tooling + dependencies + rationale
-- docs/RULES.md         — conventions (added later)
 
 ## Commit convention
 Commits are prefixed with a meaningful icon + a Conventional Commits type:

@@ -18,7 +18,13 @@ WXT → Vite → **esbuild** (Go, fast). No webpack/Turbopack needed.
 **uPlot** — lightweight dashboard charts.
 
 ## Tests
-**bun test** — built-in, fast; covers aggregation/rollup logic.
+**bun test** — built-in, fast; covers aggregation/rollup logic (`src/__tests__/` validates P1–P7).
+
+## Conventions
+- Single source of truth: `.spec/doom-gauge-v1/spec.md` + `design.md`.
+- **Option A:** Only Background SW reads/writes IndexedDB; UI surfaces use `chrome.runtime.sendMessage`.
+- **Local dates:** `YYYY-MM-DD` is local wall-clock; `chrome.alarms` at local midnight.
+- Scaffold adds `wxt.config.ts` (not yet committed) — `bun run build` depends on it.
 
 ## Rationale
 - Local-first; no server. Multi-window safe via shared IndexedDB.
