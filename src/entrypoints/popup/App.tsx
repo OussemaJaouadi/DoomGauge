@@ -1,40 +1,33 @@
+// React & 3rd-party
 import React, { useState } from 'react';
-import { Activity, Clock, Rocket, SkipForward, ArrowRight } from 'lucide-react';
-import { Badge } from '../../components/ui/Badge';
+import { Activity, Clock, Rocket, SkipForward, Camera, MonitorPlay, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
+
+// Types
+import type { UIState, Tab, View } from '../../types/popup';
+
+// UI Components
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
 import { KpiCard } from '../../components/ui/KpiCard';
+import { OverviewCard } from '../../components/ui/OverviewCard';
 import { EmptyState, ErrorState } from '../../components/ui/State';
+
+// Dashboard Components
 import { PlatformRow } from '../../components/dashboard/PlatformRow';
-import { Donut } from '../../components/charts/Donut';
-import { SignalsImpatience } from '../../components/dashboard/SignalsImpatience';
-import HourlyBars from '../../components/charts/HourlyBars';
 import { PlatformDetail } from '../../components/dashboard/PlatformDetail';
+import { SignalsImpatience } from '../../components/dashboard/SignalsImpatience';
+import { TrendsTab } from '../../components/dashboard/TrendsTab';
+
+// Chart Components
+import { Donut } from '../../components/charts/Donut';
+
+// Utils & Data
+import { formatTime } from '../../utils/time';
+import { formatBurnSub, avgFlickSec } from '../../utils/metrics';
+import { chartTokens } from '../../components/tokens';
+import { MOCK, PLATFORM_MOCK } from '../../data/mock';
+
+// Styles
 import './App.css';
-
-type UIState = 'loading' | 'success' | 'empty' | 'error';
-type Tab = 'today' | 'signals' | 'trends';
-type Platform = 'youtube'|'instagram'|'facebook';
-type View = { kind:'tabs'; tab: Tab } | { kind:'platform'; platform: Platform };
-
-// DEV mock — props-injected later, inline for now (no createClient yet)
-const MOCK = {
-  totalMs: 5020000, // 1h23m40s
-  totalCount: 47,
-  platforms: [
-    { platform: 'youtube' as const, count: 23, timeMs: 1120000 },
-    { platform: 'instagram' as const, count: 15, timeMs: 730000 },
-    { platform: 'facebook' as const, count: 9, timeMs: 485000 },
-  ],
-  velocity: '3.2',
-  impatience: 62,
-  sparkline: {
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    total: [20, 30, 23, 43, 60, 48, 77],
-    youtube: [10, 15, 12, 20, 30, 25, 40],
-    instagram: [5, 10, 8, 15, 20, 18, 25],
-    facebook: [2, 5, 3, 8, 10, 5, 12],
-  },
-};
 
 export default function App() {
   const [uiState, setUiState] = useState<UIState>('success');
@@ -45,27 +38,89 @@ export default function App() {
   const toggleState = () => {
     const states: UIState[] = ['success', 'empty', 'error'];
     const nextIndex = (states.indexOf(uiState) + 1) % states.length;
-    setUiState(states[nextIndex]);
+    setUiState(states[nextIndex]!);
   };
 
   const maxCount = Math.max(...MOCK.platforms.map((p) => p.count));
+  const globalFlick = avgFlickSec(MOCK.totalMs, MOCK.totalCount);
+  const msDelta = MOCK.totalMs - MOCK.yesterdayMs;
+  const countDelta = MOCK.totalCount - MOCK.yesterdayCount;
+  const isTimeWorse = msDelta > 0;
+  const isTimeBetter = msDelta < 0;
+  const isCountWorse = countDelta > 0;
+  const isCountBetter = countDelta < 0;
+
+  const peakPlatform = MOCK.platforms.reduce((prev, current) => (current.timeMs > prev.timeMs) ? current : prev);
+  const peakName = peakPlatform.platform.charAt(0).toUpperCase() + peakPlatform.platform.slice(1);
+  const peakColor = chartTokens.platform[peakPlatform.platform];
 
   return (
     <div className="container">
       <div className="header">
-        <span className="brand" onClick={toggleState} style={{ cursor: 'pointer' }}>
+        <button type="button" className="brand" onClick={toggleState} aria-label="Cycle preview state (dev only)">
           DOOMGAUGE
-        </span>
-        <Badge variant="destructive">
-          <span style={{ marginRight: '6px', fontSize: '8px' }}>🔴</span> 18% LOST
-        </Badge>
+        </button>
       </div>
+      {view.kind==='tabs' && (
+      <div className="overview-cards">
+        <OverviewCard
+          label="DRAINED"
+          value={formatTime(MOCK.totalMs)}
+          sub={<span style={{ color: 'var(--threat-red)', fontWeight: 600 }}>{formatBurnSub(MOCK.totalMs, new Date())}</span>}
+          trend="neutral"
+        />
+        <OverviewCard
+          label="VS YDAY"
+          trend="neutral"
+          value={
+            <span
+              style={{
+                color: isTimeWorse ? 'var(--threat-red)' : isTimeBetter ? 'var(--accent-green)' : 'var(--text-primary)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              {isTimeWorse && <ArrowUp size={16} />}
+              {isTimeBetter && <ArrowDown size={16} />}
+              <span>{msDelta === 0 ? '0s' : formatTime(Math.abs(msDelta))}</span>
+            </span>
+          }
+          sub={
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span
+                style={{
+                  color: isCountWorse ? 'var(--threat-red)' : isCountBetter ? 'var(--accent-green)' : 'var(--text-muted)',
+                  fontWeight: 600,
+                }}
+              >
+                {countDelta === 0 ? '±0 reels' : `${isCountWorse ? '+' : '-'}${Math.abs(countDelta)} reels`}
+              </span>
+              <span style={{ color: 'var(--text-muted)' }}>· DELTA</span>
+            </span>
+          }
+        />
+        <OverviewCard
+          label="PEAK CHANNEL"
+          value={
+            <span style={{ color: peakColor }}>
+              {formatTime(peakPlatform.timeMs)}
+            </span>
+          }
+          sub={`${peakName} · ${peakPlatform.pct}% share`}
+          icon={peakPlatform.platform === 'youtube' ? <MonitorPlay size={14} /> : peakPlatform.platform === 'instagram' ? <Camera size={14} /> : <MessageCircle size={14} />}
+          accent={peakColor}
+          border={peakColor}
+          trend="neutral"
+        />
+      </div>
+      )}
 
       {uiState === 'empty' && <EmptyState />}
       {uiState === 'error' && <ErrorState />}
 
       {uiState === 'success' && view.kind==='platform' && (
-        <PlatformDetail platform={view.platform} onBack={()=> setView({kind:'tabs', tab:'today'})} />
+        <PlatformDetail platform={view.platform} data={PLATFORM_MOCK[view.platform]} onBack={()=> setView({kind:'tabs', tab:'today'})} />
       )}
 
       {uiState === 'success' && view.kind==='tabs' && (
@@ -78,7 +133,7 @@ export default function App() {
 
           <TabsContent value="today">
             <Donut
-              items={MOCK.platforms.map(p=>({ platform:p.platform, label:p.platform==='youtube'?'YT':p.platform==='instagram'?'IG':'FB', timeMs:p.timeMs, count:p.count, color:p.platform==='youtube'?'#ff3344':p.platform==='instagram'?'#a855f7':'#00b4d8'}))}
+              items={MOCK.platforms.map(p=>({ platform:p.platform, label:p.platform==='youtube'?'YouTube':p.platform==='instagram'?'Instagram':'Facebook', timeMs:p.timeMs, count:p.count, color: chartTokens.platform[p.platform] }))}
               mode={stackMode}
               onModeChange={setStackMode}
             />
@@ -87,29 +142,28 @@ export default function App() {
                 <PlatformRow key={p.platform} platform={p.platform} count={p.count} timeMs={p.timeMs} maxCount={maxCount} onClick={()=> setView({kind:'platform', platform: p.platform})} />
               ))}
             </div>
-            <div className="hint">+6 reels vs yesterday · peak: Instagram</div>
           </TabsContent>
 
           <TabsContent value="signals">
             <div className="impact-grid">
-              <KpiCard icon={<Rocket size={14} />} label="Velocity" value={MOCK.velocity} unit="reels / min" accent="magenta" sublabel="scroll speed" />
-              <KpiCard icon={<SkipForward size={14} />} label="Impatience" value={`${MOCK.impatience}%`} unit="skipped <3s" accent="magenta" sublabel="not watching" />
+              <KpiCard icon={<Rocket size={14} />} label="Velocity" value={MOCK.velocity} unit="reels/min" accent="magenta" />
+              <KpiCard icon={<SkipForward size={14} />} label="Impatience" value={`${MOCK.impatience}%`} unit="skipped <3s" accent="magenta" />
+              <KpiCard icon={<Clock size={14} />} label="Avg Flick" value={`${globalFlick}s`} unit="per reel" accent="magenta" />
             </div>
-            <SignalsImpatience />
-            <div className="hint">62% scanning — Instagram drives impatience (+9pp over avg)</div>
+            <SignalsImpatience data={PLATFORM_MOCK} />
           </TabsContent>
 
           <TabsContent value="trends">
-            <HourlyBars />
+            <TrendsTab />
           </TabsContent>
         </Tabs>
       )}
 
-      {uiState === 'success' && (
+      {uiState === 'success' && view.kind==='tabs' && (
         <div className="footer">
-          <a href="#" className="btn-telemetry">
-            EXPLORE FULL TELEMETRY <ArrowRight size={14} style={{ marginLeft: 4 }} />
-          </a>
+          <button type="button" className="btn-telemetry" onClick={()=>{ chrome.tabs.create({ url: chrome.runtime.getURL('/telemetry.html') }); }}>
+            ⤢ FULL TELEMETRY COMMAND CENTER
+          </button>
         </div>
       )}
     </div>

@@ -23,7 +23,7 @@ Everything runs in-browser. Data never leaves the device.
 | **videoDurationMs** | Optional total length of the reel in ms, read from `video.duration` when available. Used to compute `watchPct = durationMs / videoDurationMs` and scary early-exit stats |
 | **Daily rollup** | Per-platform aggregate of reel count, skip count, and total active ms for one calendar day (local calendar day — see Requirement 5) |
 | **Doom Score** | Visual label for the two headline metrics in the popup: total active time + total reel count for today |
-| **Surface A** | Extension popup (≤ 400 × 540 px) — glance view |
+| **Surface A** | Extension popup (540 × 580 px, decided) — glance view |
 | **Surface B** | Full telemetry new-tab page — detailed view |
 | **Content script** | Per-platform injected JS that observes DOM and tracks events |
 | **Background SW** | Service Worker that receives events, persists them, and computes rollups |
@@ -118,16 +118,19 @@ Everything runs in-browser. Data never leaves the device.
 
 ### Acceptance Criteria
 
-1. WHEN the popup opens, THEN it SHALL display within a flexible popup container (≈540 px width, height under study — initial 540×580 for content inventory) using the Neuro-Spike Telemetry design system (dark background `#090d13`, monospace font, high-contrast text). Size is under study: content → tabs → layout → size (not the reverse).
-2. WHEN the popup opens, THEN it SHALL show today's total active watch time (formatted as `Xh Ym` or `Xm Ys`) and total reel count displayed side by side as the two headline "Doom Score" metrics.
-3. WHEN the popup opens, THEN it SHALL show a per-platform row for each platform with: platform icon + name (e.g. YouTube/Instagram/Facebook via `lucide-react`), reel count, active time, and a coloured progress bar using the platform accent colour. `CH-` channel codes are removed.
-4. WHEN the popup opens, THEN it SHALL render a 7-day sparkline chart (uPlot) showing both a combined total line and per-platform lines.
-5. WHEN the popup opens and no data exists for today, THEN it SHALL show a clear empty-state message (e.g., `NO SIGNAL FOR TODAY`) to indicate no data was recorded. IF an error occurs while fetching data, it SHALL display an error state message (e.g., `DATA ERROR`).
-6. WHEN the user clicks "Open full telemetry →", THEN the extension SHALL open Surface B in a new tab via `chrome.tabs.create`.
-7. THE popup SHALL load and render initial data within 300 ms of opening on a modern machine.
-8. ALL numeric metrics and timestamps in the popup SHALL use monospace rendering (no font fallback to proportional fonts).
+1. WHEN the popup opens, THEN it SHALL display in a fixed popup container (540 px width, 580 px height: `min-height: 580px` / `max-height: 580px`) using the Neuro-Spike Telemetry design system (dark background `#090d13`, monospace font, high-contrast text).
+2. WHEN the popup opens, THEN it SHALL show a persistent header with three OverviewCards: `DRAINED` (total active watch time + burn rate = `totalActiveMin / elapsedMinSinceMidnight * 100`, 1 decimal, rendered in `threat-red`; when `elapsedMin < 30` show sub `CALIBRATING (<30m)` instead of a percentage), `VS YDAY` (dual delta on the threat-scale: primary time delta `+Xm`/`-Xm` in `threat-red` when worse / `accent-green` when better, secondary reel-count delta likewise, plus neutral `· DELTA` suffix), `PEAK CHANNEL` (top platform icon + active time + `% share` of today's total; intentional glance duplication of the Today rows). The legacy "Doom Score" and `LOST` labels are retired.
+3. THE popup SHALL use a Tabbed interface to organize data views: `Today`, `Signals`, and `Trends`.
+4. WHEN the `Today` tab is active, THEN it SHALL show a Donut chart splitting time/count by platform, and a per-platform row with platform icon + full name (`YouTube`, `Instagram`, `Facebook` — never 2-letter codes, never `CH-` codes), reel count, duration, and progress track. WHEN a platform row is clicked, THEN the popup SHALL navigate to a scoped `PlatformDetail` view (`/platform/:id`); the global header cards SHALL be hidden in scoped view so the detail owns the full 540 × 580 canvas (fallback: `.platform-detail { overflow-y: auto; overscroll-behavior: contain; }`). The detail SHALL show: back affordance, hero (Active Time + Reel Count), diagnostic grid (`Impatience %` + `of10 = round(skip/count*10)`, `Velocity reels/min`, `Avg flick = totalActiveMs/(count*1000)` s 1-decimal), one consolidated **Abandonment Telemetry** card (`BAILED <3s` filmstrip `skip/count` + `EARLY EXIT` as `early/measured measured abandoned before 50%`, measured-only where `videoDurationMs != null`), and a 24h hourly chart. Zero abbreviations in tooltips and legends everywhere (including hourly charts).
+5. WHEN the `Signals` tab is active, THEN it SHALL show three KPI cards: Velocity (`reels/min`), Impatience (`%` skipped `<3s`), and Avg Flick (`avgFlickSec` per reel, global). `Longest Vortex` (longest unbroken chain with inter-reel gaps ≤ 60 s) is deferred to sessionization (Phase 2+) — it requires raw event gap inference, not rollups.
+6. WHEN the `Trends` tab is active, THEN it SHALL render an hourly/daily waveform or bar chart (using Recharts).
+7. WHEN the user clicks the slim bottom dock (`FULL TELEMETRY COMMAND CENTER`, 28 px) in the footer, THEN the extension SHALL open Surface B in a new tab via `chrome.tabs.create`.
+8. THE popup SHALL load and render initial data within 300 ms of opening on a modern machine.
+9. ALL numeric metrics and timestamps in the popup SHALL use monospace rendering.
 
 > **Data path (Option A):** Popup SHALL request data via `chrome.runtime.sendMessage({type:"get_today_stats"})` / `get_rollups` to the Background SW. It SHALL NOT read IndexedDB directly.
+>
+> **Mock phase (see `tasks.md`):** while `phase = UI-mock only`, direct `import { MOCK } from data/mock` is intentional and agents SHALL NOT flag it. Brand-click `toggleState` (success/empty/error) and dead `popup/index.ts` are intentional dev scaffolding.
 
 ---
 
@@ -137,14 +140,14 @@ Everything runs in-browser. Data never leaves the device.
 
 ### Acceptance Criteria
 
-1. WHEN Surface B is opened, THEN it SHALL display in a full browser tab using the same Neuro-Spike Telemetry design tokens as Surface A.
-2. WHEN Surface B loads, THEN it SHALL show a header with total active attention lost (today, formatted) and a telemetry channel status row per platform.
-3. WHEN Surface B loads, THEN it SHALL render a multi-channel Spike Waveform chart (uPlot) showing per-platform reel counts over the selected time range.
-4. WHEN Surface B loads, THEN it SHALL show Platform Stat Rows with platform icon + name, reel count, skip count, total active time, and coloured track for each platform. `CH-` channel codes are removed.
-5. WHEN the user toggles between "7-day" and "30-day" views, THEN the charts and stat rows SHALL update to reflect the selected range without a full page reload.
-6. WHEN the user clicks "Export JSON", THEN the extension SHALL trigger a browser download of a minified JSON file containing all `DailyRollup` records (plus the live partial rollup for today if any), named `doomgauge-export-YYYY-MM-DD.json` (local date).
-7. ALL numeric metrics and timestamps in Surface B SHALL use monospace rendering.
-8. WHEN Surface B loads and no rollup data exists, THEN it SHALL show an empty-state message (`NO SIGNAL — start scrolling to record data`) rather than broken charts. IF an error occurs while fetching data, it SHALL display a clear error state.
+1. WHEN Surface B is opened, THEN it SHALL display in a full browser tab using the Neuro-Spike Telemetry design system.
+2. WHEN Surface B loads, THEN it SHALL show a header with the brand title and a JSON export button.
+3. WHEN Surface B loads, THEN it SHALL feature a Time Traversal Navigation bar with tabs for `Day`, `7d`, and `30d` along with backward (`<`) and forward (`>`) date traversal buttons.
+4. WHEN Surface B loads, THEN it SHALL render a macro-view chart (using Recharts) spanning the full width. It SHALL use a unified ComposedChart (Line + Stacked Bars) for all time views.
+5. WHEN Surface B loads, THEN beneath the chart it SHALL display a 3-column "Bento" grid containing a dedicated Stat Card for each platform (YouTube, Instagram, Facebook).
+6. EACH Stat Card SHALL display clinical, icon-driven metrics (`Time`, `Reels`, `Skips`, `Avg flick`) without verbose explanatory text.
+7. WHEN the user triggers an export, it SHALL trigger a download of minified JSON for the current data view.
+8. ALL numeric metrics and timestamps in Surface B SHALL use monospace rendering.
 
 > **Data path (Option A):** Surface B SHALL request data via Background SW messages (`get_rollups`, `get_today_stats`). No direct IndexedDB reads from UI surfaces.
 

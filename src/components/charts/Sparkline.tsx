@@ -1,26 +1,19 @@
+// React & 3rd-party
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartTokens } from './tokens';
-import './Sparkline.css';
 
-type SeriesKey = 'total' | 'youtube' | 'instagram' | 'facebook';
+// Types
+import { PLATFORMS } from '../../types/models';
+
+// Styles & Tokens
+import { chartTokens } from '../tokens';
+import './Sparkline.css';
 
 interface SparklineProps {
   days?: string[];
   total: number[];
-  youtube: number[];
-  instagram: number[];
-  facebook: number[];
+  [key: string]: any;
 }
-
-const seriesMeta: Record<SeriesKey, { label: string; color: string }> = {
-  total: { label: 'Total', color: chartTokens.accentGreen },
-  youtube: { label: 'YouTube', color: chartTokens.platform.youtube },
-  instagram: { label: 'Instagram', color: chartTokens.platform.instagram },
-  facebook: { label: 'Facebook', color: chartTokens.platform.facebook },
-};
-
-const seriesOrder: SeriesKey[] = ['total', 'youtube', 'instagram', 'facebook'];
 
 function SparkTooltip({ active, payload, label }: any) {
   if (!active || !payload) return null;
@@ -37,19 +30,24 @@ function SparkTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function Sparkline({ days, total, youtube, instagram, facebook }: SparklineProps) {
+export default function Sparkline({ days, total, ...platformSeries }: SparklineProps) {
   const xLabels = days ?? total.map((_, i) => `D${i + 1}`);
-  const data = xLabels.map((label, i) => ({
-    label,
-    total: total[i],
-    youtube: youtube[i],
-    instagram: instagram[i],
-    facebook: facebook[i],
-  }));
-  const [visible, setVisible] = useState<Record<SeriesKey, boolean>>({
-    total: true, youtube: true, instagram: true, facebook: true,
+  
+  const data = xLabels.map((label, i) => {
+    const row: any = { label, total: total[i] };
+    PLATFORMS.forEach(p => {
+      row[p] = platformSeries[p]?.[i] ?? 0;
+    });
+    return row;
   });
-  const toggle = (k: SeriesKey) => setVisible(v=>({...v, [k]: !v[k]}));
+
+  const [visible, setVisible] = useState(() => {
+    const v: Record<string, boolean> = { total: true };
+    PLATFORMS.forEach(p => v[p] = true);
+    return v;
+  });
+
+  const toggle = (k: string) => setVisible(v=>({...v, [k]: !v[k]}));
 
   return (
     <div className="sparkline">
@@ -60,19 +58,32 @@ export default function Sparkline({ days, total, youtube, instagram, facebook }:
             <XAxis dataKey="label" tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 10 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} />
             <YAxis tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
             <Tooltip content={<SparkTooltip />} />
-            {visible.total && <Line type="monotone" dataKey="total" name="Total" stroke={seriesMeta.total.color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 4 }} />}
-            {visible.youtube && <Line type="monotone" dataKey="youtube" name="YouTube" stroke={seriesMeta.youtube.color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 4 }} />}
-            {visible.instagram && <Line type="monotone" dataKey="instagram" name="Instagram" stroke={seriesMeta.instagram.color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 4 }} />}
-            {visible.facebook && <Line type="monotone" dataKey="facebook" name="Facebook" stroke={seriesMeta.facebook.color} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 4 }} />}
+            {visible.total && <Line type="monotone" dataKey="total" name="Total" stroke={chartTokens.accentGreen} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 4 }} />}
+            {PLATFORMS.map(p => visible[p] && (
+              <Line 
+                key={p} 
+                type="monotone" 
+                dataKey={p} 
+                name={p.charAt(0).toUpperCase() + p.slice(1)} 
+                stroke={chartTokens.platform[p]} 
+                strokeWidth={2} 
+                dot={{ r: 3 }} 
+                activeDot={{ r: 4 }} 
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="sparkline-legend">
-        {seriesOrder.map((k) => (
-          <button key={k} className={`sparkline-legend-item ${visible[k] ? '' : 'legend-off'}`} onClick={() => toggle(k)} type="button">
-            <span className="sparkline-dot" style={{ background: seriesMeta[k].color }} />
-            {seriesMeta[k].label}
+        <button className={`sparkline-legend-item ${visible.total ? '' : 'legend-off'}`} onClick={() => toggle('total')} type="button">
+          <span className="sparkline-dot" style={{ background: chartTokens.accentGreen }} />
+          Total
+        </button>
+        {PLATFORMS.map(p => (
+          <button key={p} className={`sparkline-legend-item ${visible[p] ? '' : 'legend-off'}`} onClick={() => toggle(p)} type="button">
+            <span className="sparkline-dot" style={{ background: chartTokens.platform[p] }} />
+            {p.charAt(0).toUpperCase() + p.slice(1)}
           </button>
         ))}
       </div>

@@ -1,10 +1,13 @@
+// React & 3rd-party
 import React from 'react';
+
+// Types
+import type { ChartMode, ChartItem } from '../../types/models';
+
+// Styles
 import './StackedBar.css';
 
-type Mode = 'time' | 'count';
-interface Item { platform: 'youtube'|'instagram'|'facebook'; label: string; timeMs: number; count: number; color: string; }
-
-export function StackedBar({ items, mode, onModeChange }: { items: Item[]; mode: Mode; onModeChange: (m: Mode)=>void }) {
+export function StackedBar({ items, mode, onModeChange }: { items: ChartItem[]; mode: ChartMode; onModeChange: (m: ChartMode)=>void }) {
   const totalTime = items.reduce((s,i)=>s+i.timeMs,0);
   const totalCount = items.reduce((s,i)=>s+i.count,0);
   const total = mode==='time'? totalTime : totalCount;

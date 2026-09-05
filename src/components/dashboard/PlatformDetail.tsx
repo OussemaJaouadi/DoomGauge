@@ -1,82 +1,127 @@
-import React from 'react';
+// React & 3rd-party
+import React, { useState } from 'react';
 import { ArrowLeft, Clock, Hash, Zap, Timer } from 'lucide-react';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Components
 import { KpiCard } from '../ui/KpiCard';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { chartTokens } from '../charts/tokens';
+
+// Utils & Data
+import { formatTime } from '../../utils/time';
+import { avgFlickSec, skipDiagnostics } from '../../utils/metrics';
+
+// Types
+import type { Platform, PlatformStats } from '../../types/models';
+
+// Styles & Tokens
+import { chartTokens } from '../tokens';
 import './PlatformDetail.css';
 
-type Platform = 'youtube'|'instagram'|'facebook';
+function DetailHourTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) return null;
+  const val = payload[0]?.value ?? 0;
+  return (
+    <div style={{
+      background: 'var(--bg-surface-raised)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: '4px',
+      padding: '4px 8px',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '0.68rem',
+      color: 'var(--text-primary)',
+    }}>
+      <span style={{ color: 'var(--text-secondary)' }}>{label}:00</span> · <span style={{ fontWeight: 700 }}>{val} reels</span>
+    </div>
+  );
+}
 
-const meta: Record<Platform, { label: string; color: string; accent: 'yt'|'ig'|'fb' }> = {
-  youtube: { label: 'YouTube', color: '#ff3344', accent: 'yt' },
-  instagram: { label: 'Instagram', color: '#a855f7', accent: 'ig' },
-  facebook: { label: 'Facebook', color: '#00b4d8', accent: 'fb' },
-};
+export function PlatformDetail({ platform, data: d, onBack }: { platform: Platform; data: PlatformStats; onBack: ()=>void }) {
+  const [showBars, setShowBars] = useState(true);
+  const [showLine, setShowLine] = useState(true);
 
-const platformMock: Record<Platform, { count:number; timeMs:number; skip:number; avgFlick:number; velocity:string; share: number; earlyExit: string; hourly:number[] }> = {
-  youtube: { count: 23, timeMs: 1120000, skip: 14, avgFlick: 1.1, velocity: '1.2', share: 37, earlyExit: '3/18 · 17%', hourly: [0,0,0,0,0,0,0,1,1,0,0,1,2,5,3,1,0,1,1,2,3,5,4,1] },
-  instagram: { count: 15, timeMs: 730000, skip: 11, avgFlick: 0.9, velocity: '1.8', share: 28, earlyExit: '5/12 · 42%', hourly: [0,0,0,0,0,0,1,1,0,0,0,0,1,2,2,1,0,1,2,2,3,4,2,1] },
-  facebook: { count: 9, timeMs: 485000, skip: 4, avgFlick: 1.6, velocity: '0.9', share: 18, earlyExit: '1/7 · 14%', hourly: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,1,1,2] },
-};
+  const toggleBars = () => setShowBars(prev => (prev && !showLine ? prev : !prev));
+  const toggleLine = () => setShowLine(prev => (!showBars && prev ? prev : !prev));
 
-function formatTime(ms:number){ const s=Math.floor(ms/1000); const m=Math.floor(s/60); const sec=s%60; if(m>=60){const h=Math.floor(m/60);const min=m%60;return `${h}h ${min}m`;} if(m>0) return `${m}m ${sec}s`; return `${sec}s`; }
+  const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
+  const color = chartTokens.platform[platform];
+  const lineColor = chartTokens.accentGreen;
+  const accent = platform === 'youtube' ? 'yt' : platform === 'instagram' ? 'ig' : 'fb';
 
-export function PlatformDetail({ platform, onBack }: { platform: Platform; onBack: ()=>void }) {
-  const m = meta[platform];
-  const d = platformMock[platform];
-  const of10 = Math.round((d.skip/d.count)*10);
+  const { pct: skipPct, of10: fill } = skipDiagnostics(d.skip, d.count);
+  const flick = avgFlickSec(d.timeMs, d.count);
   const hourlyData = d.hourly.map((v,i)=>({ label: String(i).padStart(2,'0'), value: v }));
 
   return (
     <div className="platform-detail">
       <button className="detail-back" onClick={onBack} type="button"><ArrowLeft size={14} /> Back to Today</button>
-      <div className="detail-header" style={{ borderColor: m.color }}>
-        <span className="detail-dot" style={{ background: m.color }} />
-        <span className="detail-title" style={{ color: m.color }}>{m.label}</span>
-        <span className="detail-sub">· TODAY · {d.share}% of day</span>
+      <div className="detail-header" style={{ borderColor: color }}>
+        <span className="detail-dot" style={{ background: color }} />
+        <span className="detail-title" style={{ color: color }}>{pName}</span>
+        <span className="detail-sub">{d.share}% elapsed burn</span>
       </div>
 
       <div className="detail-hero">
-        <KpiCard icon={<Clock size={14}/>} label="Active Time" value={formatTime(d.timeMs)} accent={m.accent} sublabel="today" />
-        <KpiCard icon={<Hash size={14}/>} label="Reel Count" value={d.count} accent={m.accent} sublabel="today" />
+        <KpiCard icon={<Clock size={14}/>} label="Active Time" value={formatTime(d.timeMs)} accent={accent} />
+        <KpiCard icon={<Hash size={14}/>} label="Reel Count" value={d.count} accent={accent} />
       </div>
 
       <div className="detail-grid3">
-        <KpiCard icon={<Zap size={14}/>} label="Impatience" value={`${Math.round(d.skip/d.count*100)}%`} unit={`${of10}/10`} accent="magenta" sublabel="bailed <3s" />
-        <KpiCard icon={<Timer size={14}/>} label="Velocity" value={d.velocity} unit="/min" accent="magenta" sublabel="speed" />
-        <KpiCard icon={<Clock size={14}/>} label="Avg flick" value={`${d.avgFlick}s`} accent="magenta" sublabel="reflex" />
+        <KpiCard icon={<Zap size={14}/>} label="Impatience" value={`${skipPct}%`} unit={`${fill}/10`} accent="magenta" />
+        <KpiCard icon={<Timer size={14}/>} label="Velocity" value={d.velocity} unit="/min" accent="magenta" />
+        <KpiCard icon={<Clock size={14}/>} label="Avg flick" value={`${flick}s`} accent="magenta" />
       </div>
 
       <div className="detail-section">
-        <div className="detail-section-title">Bailed in 3 seconds</div>
-        <div className="filmstrip" aria-label={`${d.skip} of ${d.count} flicked`}>
+        <div className="detail-section-title">ABANDONMENT TELEMETRY</div>
+        <div className="detail-meta">BAILED &lt;3s · {d.skip}/{d.count}</div>
+        <div className="filmstrip">
           {Array.from({length:10},(_,i)=> (
-            <span key={i} className="film-cell" style={{ background: i<of10? m.color : 'transparent', borderColor: i<of10? m.color : 'var(--border-subtle)', opacity: i<of10?1:0.5 }} />
+            <span key={i} className="film-cell" style={{ background: i<fill? color : 'transparent', borderColor: i<fill? color : 'var(--border-subtle)', opacity: i<fill?1:0.5 }} />
           ))}
-          <span className="film-label">{of10}/10</span>
         </div>
-        <div className="detail-meta">{d.skip} of {d.count} bailed · {d.count-d.skip} watched</div>
+        <div className="detail-meta">EARLY EXIT · {d.earlyExit} abandoned before 50%</div>
       </div>
 
       <div className="detail-section">
-        <div className="detail-section-title">Today — hourly</div>
+        <div className="detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>HOURLY DISTRIBUTION (TODAY)</span>
+          <div className="detail-chart-toggles">
+            <button
+              type="button"
+              className={`chart-pill ${showBars ? '' : 'off'}`}
+              onClick={toggleBars}
+              aria-pressed={showBars}
+            >
+              <span className="dot" style={{ background: color }} />
+              Reels
+            </button>
+            <button
+              type="button"
+              className={`chart-pill ${showLine ? '' : 'off'}`}
+              onClick={toggleLine}
+              aria-pressed={showLine}
+            >
+              <span className="dot" style={{ background: lineColor }} />
+              Wave
+            </button>
+          </div>
+        </div>
         <div className="detail-chart">
           <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={hourlyData} margin={{top:8,right:8,left:0,bottom:0}} barCategoryGap="24%">
+            <ComposedChart data={hourlyData} margin={{top:8,right:8,left:0,bottom:0}} barCategoryGap="24%">
               <CartesianGrid stroke={chartTokens.borderGrid} strokeDasharray="3 3" opacity={0.6} vertical={false} />
               <XAxis dataKey="label" tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 9 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} interval={3} />
               <YAxis tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 10 }} axisLine={false} tickLine={false} width={24} allowDecimals={false} />
-              <Tooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} contentStyle={{ background: 'var(--bg-surface-raised)', border: '1px solid var(--border-subtle)', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontSize: '0.68rem' }} />
-              <Bar dataKey="value" fill={m.color} radius={[2,2,0,0]} isAnimationActive={false} barSize={10} />
-            </BarChart>
+              <Tooltip content={<DetailHourTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              {showBars && (
+                <Bar dataKey="value" fill={color} fillOpacity={0.65} radius={[2,2,0,0]} isAnimationActive={false} barSize={10} />
+              )}
+              {showLine && (
+                <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2} strokeOpacity={0.9} dot={{ r: 2, fill: lineColor, stroke: chartTokens.bgRoot, strokeWidth: 1 }} activeDot={{ r: 4, stroke: lineColor }} isAnimationActive={false} />
+              )}
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
-        <div className="hint">Peaks 12-14 & 21-23 · Valleys 09-11 focused</div>
-      </div>
-
-      <div className="detail-section">
-        <div className="detail-section-title">Early exit · watch &lt;50%</div>
-        <div className="detail-meta">{d.earlyExit} where length known · avg watch 34% — bailed before half</div>
       </div>
     </div>
   );

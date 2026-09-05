@@ -1,8 +1,15 @@
+// React & 3rd-party
 import React from 'react';
 import { MonitorPlay, Camera, MessageCircle } from 'lucide-react';
-import './PlatformRow.css';
 
-type Platform = 'youtube' | 'instagram' | 'facebook';
+// Utils
+import { formatTime } from '../../utils/time';
+
+// Types
+import type { Platform } from '../../types/models';
+
+// Styles
+import './PlatformRow.css';
 
 const platformMeta: Record<Platform, { label: string; icon: React.ReactNode; color: string }> = {
   youtube: { label: 'YouTube', icon: <MonitorPlay size={14} />, color: 'var(--platform-yt)' },
@@ -16,19 +23,6 @@ export interface PlatformRowProps {
   timeMs: number;
   maxCount: number;
   onClick?: () => void;
-}
-
-function formatTime(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  if (m >= 60) {
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    return `${h}h ${min}m`;
-  }
-  if (m > 0) return `${m}m ${sec}s`;
-  return `${sec}s`;
 }
 
 export function PlatformRow({ platform, count, timeMs, maxCount, onClick }: PlatformRowProps) {

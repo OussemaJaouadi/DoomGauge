@@ -15,7 +15,7 @@ toolchain carries no API-risk from the native port.
 WXT → Vite → **esbuild** (Go, fast). No webpack/Turbopack needed.
 
 ## Charts
-**uPlot** — lightweight dashboard charts.
+**Recharts** — React-based declarative charting library used for Donut, ComposedChart, and LineCharts.
 
 ## Tests
 **bun test** — built-in, fast; covers aggregation/rollup logic (`src/__tests__/` validates P1–P7).
@@ -24,9 +24,9 @@ WXT → Vite → **esbuild** (Go, fast). No webpack/Turbopack needed.
 - Single source of truth: `.spec/doom-gauge-v1/spec.md` + `design.md`.
 - **Option A:** Only Background SW reads/writes IndexedDB; UI surfaces use `chrome.runtime.sendMessage`.
 - **Local dates:** `YYYY-MM-DD` is local wall-clock; `chrome.alarms` at local midnight.
-- Popup size is under study: content → tabs → layout → size (current mock ≈540×580); spec `400×540` cap is deferred.
-- No `CH-` codes — platform rows use `lucide-react` icon + name.
-- Mock layer: `DEV`-only typed factories (e.g. `src/mocks/fixtures.ts`) injected via props; `createClient` abstraction deferred until data schema settles.
+- Popup size decided: 540×580 px fixed (old 400×540 cap retired).
+- No `CH-` codes and no 2-letter abbreviations — platform rows use `lucide-react` icon + full name (tooltips/legends included).
+- Mock layer (UI-mock phase, see `.spec/doom-gauge-v1/tasks.md`): direct `import { MOCK } from data/mock` is intentional until UI is approved; `createClient` abstraction deferred until data schema settles. Agents SHALL NOT flag mock imports while phase=mock.
 
 ## Rationale
 - Local-first; no server. Multi-window safe via shared IndexedDB.

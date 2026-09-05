@@ -303,30 +303,37 @@ function isEarlyExit(e: ReelViewEvent, threshold = 0.5): boolean {
 
 WXT popup entry point. React (WXT + @wxt-dev/module-react) — vanilla was a brainstorm error; popup needs query/state handling, frequent data changes, and component decomposition.
 
-Layout — size under study (≈540 px width, height derived from tab content — not fixed 400×540):
+Layout — decided size 540 × 580 px (fixed; `min-height: 580px` / `max-height: 580px`):
 ```
 ┌─────────────────────────────────────────────────┐
-│  DOOMGAUGE                         [today]       │
-├────────────────────┬────────────────────────────┤
-│   1h 23m           │   47 reels                 │
-│   ACTIVE TIME      │   REEL COUNT               │
+│  DOOMGAUGE (click = dev state switch, mock only)│
+├────────────────────┬────────────┬───────────────┤
+│  DRAINED            │  VS YDAY      │  PEAK CHANNEL │
+│  total time+burn%   │  time+count Δ │  top platform │
 ├─────────────────────────────────────────────────┤
-│  [tabs: Today | Signals | Trends] — under study │
+│  [tabs: Today | Signals | Trends]                │
 ├─────────────────────────────────────────────────┤
-│  (Today) icon YT  23  ██████░░░░  18m 40s       │
-│          IG  15  ████░░░░░░  12m 10s            │
-│          FB   9  ██░░░░░░░░   8m 05s            │
+│  (Today) icon YouTube  23  ██████░░░░  18m 40s  │
+│          Instagram 15  ████░░░░░░  12m 10s       │
+│          Facebook   9  ██░░░░░░░░   8m 05s       │
+│          (row click → scoped /platform/:id;      │
+│           globals hidden, abandonment merged,    │
+│           overflow-y:auto fallback)              │
 │  (Signals) Velocity / Impatience cards          │
-│  (Trends) sparkline 7-day + filterable legend   │
+│   (Vortex deferred — needs event gap inference) │
+│  (Trends) 24h stacked bars + total line,        │
+│   filterable legend (full names, no abbrevs)    │
 ├─────────────────────────────────────────────────┤
 │  [sparkline: 7-day combined + per-platform      │
 │   — icon: value legend, tooltip per point,      │
 │   click-to-filter series]                       │
 ├─────────────────────────────────────────────────┤
-│              Open full telemetry →              │
+│  [slim dock 28px: ⤢ FULL TELEMETRY COMMAND CENTER]│
 └─────────────────────────────────────────────────┘
 ```
-No `CH-` codes — platform rows use `lucide-react` icon + name. Legend uses `icon: value`, own line for time, and tooltip on hover; legend entries are filter toggles.
+No `CH-` codes and no 2-letter abbreviations — platform rows, Donut labels, hourly tooltips, and legends use `lucide-react` icon + full name (`YouTube`, `Instagram`, `Facebook`). Legend uses `icon: value`, own line for time, and tooltip on hover; legend entries are filter toggles.
+
+Header formulas (see spec R6.2): `DRAINED` burn `totalActiveMin/elapsedMinSinceMidnight*100` with `<30m CALIBRATING` guard; `VS YDAY` dual delta with neutral `DELTA`; `avgFlick = totalActiveMs/(count*1000)`; `of10 = round(skip/count*10)`; early-exit measured-only.
 
 Render pipeline (Option A):
 1. On popup open: send `get_today_stats` to SW → render headline metrics + platform rows

@@ -1,7 +1,7 @@
 import React from 'react';
 import './KpiCard.css';
 
-type Accent = 'yt' | 'ig' | 'fb' | 'green' | 'magenta' | 'default';
+type Accent = 'yt' | 'ig' | 'fb' | 'green' | 'magenta' | 'amber' | 'default';
 
 export interface KpiCardProps {
   icon?: React.ReactNode;
@@ -9,6 +9,7 @@ export interface KpiCardProps {
   value: React.ReactNode;
   unit?: string;
   sublabel?: string;
+  meta?: React.ReactNode;
   accent?: Accent;
   className?: string;
 }
@@ -19,10 +20,11 @@ const accentVar: Record<Accent, string> = {
   fb: 'var(--platform-fb)',
   green: 'var(--accent-green)',
   magenta: 'var(--accent-magenta)',
+  amber: 'var(--accent-amber)',
   default: 'var(--text-muted)',
 };
 
-export function KpiCard({ icon, label, value, unit, sublabel, accent = 'default', className = '' }: KpiCardProps) {
+export function KpiCard({ icon, label, value, unit, sublabel, meta, accent = 'default', className = '' }: KpiCardProps) {
   return (
     <div className={`ui-kpi-card ui-kpi-accent-${accent} ${className}`}>
       <div className="ui-kpi-label">
@@ -34,6 +36,7 @@ export function KpiCard({ icon, label, value, unit, sublabel, accent = 'default'
         {unit && <span className="ui-kpi-unit">{unit}</span>}
       </div>
       {sublabel && <div className="ui-kpi-sublabel">{sublabel}</div>}
+      {meta && <div className="ui-kpi-meta">{meta}</div>}
     </div>
   );
 }

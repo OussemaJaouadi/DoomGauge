@@ -13,7 +13,9 @@ colors:
   accent-green: "#00ff88"
   accent-cyan: "#00b4d8"
   accent-magenta: "#ff0055"
-  platform-yt: "#ff3344"
+  accent-amber: "#ffd700"
+  threat-red: "#ff2a3b"
+  platform-yt: "#ff6b4a"
   platform-ig: "#a855f7"
   platform-fb: "#00b4d8"
 typography:
@@ -71,10 +73,10 @@ DoomGauge uses an EEG/Neuro-Spike Telemetry visual system designed specifically 
 - **Ground / Chassis**: Abyssal charcoal `#090d13` with subtle grid lines `#16222f`.
 - **Text / Readouts**: Crisp high-contrast white `#f0f6fc` and muted slate `#8b949e`.
 - **Telemetry Channels**:
-  - **YouTube Shorts**: Signal red `#ff3344` — hue 356°, high-voltage crimson
-  - **Instagram Reels**: Violet-purple `#a855f7` — hue 270°, ~86° from YT for instant distinguish
+  - **YouTube Shorts**: Warm coral-vermilion `#ff6b4a` — hue ~11°, warm and distinct from severity red
+  - **Instagram Reels**: Violet-purple `#a855f7` — hue 270°, ~100° from YT for instant distinguish
   - **Facebook Reels**: Signal cyan `#00b4d8` — hue 192°, far from both
-  - **Global Status / Awareness**: Phosphor green `#00ff88`
+  - **Global Status / Awareness**: Phosphor green `#00ff88` (recovery / drop), Hazard amber `#ffd700` (moderate / warn), Blood crimson `#ff2a3b` (threat / surge)
 
 ## Typography
 Monospace-first across all metrics, timestamps, and headers. Numbers and telemetry values are strictly monospaced to prevent layout jitter during live count changes.
@@ -82,22 +84,21 @@ Monospace-first across all metrics, timestamps, and headers. Numbers and telemet
 ## Layout
 
 ### Surface A — Popup (glance)
-- **Container**: Chrome popup — size under study (≈540 px width in current mock; final derived from tab content → tabs → layout → size). Treated as a glance surface with tabs (Today / Signals / Trends) under study.
-- **Contents** (tabbed, under study):
-  - Doom Score (time + count side-by-side, `icon: value` legend line)
-  - Per-platform rows (icon + name, no `CH-` codes) + Velocity / Impatience cards (Signals tab)
-  - 7-day sparkline (combined + per-platform, filterable legend with tooltip)
+- **Container**: Chrome popup (540 × 580 px fixed). Treated as a glance surface with a persistent header and deep-dive tabs.
+- **Contents**:
+  - Persistent Header: 3 OverviewCards — DRAINED (total time + burn % of elapsed day since 00:00, `CALIBRATING (<30m)` guard), VS YDAY (time + count dual delta, neutral DELTA), PEAK CHANNEL (top platform icon + time + % share).
+  - Tab 1 (Today): Donut chart (time/count split) and per-platform stat rows (icon + full name — zero abbreviations, never `CH-` codes). Row click navigates to a scoped platform view (globals hidden; abandonment telemetry merged; scroll fallback).
+  - Tab 2 (Signals): Scrolling diagnostics like Velocity (reels/min) and Impatience (skip %).
+  - Tab 3 (Trends): Hourly/Daily waveform charts.
   - Prominent `Open full telemetry →` affordance (opens Surface B)
-- Strictly monospaced, high-contrast, no gamification. Legend uses `icon: value` + own line for time; legend entries toggle series.
+- Strictly monospaced, high-contrast, no gamification.
 
 ### Surface B — Full Telemetry Page (new-tab)
-- **Container**: Full browser tab, opened via `chrome.tabs.create({ url })`. Responsive, full-width.
+- **Container**: Full browser tab, opened via `chrome.tabs.create({ url })`. Responsive, full-width "Command Center".
 - **Contents**:
-  - Header: telemetry channel status + total active attention lost
-  - Spike Waveform: multi-channel scroll-burst trace (filterable legend `icon: value`, tooltip per point)
-  - Platform Stat Rows: platform icon + name … count, duration, colored track (no `CH-` codes)
-  - 7-day / 30-day toggle views
-  - Brain Composition (future)
+  - Time Traversal Bar: Samsung Health-inspired navigation (`Day | 7d | 30d` with `<` and `>`).
+  - Macro View: Massive, edge-to-edge Spike Waveform/Histogram mapping total and per-platform history.
+  - Micro View (Bento Grid): 3-column grid below the chart for YouTube, Instagram, and Facebook. Each contains clinical, icon-driven metrics (Time, Reels, Skips, Avg flick).
   - Export JSON button
 - Reuses the same tokens, components, and Do's/Don'ts.
 

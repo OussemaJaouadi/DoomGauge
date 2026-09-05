@@ -1,22 +1,19 @@
+// React & 3rd-party
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
+
+// Utils
+import { formatTime } from '../../utils/time';
+
+// Types
+import type { ChartMode, ChartItem } from '../../types/models';
+
+// Styles
 import './Donut.css';
-
-type Mode = 'time' | 'count';
-interface Item { platform: 'youtube'|'instagram'|'facebook'; label: string; timeMs: number; count: number; color: string; }
-
-function formatTime(ms: number): string {
-  const s = Math.floor(ms/1000);
-  const m = Math.floor(s/60);
-  const sec = s%60;
-  if (m >= 60) { const h=Math.floor(m/60); const min=m%60; return `${h}h ${min}m`; }
-  if (m>0) return `${m}m ${sec}s`;
-  return `${sec}s`;
-}
 
 function DonutCard({ active, payload, mode }: any) {
   if (!active || !payload?.[0]) return null;
-  const d = payload[0].payload as Item & { value: number; pct: number };
+  const d = payload[0].payload as ChartItem & { value: number; pct: number };
   return (
     <div className="donut-tooltip">
       <div className="donut-tooltip-head"><span className="dot" style={{background:d.color}} />{d.label} · {d.pct}%</div>
@@ -32,7 +29,7 @@ const renderActive = (props: any) => {
   return <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6} startAngle={startAngle} endAngle={endAngle} fill={fill} stroke="var(--bg-root)" strokeWidth={1} />;
 };
 
-export function Donut({ items, mode, onModeChange }: { items: Item[]; mode: Mode; onModeChange: (m:Mode)=>void }) {
+export function Donut({ items, mode, onModeChange }: { items: ChartItem[]; mode: ChartMode; onModeChange: (m:ChartMode)=>void }) {
   const [active, setActive] = useState<number | undefined>(undefined);
   const total = mode==='time' ? items.reduce((s,i)=>s+i.timeMs,0) : items.reduce((s,i)=>s+i.count,0);
   const data = items.map(i=> {
@@ -66,6 +63,7 @@ export function Donut({ items, mode, onModeChange }: { items: Item[]; mode: Mode
                 stroke="var(--bg-root)"
                 strokeWidth={1}
                 isAnimationActive={false}
+                // @ts-expect-error recharts types currently omit activeIndex
                 activeIndex={active}
                 activeShape={renderActive}
                 onMouseEnter={(_, idx)=>setActive(idx)}

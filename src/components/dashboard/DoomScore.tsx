@@ -1,17 +1,15 @@
+// React & 3rd-party
 import React from 'react';
 import { Clock, Hash } from 'lucide-react';
-import { KpiCard } from '../ui/KpiCard';
-import './DoomScore.css';
 
-function formatTime(ms: number): string {
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
+// Components
+import { KpiCard } from '../ui/KpiCard';
+
+// Utils
+import { formatTime } from '../../utils/time';
+
+// Styles
+import './DoomScore.css';
 
 export interface DoomScoreProps {
   totalMs: number;

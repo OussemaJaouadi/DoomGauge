@@ -1,4 +1,6 @@
-.platform-detail { display:flex; flex-direction:column; gap:12px; animation: tabs-in 0.15s ease-out; }
+.platform-detail { display:flex; flex-direction:column; gap:12px; animation: tabs-in 0.15s ease-out; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.platform-detail::-webkit-scrollbar { width:3px; }
+.platform-detail::-webkit-scrollbar-thumb { background:var(--border-subtle); border-radius:2px; }
 .detail-back { display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:6px 10px; font-family:var(--font-mono); font-size:0.68rem; font-weight:700; color:var(--text-secondary); cursor:pointer; align-self:flex-start; }
 .detail-back:hover { color:var(--text-primary); border-color:var(--text-muted); background:var(--bg-surface); }
 .detail-header { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-left:3px solid; border-radius:var(--radius-sm); }
@@ -14,4 +16,23 @@
 .film-label { font-family:var(--font-mono); font-size:0.62rem; font-weight:700; color:var(--text-secondary); margin-left:4px; }
 .detail-meta { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); }
 .detail-chart { background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:4px; }
+.detail-chart-toggles { display:flex; gap:6px; }
+.chart-pill {
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  background:var(--bg-surface-raised);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-sm);
+  padding:2px 6px;
+  font-family:var(--font-mono);
+  font-size:0.58rem;
+  font-weight:700;
+  color:var(--text-secondary);
+  cursor:pointer;
+  transition:opacity 0.15s, border-color 0.15s;
+}
+.chart-pill:hover { border-color:var(--text-muted); color:var(--text-primary); }
+.chart-pill.off { opacity:0.35; text-decoration:line-through; }
+.chart-pill .dot { width:6px; height:6px; border-radius:1px; }
 .hint { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-muted); text-align:center; }

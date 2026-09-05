@@ -14,9 +14,11 @@
   --accent-green: #00ff88;
   --accent-cyan: #00b4d8;
   --accent-magenta: #ff0055;
-  --platform-yt: #ff3344; /* YT: true red — hue 356°, distinct from IG */
-  --platform-ig: #a855f7; /* IG: violet-purple — hue 270°, ~86° from YT */
-  --platform-fb: #00b4d8; /* FB: signal cyan — hue 192°, far from both */
+  --accent-amber: #ffd700; /* amber/gold for moderate */
+  --threat-red: #ff2a3b;   /* Threat / Defcon-1 alert / surge — blood crimson */
+  --platform-yt: #ff6b4a;  /* YT: warm coral-vermilion — hue ~11°, distinct from threat red and IG */
+  --platform-ig: #a855f7;  /* IG: violet-purple — hue 270°, distinct from YT and FB */
+  --platform-fb: #00b4d8;  /* FB: signal cyan — hue 192°, far from both */
 
   /* Typography */
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
