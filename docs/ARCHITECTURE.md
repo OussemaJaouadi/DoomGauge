@@ -1,5 +1,7 @@
 # Architecture
 
+Popup mock refinement (September 2026): `src/data/popupMock.ts` supplies one internally consistent platform dataset, derived headline/hourly values and same-cutoff yesterday fixtures. This is UI-only; production message/storage architecture and Surface B fixtures are unchanged. Popup readability overrides are scoped to its container.
+
 Few words. Diagrams first.
 
 ## System shape

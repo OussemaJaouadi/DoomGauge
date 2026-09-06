@@ -1,20 +1,20 @@
 // React & 3rd-party
 import React, { useState } from 'react';
-import { Activity, Clock, Rocket, SkipForward, Camera, MonitorPlay, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Activity, Clock, BarChart2, Zap } from 'lucide-react';
 
 // Types
 import type { UIState, Tab, View } from '../../types/popup';
 
 // UI Components
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
-import { KpiCard } from '../../components/ui/KpiCard';
+import { Badge } from '../../components/ui/Badge';
 import { OverviewCard } from '../../components/ui/OverviewCard';
 import { EmptyState, ErrorState } from '../../components/ui/State';
 
 // Dashboard Components
 import { PlatformRow } from '../../components/dashboard/PlatformRow';
 import { PlatformDetail } from '../../components/dashboard/PlatformDetail';
-import { SignalsImpatience } from '../../components/dashboard/SignalsImpatience';
+import { SignalsTab } from '../../components/dashboard/SignalsTab';
 import { TrendsTab } from '../../components/dashboard/TrendsTab';
 
 // Chart Components
@@ -22,18 +22,18 @@ import { Donut } from '../../components/charts/Donut';
 
 // Utils & Data
 import { formatTime } from '../../utils/time';
-import { formatBurnSub, avgFlickSec } from '../../utils/metrics';
+import { avgFlickSec } from '../../utils/metrics';
 import { chartTokens } from '../../components/tokens';
-import { MOCK, PLATFORM_MOCK } from '../../data/mock';
+import { MOCK, PLATFORM_MOCK, POPUP_AS_OF_HOUR } from '../../data/popupMock';
 
 // Styles
 import './App.css';
 
 export default function App() {
   const [uiState, setUiState] = useState<UIState>('success');
-  const [view, setView] = useState<View>({ kind:'tabs', tab:'today' });
-  const [stackMode, setStackMode] = useState<'time'|'count'>('time');
-  const tab = view.kind==='tabs' ? view.tab : 'today';
+  const [view, setView] = useState<View>({ kind: 'tabs', tab: 'today' });
+  const [stackMode, setStackMode] = useState<'time' | 'count'>('time');
+  const tab = view.kind === 'tabs' ? view.tab : 'today';
 
   const toggleState = () => {
     const states: UIState[] = ['success', 'empty', 'error'];
@@ -41,7 +41,7 @@ export default function App() {
     setUiState(states[nextIndex]!);
   };
 
-  const maxCount = Math.max(...MOCK.platforms.map((p) => p.count));
+  const totalSkips = MOCK.platforms.reduce((sum, p) => sum + p.skip, 0);
   const globalFlick = avgFlickSec(MOCK.totalMs, MOCK.totalCount);
   const msDelta = MOCK.totalMs - MOCK.yesterdayMs;
   const countDelta = MOCK.totalCount - MOCK.yesterdayCount;
@@ -50,118 +50,130 @@ export default function App() {
   const isCountWorse = countDelta > 0;
   const isCountBetter = countDelta < 0;
 
-  const peakPlatform = MOCK.platforms.reduce((prev, current) => (current.timeMs > prev.timeMs) ? current : prev);
-  const peakName = peakPlatform.platform.charAt(0).toUpperCase() + peakPlatform.platform.slice(1);
-  const peakColor = chartTokens.platform[peakPlatform.platform];
-
   return (
     <div className="container">
       <div className="header">
         <button type="button" className="brand" onClick={toggleState} aria-label="Cycle preview state (dev only)">
           DOOMGAUGE
         </button>
+        <span className="preview-pill">as of {POPUP_AS_OF_HOUR}:00</span>
       </div>
-      {view.kind==='tabs' && (
-      <div className="overview-cards">
-        <OverviewCard
-          label="DRAINED"
-          value={formatTime(MOCK.totalMs)}
-          sub={<span style={{ color: 'var(--threat-red)', fontWeight: 600 }}>{formatBurnSub(MOCK.totalMs, new Date())}</span>}
-          trend="neutral"
-        />
-        <OverviewCard
-          label="VS YDAY"
-          trend="neutral"
-          value={
-            <span
-              style={{
-                color: isTimeWorse ? 'var(--threat-red)' : isTimeBetter ? 'var(--accent-green)' : 'var(--text-primary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              {isTimeWorse && <ArrowUp size={16} />}
-              {isTimeBetter && <ArrowDown size={16} />}
-              <span>{msDelta === 0 ? '0s' : formatTime(Math.abs(msDelta))}</span>
-            </span>
-          }
-          sub={
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <span
-                style={{
-                  color: isCountWorse ? 'var(--threat-red)' : isCountBetter ? 'var(--accent-green)' : 'var(--text-muted)',
-                  fontWeight: 600,
-                }}
-              >
-                {countDelta === 0 ? '±0 reels' : `${isCountWorse ? '+' : '-'}${Math.abs(countDelta)} reels`}
-              </span>
-              <span style={{ color: 'var(--text-muted)' }}>· DELTA</span>
-            </span>
-          }
-        />
-        <OverviewCard
-          label="PEAK CHANNEL"
-          value={
-            <span style={{ color: peakColor }}>
-              {formatTime(peakPlatform.timeMs)}
-            </span>
-          }
-          sub={`${peakName} · ${peakPlatform.pct}% share`}
-          icon={peakPlatform.platform === 'youtube' ? <MonitorPlay size={14} /> : peakPlatform.platform === 'instagram' ? <Camera size={14} /> : <MessageCircle size={14} />}
-          accent={peakColor}
-          border={peakColor}
-          trend="neutral"
-        />
+
+      {uiState === 'success' && view.kind === 'tabs' && (
+        <div className="overview-cards">
+          <OverviewCard
+            label="ACTIVE DRAIN"
+            icon={<Clock size={13} style={{ color: isTimeWorse ? 'var(--threat-red)' : 'var(--accent-green)' }} />}
+            value={formatTime(MOCK.totalMs)}
+            sub={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Badge variant={isTimeWorse ? 'destructive' : 'success'}>
+                  {isTimeWorse ? '▲ +' : '▼ -'}{formatTime(Math.abs(msDelta))}
+                </Badge>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>vs yday ({POPUP_AS_OF_HOUR}:00)</span>
+              </div>
+            }
+            trend={isTimeWorse ? 'negative' : 'neutral'}
+          />
+          <OverviewCard
+            label="REELS CONSUMED"
+            icon={<Zap size={13} style={{ color: isCountWorse ? 'var(--threat-red)' : 'var(--accent-amber)' }} />}
+            value={
+              <>
+                <span>{MOCK.totalCount}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>reels</span>
+              </>
+            }
+            sub={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Badge variant={isCountWorse ? 'destructive' : 'success'}>
+                  {isCountWorse ? '▲ +' : '▼ -'}{Math.abs(countDelta)}
+                </Badge>
+                <Badge variant="warning">
+                  {totalSkips} rapid ({MOCK.impatience}%)
+                </Badge>
+              </div>
+            }
+            trend={isCountWorse ? 'negative' : 'neutral'}
+          />
+        </div>
+      )}
+
+      <div className="popup-body">
+        {uiState === 'empty' && <EmptyState />}
+        {uiState === 'error' && <ErrorState />}
+
+        {uiState === 'success' && view.kind === 'platform' && (
+          <PlatformDetail
+            platform={view.platform}
+            data={PLATFORM_MOCK[view.platform]}
+            onBack={() => setView({ kind: 'tabs', tab: 'today' })}
+          />
+        )}
+
+        {uiState === 'success' && view.kind === 'tabs' && (
+          <Tabs value={tab} onValueChange={(v) => setView({ kind: 'tabs', tab: v as Tab })}>
+            <TabsList>
+              <TabsTrigger value="today" icon={<Clock size={12} />}>Today</TabsTrigger>
+              <TabsTrigger value="signals" icon={<Activity size={12} />}>Signals</TabsTrigger>
+              <TabsTrigger value="hourly" icon={<BarChart2 size={12} />}>Hourly</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="today">
+              <Donut
+                items={MOCK.platforms.map((p) => ({
+                  platform: p.platform,
+                  label: p.platform === 'youtube' ? 'YouTube' : p.platform === 'instagram' ? 'Instagram' : 'Facebook',
+                  timeMs: p.timeMs,
+                  count: p.count,
+                  color: chartTokens.platform[p.platform],
+                }))}
+                mode={stackMode}
+                onModeChange={setStackMode}
+              />
+              <div className="platform-scale-hint">Share of total {stackMode}</div>
+              <div className="platform-list">
+                {MOCK.platforms.map((p) => (
+                  <PlatformRow
+                    key={p.platform}
+                    platform={p.platform}
+                    count={p.count}
+                    timeMs={p.timeMs}
+                    mode={stackMode}
+                    totalTimeMs={MOCK.totalMs}
+                    totalCount={MOCK.totalCount}
+                    onClick={() => setView({ kind: 'platform', platform: p.platform })}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="signals">
+              <SignalsTab
+                data={PLATFORM_MOCK}
+                totalCount={MOCK.totalCount}
+                totalSkips={totalSkips}
+                impatiencePct={MOCK.impatience}
+                avgFlickSec={globalFlick}
+              />
+            </TabsContent>
+
+            <TabsContent value="hourly">
+              <TrendsTab />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
-      )}
 
-      {uiState === 'empty' && <EmptyState />}
-      {uiState === 'error' && <ErrorState />}
-
-      {uiState === 'success' && view.kind==='platform' && (
-        <PlatformDetail platform={view.platform} data={PLATFORM_MOCK[view.platform]} onBack={()=> setView({kind:'tabs', tab:'today'})} />
-      )}
-
-      {uiState === 'success' && view.kind==='tabs' && (
-        <Tabs value={tab} onValueChange={(v) => setView({kind:'tabs', tab: v as Tab})}>
-          <TabsList>
-            <TabsTrigger value="today" icon={<Clock size={12} />}>Today</TabsTrigger>
-            <TabsTrigger value="signals" icon={<Activity size={12} />}>Signals</TabsTrigger>
-            <TabsTrigger value="trends" icon={<Rocket size={12} />}>Trends</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="today">
-            <Donut
-              items={MOCK.platforms.map(p=>({ platform:p.platform, label:p.platform==='youtube'?'YouTube':p.platform==='instagram'?'Instagram':'Facebook', timeMs:p.timeMs, count:p.count, color: chartTokens.platform[p.platform] }))}
-              mode={stackMode}
-              onModeChange={setStackMode}
-            />
-            <div className="platform-list">
-              {MOCK.platforms.map((p) => (
-                <PlatformRow key={p.platform} platform={p.platform} count={p.count} timeMs={p.timeMs} maxCount={maxCount} onClick={()=> setView({kind:'platform', platform: p.platform})} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="signals">
-            <div className="impact-grid">
-              <KpiCard icon={<Rocket size={14} />} label="Velocity" value={MOCK.velocity} unit="reels/min" accent="magenta" />
-              <KpiCard icon={<SkipForward size={14} />} label="Impatience" value={`${MOCK.impatience}%`} unit="skipped <3s" accent="magenta" />
-              <KpiCard icon={<Clock size={14} />} label="Avg Flick" value={`${globalFlick}s`} unit="per reel" accent="magenta" />
-            </div>
-            <SignalsImpatience data={PLATFORM_MOCK} />
-          </TabsContent>
-
-          <TabsContent value="trends">
-            <TrendsTab />
-          </TabsContent>
-        </Tabs>
-      )}
-
-      {uiState === 'success' && view.kind==='tabs' && (
+      {uiState === 'success' && view.kind === 'tabs' && (
         <div className="footer">
-          <button type="button" className="btn-telemetry" onClick={()=>{ chrome.tabs.create({ url: chrome.runtime.getURL('/telemetry.html') }); }}>
+          <button
+            type="button"
+            className="btn-telemetry"
+            onClick={() => {
+              chrome.tabs.create({ url: chrome.runtime.getURL('/telemetry.html') });
+            }}
+          >
             ⤢ FULL TELEMETRY COMMAND CENTER
           </button>
         </div>

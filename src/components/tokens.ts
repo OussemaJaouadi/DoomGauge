@@ -1,3 +1,5 @@
+// MIRROR DISCIPLINE: Recharts cannot read CSS vars, so these hexes duplicate
+// src/styles/global.css + docs/DESIGN.md. Change all three together. Ever.
 export const chartTokens = {
   bgRoot: '#090d13',
   bgSurface: '#0f141c',
@@ -14,5 +16,15 @@ export const chartTokens = {
   accentGreen: '#00ff88',
   accentAmber: '#ffd700',
   threatRed: '#ff2a3b',
+  freezeSlate: '#64748b',
   fontMono: 'JetBrains Mono, ui-monospace, SF Mono, Cascadia Code, Fira Code, monospace',
+} as const;
+
+/** Shared Recharts theme: oscilloscope grid, muted mono ticks, square data dots. */
+export const chartTheme = {
+  grid: { stroke: '#16222f', strokeDasharray: '3 3', strokeOpacity: 0.6 },
+  tick: { fill: '#545d68', fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 10 },
+  axisLine: { stroke: '#1c2838' },
+  cursor: { fill: 'rgba(255,255,255,0.03)' },
+  dotRadius: 2,
 } as const;

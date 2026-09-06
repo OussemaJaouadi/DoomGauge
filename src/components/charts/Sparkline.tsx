@@ -7,6 +7,7 @@ import { PLATFORMS } from '../../types/models';
 
 // Styles & Tokens
 import { chartTokens } from '../tokens';
+import { ChartTooltip } from '../ui/ChartTooltip';
 import './Sparkline.css';
 
 interface SparklineProps {
@@ -18,15 +19,16 @@ interface SparklineProps {
 function SparkTooltip({ active, payload, label }: any) {
   if (!active || !payload) return null;
   return (
-    <div className="sparkline-tooltip">
-      <div className="sparkline-tooltip-title">{label}</div>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} className="sparkline-tooltip-row">
-          <span className="sparkline-dot" style={{ background: p.color }} />
-          {p.name}: {p.value}
-        </div>
-      ))}
-    </div>
+    <ChartTooltip head={`${label}`}>
+      <>
+        {payload.map((p: any) => (
+          <span key={p.dataKey}>
+            <span className="sparkline-dot" style={{ background: p.color }} />
+            {p.name}: <strong>{p.value}</strong>
+          </span>
+        ))}
+      </>
+    </ChartTooltip>
   );
 }
 

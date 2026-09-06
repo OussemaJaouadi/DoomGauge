@@ -1,21 +1,24 @@
 .container {
   width: 540px;
-  min-height: 560px;
+  height: 580px;
   max-height: 580px;
+  min-height: 580px;
   background-color: var(--bg-root);
   color: var(--text-primary);
-  padding: 16px;
+  padding: 14px 16px;
   font-family: var(--font-mono);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .brand {
@@ -30,10 +33,47 @@
   cursor: pointer;
 }
 
+.brand:focus-visible {
+  outline: 1px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+
+.preview-pill {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
 .overview-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.popup-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-scale-hint {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 6px 0 4px 0;
 }
 
 .platform-list {
@@ -44,8 +84,9 @@
 
 .impact-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
 .signals-breakdown {
@@ -75,6 +116,38 @@
   color: var(--text-secondary);
 }
 
+.hourly-peak-annotation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--threat-red);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+}
+
+.hourly-peak-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--threat-red);
+  text-transform: uppercase;
+}
+
+.hourly-peak-time {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.hourly-peak-count {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
 .hint {
   font-family: var(--font-mono);
   font-size: 0.65rem;
@@ -86,9 +159,11 @@
 
 /* Footer / Slim dock (28px) */
 .footer {
-  margin-top: 12px;
+  margin-top: 6px;
+  padding-top: 6px;
   display: flex;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .btn-telemetry {

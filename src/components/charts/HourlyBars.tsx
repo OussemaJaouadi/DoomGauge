@@ -1,44 +1,32 @@
 // React & 3rd-party
 import React, { useState } from 'react';
-import { MonitorPlay, Camera, MessageCircle } from 'lucide-react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Types
-import type { HourItem, Platform } from '../../types/models';
+import type { HourItem } from '../../types/models';
 import { PLATFORMS } from '../../types/models';
 
 // Styles & Tokens
 import { chartTokens } from '../tokens';
+import { ChartTooltip } from '../ui/ChartTooltip';
+import { platformMeta } from '../platformMeta';
 import './HourlyBars.css';
-
-const platformLabel: Record<Platform, string> = {
-  youtube: 'YouTube',
-  instagram: 'Instagram',
-  facebook: 'Facebook',
-};
-
-const platformIcon: Record<Platform, React.ReactNode> = {
-  youtube: <MonitorPlay size={10} />,
-  instagram: <Camera size={10} />,
-  facebook: <MessageCircle size={10} />,
-};
 
 function HourTooltip({ active, payload, label }: any) {
   if (!active || !payload) return null;
   const row = payload[0]?.payload as HourItem;
   if (!row) return null;
   return (
-    <div className="hour-tooltip">
-      <div className="hour-tooltip-title">{label}:00 · {row.total} reels</div>
-      <div className="hour-tooltip-grid">
+    <ChartTooltip head={`${label}:00 · ${row.total} reels`}>
+      <>
         {PLATFORMS.map(p => (
           <span key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span className="hour-dot" style={{ background: chartTokens.platform[p] }} />
-            {platformIcon[p]} {platformLabel[p]} {row[p]}
+            {platformMeta[p].icon} {platformMeta[p].label} {row[p]}
           </span>
         ))}
-      </div>
-    </div>
+      </>
+    </ChartTooltip>
   );
 }
 
@@ -53,16 +41,16 @@ export default function HourlyBars({ data }: { data: HourItem[] }) {
   return (
     <div className="hourly">
       <div className="hourly-head">
-        <span className="hourly-title">Today — hourly</span>
-        <span className="hourly-title" style={{color:'var(--text-secondary)', fontSize:'0.58rem'}}>tap legend to scope</span>
+        <span className="hourly-title">Today by hour · reels</span>
+        <span className="hourly-title">Click a legend to show or hide</span>
       </div>
       
       <div className="hourly-chart">
         <ResponsiveContainer width="100%" height={148}>
           <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
             <CartesianGrid stroke={chartTokens.borderGrid} strokeDasharray="3 3" opacity={0.6} vertical={false} />
-            <XAxis dataKey="label" tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 9 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} interval={2} />
-            <YAxis tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 10 }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
+            <XAxis dataKey="label" tick={{ fill: chartTokens.textSecondary, fontFamily: chartTokens.fontMono, fontSize: 11 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} interval={2} />
+            <YAxis tick={{ fill: chartTokens.textSecondary, fontFamily: chartTokens.fontMono, fontSize: 11 }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
             <Tooltip content={<HourTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
             {PLATFORMS.map(p => {
               const topVisible = [...PLATFORMS].reverse().find(pf => visible[pf]);
@@ -78,7 +66,7 @@ export default function HourlyBars({ data }: { data: HourItem[] }) {
                 />
               );
             })}
-            {visible.total && <Line type="monotone" dataKey="total" stroke={chartTokens.accentGreen} strokeWidth={2.5} strokeOpacity={1} dot={{ r: 2, fill: chartTokens.accentGreen, stroke: chartTokens.bgRoot, strokeWidth: 1 }} activeDot={{ r: 4, stroke: chartTokens.accentGreen }} />}
+            {visible.total && <Line type="monotone" dataKey="total" stroke={chartTokens.textSecondary} strokeWidth={1.5} dot={false} isAnimationActive={false} />}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -86,10 +74,10 @@ export default function HourlyBars({ data }: { data: HourItem[] }) {
         {PLATFORMS.map(p => (
           <button key={p} className={`hourly-legend-item ${visible[p]?'':'off'}`} onClick={()=>toggle(p)} type="button" aria-pressed={visible[p]}>
             <span className="hour-dot" style={{background: chartTokens.platform[p]}} />
-            {platformIcon[p]} {platformLabel[p]}
+            {platformMeta[p].icon} {platformMeta[p].label}
           </button>
         ))}
-        <button className={`hourly-legend-item ${visible.total?'':'off'}`} onClick={()=>toggle('total')} type="button"><span className="hour-dot" style={{background: chartTokens.accentGreen}} />Total</button>
+        <button className={`hourly-legend-item ${visible.total?'':'off'}`} onClick={()=>toggle('total')} type="button" aria-pressed={visible.total}><span className="hour-dot" style={{background: chartTokens.textSecondary}} />All platforms</button>
       </div>
     </div>
   );

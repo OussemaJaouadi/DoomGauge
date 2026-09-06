@@ -29,24 +29,6 @@ export function Tooltip({
   );
 }
 
-export function ChartTooltip({
-  x,
-  y,
-  children,
-  visible,
-}: {
-  x: number;
-  y: number;
-  children: React.ReactNode;
-  visible: boolean;
-}) {
-  if (!visible) return null;
-  return (
-    <div
-      className="ui-chart-tooltip"
-      style={{ left: x, top: y }}
-    >
-      {children}
-    </div>
-  );
-}
+// NOTE: the old positioned ChartTooltip export lived here; it is superseded by
+// ui/ChartTooltip.tsx (head + children API, used by all 7 chart tooltips).
+// This file keeps the hover Tooltip for future rack/legend explainers.

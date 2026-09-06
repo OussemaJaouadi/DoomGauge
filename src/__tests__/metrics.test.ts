@@ -20,8 +20,27 @@ import {
   of10,
   skipDiagnostics,
 } from '../utils/metrics';
+import { MOCK, PLATFORM_MOCK, HOURLY_MOCK, POPUP_AS_OF_HOUR } from '../data/popupMock';
 
 const fmt = (ms: number) => `${Math.round(ms / 60000)}m`;
+
+describe('popup preview consistency', () => {
+  test('headline, platform rows and hourly charts describe the same activity', () => {
+    expect(MOCK.totalMs).toBe(MOCK.platforms.reduce((sum, p) => sum + p.timeMs, 0));
+    expect(MOCK.totalCount).toBe(HOURLY_MOCK.reduce((sum, h) => sum + h.total, 0));
+    for (const p of MOCK.platforms) {
+      expect(PLATFORM_MOCK[p.platform].hourly.reduce((sum, count) => sum + count, 0)).toBe(p.count);
+      expect(HOURLY_MOCK.reduce((sum, h) => sum + h[p.platform], 0)).toBe(p.count);
+      expect(p.skip <= p.count).toBe(true);
+      expect(p.share).toBe(Math.round(p.timeMs / MOCK.totalMs * 100));
+    }
+  });
+  test('future hours are excluded from the same-cutoff comparison window', () => {
+    expect(HOURLY_MOCK.length).toBe(POPUP_AS_OF_HOUR);
+    expect(HOURLY_MOCK.every(h => h.hour < POPUP_AS_OF_HOUR)).toBe(true);
+    expect(MOCK.impatience).toBe(Math.round(MOCK.platforms.reduce((sum, p) => sum + p.skip, 0) / MOCK.totalCount * 100));
+  });
+});
 
 describe('burn rate (DRAINED)', () => {
   test('90 active min of 600 elapsed = 15%', () => {

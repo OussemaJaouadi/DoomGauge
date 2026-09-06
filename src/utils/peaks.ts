@@ -15,19 +15,19 @@ export function findLocalMaxima(data: HourItem[]): number[] {
   
   if (len === 0) return maxima;
   if (len === 1) {
-    if (data[0].total > 0) maxima.push(0);
+    if ((data[0]?.total ?? 0) > 0) maxima.push(0);
     return maxima;
   }
   
   // Cache the previous value to avoid lookups
-  let prev = data[0].total;
-  let curr = data[1].total;
+  let prev = data[0]!.total;
+  let curr = data[1]!.total;
   
   // Edge case: first item
   if (prev > curr) maxima.push(0);
   
   for (let i = 1; i < len - 1; i++) {
-    const next = data[i + 1].total;
+    const next = data[i + 1]!.total;
     if (curr > prev && curr > next) {
       maxima.push(i);
     }
@@ -57,7 +57,9 @@ export function findActivityClusters(data: HourItem[]): Interval[] {
   let clusterPeakHour = 0;
 
   for (let i = 0; i < len; i++) {
-    const total = data[i].total;
+    const item = data[i];
+    if (!item) continue;
+    const total = item.total;
     if (total > 0) {
       if (!inCluster) {
         inCluster = true;
@@ -114,11 +116,13 @@ export function get4hIntervals(data: HourItem[]): Interval[] {
     let total = 0;
     
     for (let j = i; j <= end; j++) {
-      const val = data[j].total;
+      const item = data[j];
+      if (!item) continue;
+      const val = item.total;
       total += val;
       if (val > peakValue) {
         peakValue = val;
-        peakHour = data[j].hour;
+        peakHour = item.hour;
       }
     }
     
@@ -132,14 +136,17 @@ export function get4hIntervals(data: HourItem[]): Interval[] {
   }
   
   // Handle edge case if the math doesn't neatly align to the very last hour
-  if (intervals[intervals.length - 1].end < len - 1) {
+  const lastInterval = intervals[intervals.length - 1];
+  if (lastInterval && lastInterval.end < len - 1) {
     const i = len - INTERVAL_SIZE;
     const end = len - 1;
     let peakValue = 0; let peakHour = i; let total = 0;
     for (let j = i; j <= end; j++) {
-      const val = data[j].total;
+      const item = data[j];
+      if (!item) continue;
+      const val = item.total;
       total += val;
-      if (val > peakValue) { peakValue = val; peakHour = data[j].hour; }
+      if (val > peakValue) { peakValue = val; peakHour = item.hour; }
     }
     intervals.push({ start: i, end, peakHour, peakValue, total });
   }
@@ -161,7 +168,9 @@ export function findPeakRanges(data: HourItem[]): PeakRange[] {
   let rangePeakValue = 0;
 
   for (let i = 0; i < len; i++) {
-    const total = data[i].total;
+    const item = data[i];
+    if (!item) continue;
+    const total = item.total;
     
     if (total > 0) {
       if (!inRange) {
@@ -214,7 +223,9 @@ export function findValleyRanges(data: HourItem[], minLength: number = 2): Valle
   let rangeStart = 0;
 
   for (let i = 0; i < len; i++) {
-    if (data[i].total === 0) {
+    const item = data[i];
+    if (!item) continue;
+    if (item.total === 0) {
       if (!inRange) {
         inRange = true;
         rangeStart = i;

@@ -1,5 +1,7 @@
 # Features
 
+September 2026 popup refinement: active time and reel count lead; same-time yesterday comparisons, Quick skips filmstrips, average time per reel and hourly patterns provide secondary context. The approved R6 clarity revision replaces the older burn/Peak Channel/Velocity presentation while remaining mock-only.
+
 Scope is split into **v1** (what we build now) and **future** (roadmap).
 Visual over prose — see the maps below.
 
@@ -70,4 +72,5 @@ flowchart LR
 | `.spec/doom-gauge-v1/design.md` | Data types, file tree, component design (Option A: BG sole DB reader, local dates, videoDurationMs) |
 | `docs/ARCHITECTURE.md` | System-shape overview (diagrams) — details in `.spec/` |
 | `docs/DESIGN.md` | Visual system (Neuro-Spike Telemetry) & design tokens |
+| `docs/PSYCHOLOGY.md` | User cognitive profile, dopamine slot-machine mechanics, urgency design rules |
 | `docs/STACK.md` | Tooling + dependencies |

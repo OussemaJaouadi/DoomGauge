@@ -1,0 +1,66 @@
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-family: var(--font-mono);
+}
+
+.time-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-root);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.time-nav button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-nav button:hover:not(:disabled) {
+  color: var(--text-secondary);
+}
+
+.time-nav button.active {
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.12);
+}
+
+.time-nav button:disabled {
+  cursor: default;
+}
+
+.topbar-action {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-raised);
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.topbar-action:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}

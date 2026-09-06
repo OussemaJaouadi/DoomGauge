@@ -21,21 +21,44 @@ export interface PlatformRowProps {
   platform: Platform;
   count: number;
   timeMs: number;
-  maxCount: number;
+  maxCount?: number;
+  mode?: 'time' | 'count';
+  totalTimeMs?: number;
+  totalCount?: number;
   onClick?: () => void;
 }
 
-export function PlatformRow({ platform, count, timeMs, maxCount, onClick }: PlatformRowProps) {
+export function PlatformRow({ platform, count, timeMs, maxCount, mode = 'time', totalTimeMs, totalCount, onClick }: PlatformRowProps) {
   const meta = platformMeta[platform];
-  const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+  let pct = 0;
+  if (mode === 'time' && totalTimeMs && totalTimeMs > 0) {
+    pct = Math.round((timeMs / totalTimeMs) * 100);
+  } else if (mode === 'count' && totalCount && totalCount > 0) {
+    pct = Math.round((count / totalCount) * 100);
+  } else if (maxCount && maxCount > 0) {
+    pct = Math.round((count / maxCount) * 100);
+  }
   const Component: any = onClick ? 'button' : 'div';
   return (
-    <Component className="platform-row" data-platform={platform} onClick={onClick} aria-label={`View ${meta.label} details`} style={onClick?{cursor:'pointer', width:'100%', textAlign:'left'} as any: undefined}>
+    <Component
+      className="platform-row"
+      data-platform={platform}
+      onClick={onClick}
+      aria-label={`View ${meta.label} details: ${formatTime(timeMs)}, ${count} reels (${pct}% of total ${mode})`}
+      style={onClick ? { cursor: 'pointer', width: '100%', textAlign: 'left' } as any : undefined}
+    >
       <div className="platform-row-main">
         <span className="platform-row-icon" style={{ color: meta.color }}>{meta.icon}</span>
         <span className="platform-row-label">{meta.label}</span>
-        <span className="platform-row-count">{count}</span>
-        <span className="platform-row-time">{formatTime(timeMs)}</span>
+        <span className="platform-row-count" style={{ color: mode === 'count' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+          {count} <span style={{ fontSize: '0.65rem', fontWeight: 500, color: 'var(--text-muted)' }}>reels</span>
+        </span>
+        <span className="platform-row-time" style={{ color: mode === 'time' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          {formatTime(timeMs)}
+        </span>
+        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: meta.color, minWidth: '32px', textAlign: 'right' }}>
+          {pct}%
+        </span>
       </div>
       <div className="platform-row-bar">
         <div className="platform-row-bar-fill" style={{ width: `${pct}%`, background: meta.color }} />

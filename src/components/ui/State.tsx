@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity, AlertTriangle } from 'lucide-react';
 import './State.css';
 
-export function EmptyState({ title = 'NO SIGNAL FOR TODAY', hint = 'Start scrolling to record data' }: { title?: string; hint?: string }) {
+export function EmptyState({ title = 'NO SIGNAL RECORDED TODAY', hint = 'No short-form video activity detected for this day.' }: { title?: string; hint?: string }) {
   return (
     <div className="ui-state">
       <Activity size={28} className="ui-state-icon" />
@@ -12,7 +12,7 @@ export function EmptyState({ title = 'NO SIGNAL FOR TODAY', hint = 'Start scroll
   );
 }
 
-export function ErrorState({ title = 'DATA ERROR', hint = 'Failed to load telemetry' }: { title?: string; hint?: string }) {
+export function ErrorState({ title = 'TELEMETRY OFFLINE', hint = 'Check extension background worker or reload the extension.' }: { title?: string; hint?: string }) {
   return (
     <div className="ui-state ui-state-error">
       <AlertTriangle size={28} className="ui-state-icon" />

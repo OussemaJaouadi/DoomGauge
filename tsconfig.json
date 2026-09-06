@@ -3,5 +3,10 @@
   "compilerOptions": {
     "types": ["chrome"],
     "jsx": "react-jsx"
-  }
+  },
+  "exclude": [
+    "script",
+    "node_modules",
+    ".output"
+  ]
 }

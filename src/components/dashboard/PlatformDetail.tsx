@@ -36,15 +36,8 @@ function DetailHourTooltip({ active, payload, label }: any) {
 }
 
 export function PlatformDetail({ platform, data: d, onBack }: { platform: Platform; data: PlatformStats; onBack: ()=>void }) {
-  const [showBars, setShowBars] = useState(true);
-  const [showLine, setShowLine] = useState(true);
-
-  const toggleBars = () => setShowBars(prev => (prev && !showLine ? prev : !prev));
-  const toggleLine = () => setShowLine(prev => (!showBars && prev ? prev : !prev));
-
   const pName = platform.charAt(0).toUpperCase() + platform.slice(1);
   const color = chartTokens.platform[platform];
-  const lineColor = chartTokens.accentGreen;
   const accent = platform === 'youtube' ? 'yt' : platform === 'instagram' ? 'ig' : 'fb';
 
   const { pct: skipPct, of10: fill } = skipDiagnostics(d.skip, d.count);
@@ -57,7 +50,7 @@ export function PlatformDetail({ platform, data: d, onBack }: { platform: Platfo
       <div className="detail-header" style={{ borderColor: color }}>
         <span className="detail-dot" style={{ background: color }} />
         <span className="detail-title" style={{ color: color }}>{pName}</span>
-        <span className="detail-sub">{d.share}% elapsed burn</span>
+        <span className="detail-sub">{d.share}% of total active time</span>
       </div>
 
       <div className="detail-hero">
@@ -65,15 +58,14 @@ export function PlatformDetail({ platform, data: d, onBack }: { platform: Platfo
         <KpiCard icon={<Hash size={14}/>} label="Reel Count" value={d.count} accent={accent} />
       </div>
 
-      <div className="detail-grid3">
-        <KpiCard icon={<Zap size={14}/>} label="Impatience" value={`${skipPct}%`} unit={`${fill}/10`} accent="magenta" />
-        <KpiCard icon={<Timer size={14}/>} label="Velocity" value={d.velocity} unit="/min" accent="magenta" />
-        <KpiCard icon={<Clock size={14}/>} label="Avg flick" value={`${flick}s`} accent="magenta" />
+      <div className="detail-grid2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+        <KpiCard icon={<Zap size={14}/>} label="Quick Skips (<3s)" value={`${skipPct}%`} unit={`${d.skip}/${d.count}`} accent="magenta" />
+        <KpiCard icon={<Clock size={14}/>} label="Avg Duration" value={`${flick}s`} unit="per reel" accent="magenta" />
       </div>
 
       <div className="detail-section">
         <div className="detail-section-title">ABANDONMENT TELEMETRY</div>
-        <div className="detail-meta">BAILED &lt;3s · {d.skip}/{d.count}</div>
+        <div className="detail-meta">BAILED &lt;3s · {d.skip}/{d.count} reels</div>
         <div className="filmstrip">
           {Array.from({length:10},(_,i)=> (
             <span key={i} className="film-cell" style={{ background: i<fill? color : 'transparent', borderColor: i<fill? color : 'var(--border-subtle)', opacity: i<fill?1:0.5 }} />
@@ -83,29 +75,7 @@ export function PlatformDetail({ platform, data: d, onBack }: { platform: Platfo
       </div>
 
       <div className="detail-section">
-        <div className="detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>HOURLY DISTRIBUTION (TODAY)</span>
-          <div className="detail-chart-toggles">
-            <button
-              type="button"
-              className={`chart-pill ${showBars ? '' : 'off'}`}
-              onClick={toggleBars}
-              aria-pressed={showBars}
-            >
-              <span className="dot" style={{ background: color }} />
-              Reels
-            </button>
-            <button
-              type="button"
-              className={`chart-pill ${showLine ? '' : 'off'}`}
-              onClick={toggleLine}
-              aria-pressed={showLine}
-            >
-              <span className="dot" style={{ background: lineColor }} />
-              Wave
-            </button>
-          </div>
-        </div>
+        <div className="detail-section-title">HOURLY DISTRIBUTION (TODAY)</div>
         <div className="detail-chart">
           <ResponsiveContainer width="100%" height={120}>
             <ComposedChart data={hourlyData} margin={{top:8,right:8,left:0,bottom:0}} barCategoryGap="24%">
@@ -113,12 +83,7 @@ export function PlatformDetail({ platform, data: d, onBack }: { platform: Platfo
               <XAxis dataKey="label" tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 9 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} interval={3} />
               <YAxis tick={{ fill: chartTokens.textMuted, fontFamily: chartTokens.fontMono, fontSize: 10 }} axisLine={false} tickLine={false} width={24} allowDecimals={false} />
               <Tooltip content={<DetailHourTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              {showBars && (
-                <Bar dataKey="value" fill={color} fillOpacity={0.65} radius={[2,2,0,0]} isAnimationActive={false} barSize={10} />
-              )}
-              {showLine && (
-                <Line type="monotone" dataKey="value" stroke={lineColor} strokeWidth={2} strokeOpacity={0.9} dot={{ r: 2, fill: lineColor, stroke: chartTokens.bgRoot, strokeWidth: 1 }} activeDot={{ r: 4, stroke: lineColor }} isAnimationActive={false} />
-              )}
+              <Bar dataKey="value" fill={color} fillOpacity={0.65} radius={[2,2,0,0]} isAnimationActive={false} barSize={10} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

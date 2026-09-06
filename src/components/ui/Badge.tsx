@@ -3,7 +3,7 @@ import './Badge.css';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'destructive' | 'outline';
+  variant?: 'default' | 'destructive' | 'warning' | 'success' | 'cyan' | 'outline';
   className?: string;
 }
 

@@ -9,18 +9,16 @@ import { formatTime } from '../../utils/time';
 import type { ChartMode, ChartItem } from '../../types/models';
 
 // Styles
+import { ChartTooltip } from '../ui/ChartTooltip';
 import './Donut.css';
 
 function DonutCard({ active, payload, mode }: any) {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload as ChartItem & { value: number; pct: number };
   return (
-    <div className="donut-tooltip">
-      <div className="donut-tooltip-head"><span className="dot" style={{background:d.color}} />{d.label} · {d.pct}%</div>
-      <div className="donut-tooltip-grid">
-        {mode === 'time' ? <span>{formatTime(d.timeMs)}</span> : <span>{d.count} reels</span>}
-      </div>
-    </div>
+    <ChartTooltip head={<><span className="dot" style={{ background: d.color }} />{d.label} · {d.pct}%</>}>
+      {mode === 'time' ? <span>{formatTime(d.timeMs)}</span> : <span>{d.count} reels</span>}
+    </ChartTooltip>
   );
 }
 
@@ -42,10 +40,10 @@ export function Donut({ items, mode, onModeChange }: { items: ChartItem[]; mode:
   return (
     <div className="donut-wrap">
       <div className="donut-head">
-        <span className="donut-title">Share — {mode==='time'?'time':'count'}</span>
+        <span className="donut-title">Share of total {mode==='time'?'time':'reels'}</span>
         <div className="donut-toggle">
-          <button className={mode==='time'?'active':''} onClick={()=>onModeChange('time')}>Time</button>
-          <button className={mode==='count'?'active':''} onClick={()=>onModeChange('count')}>Count</button>
+          <button type="button" aria-pressed={mode === 'time'} className={mode==='time'?'active':''} onClick={()=>onModeChange('time')}>Time</button>
+          <button type="button" aria-pressed={mode === 'count'} className={mode==='count'?'active':''} onClick={()=>onModeChange('count')}>Count</button>
         </div>
       </div>
 

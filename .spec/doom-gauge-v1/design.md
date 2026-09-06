@@ -343,14 +343,23 @@ Render pipeline (Option A):
 
 ### Full Telemetry Page — Surface B
 
-WXT `entrypoints/telemetry` page. Opens in a new tab. All data via SW messages.
+WXT `entrypoints/telemetry` page. Opens in a new tab. All data via SW messages (`get_rollups`, `get_today_stats`).
 
 Layout sections:
-1. **Header bar**: `DOOMGAUGE TELEMETRY` + total active time today
-2. **Spike Waveform**: multi-channel uPlot line chart (per-platform reel count per day) — filterable legend (icon: value, click to toggle), tooltip per point
-3. **Platform Stat Rows**: platform icon + name — count, skips, early exits (<50 % watch when length known), total time, coloured track (no `CH-` codes)
-4. **Time range toggle**: 7-day / 30-day
-5. **Export JSON** button
+1. **Instrument Control Plane (240px Sidebar)**:
+   - Lens selector: Macro Trajectory, Circadian Clock, Survival Curves, Session Gravity, Dual-State Neuro Map.
+   - Platform channel toggles (`YouTube` `#ff6b4a`, `Instagram` `#a855f7`, `Facebook` `#00b4d8`).
+   - Daypart bin filters (`Morning 06-12`, `Afternoon 12-18`, `Prime 18-23`, `Graveyard 23-06`).
+2. **Analytical Canvas Header**:
+   - Title (`DOOMGAUGE TELEMETRY // INSTRUMENT RACK`) + active time slice summary.
+   - Time Traversal: `Day`, `7d`, `30d` tabs + `◀ PREV` / `NEXT ▶` stepping buttons.
+   - Action buttons: `[⤓ Export JSON]`, `[✕ Close]`.
+3. **Dynamic Lens Canvas**:
+   - Lens 1: Macro Trajectory (full-width Recharts `ComposedChart` stacked bars + line) + 3-column platform benchmark.
+   - Lens 2: Circadian Vulnerability Clock (24h × 7d daypart matrix with Graveyard `--threat-red` highlight).
+   - Lens 3: Kaplan-Meier Attention Survival Curves ($S(t)$ with $t_{\text{cliff}}$ and $t_{\text{lock}}$ markers).
+   - Lens 4: Session Gravity & Burstiness (Fano factor of inter-arrival gaps + Runaway Horizon cold-start sessions $>15\text{m}$).
+   - Lens 5: Dual-State Neuro Map (Frantic Foraging vs Dissociative Freeze with 7-day quantile calibration guards, dimensionless Compulsion Index, and Attention ROI).
 
 ---
 
@@ -406,6 +415,12 @@ Tests live in `src/__tests__/` and run with `bun test`.
 ---
 
 ## Key Design Decisions
+
+### Approved popup clarity revision (September 2026)
+
+R6's popup clarity revision supersedes the earlier three-card popup wireframe and metric labels in this document. Use a two-column active-time/reel-count headline with secondary same-cutoff yesterday deltas. Keep the donut beside its legend and use matching time/count shares in the platform rows. Signals contains Quick skips and Avg time per reel; Hourly contains the chart and busiest-hour annotation. Detail contains two primary and two secondary metrics, measured-only early exits, and bars only.
+
+The popup owns its readable text variables, typography adjustments and fixed-height scroll layout; shared telemetry tokens remain unchanged. Its bottom telemetry action stays outside the scrolling content. `src/data/popupMock.ts` owns internally consistent popup-only fixtures and a fixed 22:00 comparison cutoff; existing Surface B fixtures are untouched. This is still the mock phase.
 
 | Decision | Rationale |
 |----------|-----------|

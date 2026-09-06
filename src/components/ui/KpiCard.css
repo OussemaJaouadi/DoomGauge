@@ -68,6 +68,15 @@
 }
 .ui-kpi-accent-amber:hover { background: rgba(255, 215, 0, 0.12); border-color: rgba(255, 215, 0, 0.28); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 16px var(--kpi-glow); }
 
+.ui-kpi-accent-threat {
+  --kpi-bg: rgba(255, 42, 59, 0.08);
+  --kpi-border: rgba(255, 42, 59, 0.22);
+  --kpi-glow: rgba(255, 42, 59, 0.2);
+  background: var(--kpi-bg);
+  border-color: var(--kpi-border);
+}
+.ui-kpi-accent-threat:hover { background: rgba(255, 42, 59, 0.12); border-color: rgba(255, 42, 59, 0.3); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 16px var(--kpi-glow); }
+
 .ui-kpi-accent-default { --kpi-bg: var(--bg-surface); --kpi-border: var(--border-subtle); }
 
 .ui-kpi-label {
@@ -97,6 +106,7 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .ui-kpi-unit {

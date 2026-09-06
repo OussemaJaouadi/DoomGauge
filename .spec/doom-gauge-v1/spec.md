@@ -134,20 +134,37 @@ Everything runs in-browser. Data never leaves the device.
 
 ---
 
+### Popup clarity revision — active acceptance criteria (September 2026)
+
+This approved UI-mock refinement supersedes the presentation requirements in R6 AC2–7 above where they conflict. Surface B is unchanged.
+
+1. The 540 × 580 popup SHALL lead with active time (`DRAINED · ACTIVE TIME`) and reel count. Yesterday deltas SHALL be secondary and compare the same elapsed portion of each day, with the cutoff visibly named. Burn percentage and the Peak Channel card SHALL be removed from the popup.
+2. Today SHALL retain the platform-colored donut and clickable rows. Time/Count SHALL control both graphics; row bars SHALL encode share of the selected total, with a visible scale description and accessible control states.
+3. Signals SHALL show Quick skips (`<3s`) and Avg time per reel, retaining platform-colored ten-cell strips and exact fractions. Velocity and psychological interpretations of skip behavior SHALL be removed from displayed metrics.
+4. Hourly (formerly Trends) SHALL lead with the hourly chart and one busiest-hour annotation. LOW/ZERO/HIGH/MODERATE cards SHALL be removed. Platform detail SHALL retain measured-only early exits and a single bar chart, without duplicate Wave controls or elapsed-burn labels.
+5. Platform colors SHALL remain coral/purple/cyan. Aggregate chart values and navigation SHALL use neutral emphasis; magenta identifies viewing-pattern panels. Essential text SHALL have at least 4.5:1 contrast, with readable labels and visible keyboard focus. No horizontal overflow is allowed at 540 × 580; the telemetry action SHALL remain visible while content scrolls.
+6. Popup fixtures SHALL derive global totals, shares, skips, averages and hourly counts from one consistent platform dataset. The preview SHALL name a fixed as-of time; yesterday fixtures SHALL use that same cutoff. No real-data wiring is part of this revision.
+7. Empty/error previews SHALL not retain populated headline metrics. Empty copy SHALL not encourage scrolling; errors SHALL provide a recovery instruction. The brand preview-state switch remains intentional.
+
 ## Requirement 7: Full Telemetry Page — Surface B
 
 **User Story:** As a user, I want a full-page telemetry view with more detail so that I can analyse trends over 7 and 30 days and understand my patterns over time.
 
 ### Acceptance Criteria
 
-1. WHEN Surface B is opened, THEN it SHALL display in a full browser tab using the Neuro-Spike Telemetry design system.
-2. WHEN Surface B loads, THEN it SHALL show a header with the brand title and a JSON export button.
-3. WHEN Surface B loads, THEN it SHALL feature a Time Traversal Navigation bar with tabs for `Day`, `7d`, and `30d` along with backward (`<`) and forward (`>`) date traversal buttons.
-4. WHEN Surface B loads, THEN it SHALL render a macro-view chart (using Recharts) spanning the full width. It SHALL use a unified ComposedChart (Line + Stacked Bars) for all time views.
-5. WHEN Surface B loads, THEN beneath the chart it SHALL display a 3-column "Bento" grid containing a dedicated Stat Card for each platform (YouTube, Instagram, Facebook).
-6. EACH Stat Card SHALL display clinical, icon-driven metrics (`Time`, `Reels`, `Skips`, `Avg flick`) without verbose explanatory text.
-7. WHEN the user triggers an export, it SHALL trigger a download of minified JSON for the current data view.
-8. ALL numeric metrics and timestamps in Surface B SHALL use monospace rendering.
+1. WHEN Surface B is opened, THEN it SHALL display in a full browser tab using the Neuro-Spike Telemetry design system (dark chassis `#090d13`, monospace font, high-contrast text).
+2. WHEN Surface B loads, THEN it SHALL feature an Instrument Control Plane (240px sidebar) and a flexible main analytical canvas. The Control Plane SHALL provide:
+   - Analytical Lens selection: Macro Trajectory, Circadian Clock, Survival Curves, Session Gravity, and Dual-State Neuro Map.
+   - Platform channel toggles (YouTube Coral `#ff6b4a`, Instagram Violet `#a855f7`, Facebook Cyan `#00b4d8`).
+   - Daypart bin filters: Morning (06:00–12:00), Afternoon (12:00–18:00), Prime (18:00–23:00), and Graveyard (23:00–06:00).
+3. WHEN Surface B loads, THEN it SHALL feature a Time Traversal Navigation bar in the canvas header with horizon tabs for `Day`, `7d`, and `30d` along with backward (`<`) and forward (`>`) date traversal buttons and a minified JSON export trigger.
+4. WHEN Lens 1 (Macro Trajectory) is active, THEN it SHALL render a full-width unified ComposedChart (Line + Stacked Bars) spanning the selected horizon, showing platform volume attribution and total active time trajectory. Beneath the chart, it SHALL display a 3-column comparative benchmark grid for active platforms.
+5. WHEN Lens 2 (Circadian Clock) is active, THEN it SHALL render a 24h × 7d daypart vulnerability matrix classifying consumption into Morning, Afternoon, Prime, and Graveyard (highlighted in threat-red `--threat-red`).
+6. WHEN Lens 3 (Survival Curves) is active, THEN it SHALL compute and display Kaplan-Meier attention survival curves $S(t) = \prod_{t_i \le t} (1 - d_i/n_i)$ with indicators for the Critical Rejection Cliff ($t_{\text{cliff}}$) and Lock-in Threshold ($t_{\text{lock}}$).
+7. WHEN Lens 4 (Session Gravity) is active, THEN it SHALL compute the Fano factor of inter-arrival gaps $\Delta t$, burst clustering, and report Cold-Start Runaway Sessions (sessions started after an idle gap $\ge 45\text{m}$ exceeding 15 continuous minutes).
+8. WHEN Lens 5 (Dual-State Neuro Map) is active, THEN it SHALL classify session behavior into Frantic Foraging vs Dissociative Freeze using personal quantiles ($P_{80}$, $P_{75}$, $P_{20}$ for $\ge 7\text{d}$ history), displaying an amber calibration badge `[v0 HEURISTIC // CALIBRATING]` during days 1–6. It SHALL compute the dimensionless Compulsion Index ($(\text{Skip Rate} \times \text{Velocity}) / \bar{V}_{\text{baseline}}$) and Attention ROI (completion $>80\%$ counted measured-only, where `videoDurationMs != null`).
+9. WHEN the user triggers an export from Surface B, it SHALL trigger a download of minified JSON for the current data view per Requirement 8.
+10. ALL numeric metrics and timestamps in Surface B SHALL use monospace rendering.
 
 > **Data path (Option A):** Surface B SHALL request data via Background SW messages (`get_rollups`, `get_today_stats`). No direct IndexedDB reads from UI surfaces.
 

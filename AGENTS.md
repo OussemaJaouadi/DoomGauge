@@ -20,6 +20,7 @@ per platform, to reduce its impact on my ADHD. v1 is analysis-only
 - docs/DESIGN.md        — visual system (Neuro-Spike Telemetry) & design tokens
 - docs/FEATURES.md      — vision map v1 vs future (points to .spec/ for AC)
 - docs/ARCHITECTURE.md  — system shape, data flow, storage (overview; details in .spec/)
+- docs/PSYCHOLOGY.md    — user cognitive profile, dopamine slot-machine mechanics, urgency design rules
 - docs/STACK.md         — tooling + dependencies + rationale
 
 ## Commit convention

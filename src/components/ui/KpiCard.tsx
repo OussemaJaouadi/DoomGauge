@@ -1,7 +1,7 @@
 import React from 'react';
 import './KpiCard.css';
 
-type Accent = 'yt' | 'ig' | 'fb' | 'green' | 'magenta' | 'amber' | 'default';
+type Accent = 'yt' | 'ig' | 'fb' | 'green' | 'magenta' | 'amber' | 'threat' | 'default';
 
 export interface KpiCardProps {
   icon?: React.ReactNode;
@@ -21,6 +21,7 @@ const accentVar: Record<Accent, string> = {
   green: 'var(--accent-green)',
   magenta: 'var(--accent-magenta)',
   amber: 'var(--accent-amber)',
+  threat: 'var(--threat-red)',
   default: 'var(--text-muted)',
 };
 
