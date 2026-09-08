@@ -13,6 +13,7 @@ declare function expect(actual: unknown): {
 import {
   attentionROI,
   binDayparts,
+  buildHourlyTrajectory,
   calibrationBadge,
   compulsionIndex,
   daypartOfHour,
@@ -162,5 +163,31 @@ describe('fix regressions', () => {
     const m = hourlyMatrix(evts, 1, day);
     expect(m[0]![21]).toBe(1);
     expect(m[0]![20]).toBe(0);
+  });
+  test('buildHourlyTrajectory produces 24 hourly bins with active minutes per platform', () => {
+    const day = new Date(2026, 8, 5, 0, 0, 0);
+    const evts: TelemetryEvent[] = [
+      evt(day.getTime() + 14 * 3600000 + 10 * 60000, 120000, 'youtube'), // 2 mins at 14:10
+      evt(day.getTime() + 14 * 3600000 + 30 * 60000, 60000, 'instagram'), // 1 min at 14:30
+      evt(day.getTime() + 22 * 3600000, 180000, 'facebook'), // 3 mins at 22:00
+    ];
+    const visible = { youtube: true, instagram: true, facebook: true };
+    const bins = buildHourlyTrajectory(evts, visible);
+
+    expect(bins.length).toBe(24);
+    expect(bins[14]!.date).toBe('14:00');
+    expect(bins[14]!.youtube).toBe(2);
+    expect(bins[14]!.instagram).toBe(1);
+    expect(bins[14]!.facebook).toBe(0);
+    expect(bins[14]!.total).toBe(3);
+
+    expect(bins[22]!.date).toBe('22:00');
+    expect(bins[22]!.facebook).toBe(3);
+    expect(bins[22]!.total).toBe(3);
+
+    // Muted platform is excluded
+    const muted = buildHourlyTrajectory(evts, { youtube: true, instagram: false, facebook: true });
+    expect(muted[14]!.instagram).toBe(0);
+    expect(muted[14]!.total).toBe(2);
   });
 });

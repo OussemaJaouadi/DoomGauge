@@ -12,43 +12,17 @@
 
 .hourly-title {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--popup-pattern-text);
 }
 
-.hourly-toggle {
+.hourly-sub {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.hourly-toggle.active {
-  background: var(--bg-surface-raised);
-  color: var(--text-primary);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.12);
-}
-
-.hourly-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.hourly-row {
-  display: flex;
-  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .hourly-chart {
@@ -64,13 +38,13 @@
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--text-primary);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .hour-tooltip-title {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -108,7 +82,7 @@
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s, border-color 0.15s;

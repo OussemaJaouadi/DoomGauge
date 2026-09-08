@@ -1,0 +1,2 @@
+.ui-clock { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); font: 12px/1.5 var(--font-mono); white-space: nowrap; }
+.ui-clock time { color: var(--text-primary); font-variant-numeric: tabular-nums; min-width: 8ch; }

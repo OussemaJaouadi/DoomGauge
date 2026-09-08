@@ -2,63 +2,101 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  vertical-align: middle;
 }
 
+/* Clearly visible, 22x22px with intentional accent color */
 .ui-hint-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.ui-hint-btn:hover,
-.ui-hint-btn.active {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
+/* Amber variant */
+.ui-hint-btn-amber {
+  background: color-mix(in srgb, var(--accent-amber) 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--accent-amber) 40%, var(--border-subtle));
+  color: var(--accent-amber);
+}
+
+.ui-hint-btn-amber:hover,
+.ui-hint-btn-amber.active {
+  background: color-mix(in srgb, var(--accent-amber) 22%, var(--bg-surface));
+  border-color: var(--accent-amber);
+  color: #fff;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-amber) 30%, transparent);
+}
+
+/* Blue variant */
+.ui-hint-btn-blue {
+  background: color-mix(in srgb, var(--accent-blue) 10%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--accent-blue) 40%, var(--border-subtle));
+  color: var(--accent-blue);
+}
+
+.ui-hint-btn-blue:hover,
+.ui-hint-btn-blue.active {
+  background: color-mix(in srgb, var(--accent-blue) 22%, var(--bg-surface));
+  border-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-blue) 30%, transparent);
+}
+
+/* Neutral variant */
+.ui-hint-btn-neutral:hover,
+.ui-hint-btn-neutral.active {
   background: var(--bg-surface-raised);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .ui-hint-btn:focus-visible {
-  outline: 1px solid var(--accent-cyan);
-  outline-offset: 1px;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }
 
-/* Minimalist popover (no card-inside-card slop) */
+/* Accessible Popover */
 .ui-hint-popover {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  width: 240px;
+  width: 250px;
   background: var(--bg-surface-raised);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-family: var(--font-mono);
+  padding: 10px 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
   z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
 }
 
-.ui-hint-title {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-primary);
+.ui-hint-popover-amber {
+  border-top: 2px solid var(--accent-amber);
 }
 
-.ui-hint-text {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  line-height: 1.35;
+.ui-hint-popover-blue {
+  border-top: 2px solid var(--accent-blue);
 }
+.hint-facts { margin: 0; display: grid; gap: 9px; font-size: 13px; }
+.hint-facts > div { display: grid; grid-template-columns: minmax(72px, .7fr) minmax(0, 1.3fr); gap: 10px; }
+.hint-facts dt { color: var(--text-secondary); font-weight: 400; }
+.hint-facts dd { margin: 0; min-width: 0; color: var(--text-primary); overflow-wrap: anywhere; white-space: normal; }
+.ui-hint-floating .hint-note { margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 13px; white-space: normal; }
+.ui-hint-popover.ui-hint-floating { position: fixed; inset: auto; box-sizing: border-box; width: 310px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; z-index: 1000; white-space: pre-line; overflow-wrap: anywhere; font-size: 13px; line-height: 1.5; text-align: left; }

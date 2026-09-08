@@ -1,18 +1,11 @@
-// React & 3rd-party
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
-
-// Utils
-import { formatTime } from '../../utils/time';
-
-// Types
+import React, { type ReactNode } from 'react';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import type { ChartMode, ChartItem } from '../../types/models';
-
-// Styles
+import { formatTime } from '../../utils/time';
 import { ChartTooltip } from '../ui/ChartTooltip';
 import './Donut.css';
 
-function DonutCard({ active, payload, mode }: any) {
+function DonutTooltip({ active, payload, mode }: any) {
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload as ChartItem & { value: number; pct: number };
   return (
@@ -22,75 +15,52 @@ function DonutCard({ active, payload, mode }: any) {
   );
 }
 
-const renderActive = (props: any) => {
-  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-  return <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6} startAngle={startAngle} endAngle={endAngle} fill={fill} stroke="var(--bg-root)" strokeWidth={1} />;
-};
-
-export function Donut({ items, mode, onModeChange }: { items: ChartItem[]; mode: ChartMode; onModeChange: (m:ChartMode)=>void }) {
-  const [active, setActive] = useState<number | undefined>(undefined);
-  const total = mode==='time' ? items.reduce((s,i)=>s+i.timeMs,0) : items.reduce((s,i)=>s+i.count,0);
-  const data = items.map(i=> {
-    const v = mode==='time'? i.timeMs : i.count;
-    return { ...i, value: v, pct: total? Math.round((v/total)*100) : 0 };
+/** The adjacent actionable rows are the donut's accessible legend and values. */
+export function Donut({ items, mode, onModeChange, children }: {
+  items: ChartItem[];
+  mode: ChartMode;
+  onModeChange: (mode: ChartMode) => void;
+  children: ReactNode;
+}) {
+  const total = mode === 'time' ? items.reduce((s, i) => s + i.timeMs, 0) : items.reduce((s, i) => s + i.count, 0);
+  const data = items.map(item => {
+    const v = mode === 'time' ? item.timeMs : item.count;
+    return { ...item, value: v, pct: total > 0 ? Math.round((v / total) * 100) : 0 };
   });
-  const totalTimeMs = items.reduce((s,i)=>s+i.timeMs,0);
-  const totalCount = items.reduce((s,i)=>s+i.count,0);
 
   return (
-    <div className="donut-wrap">
-      <div className="donut-head">
-        <span className="donut-title">Share of total {mode==='time'?'time':'reels'}</span>
-        <div className="donut-toggle">
-          <button type="button" aria-pressed={mode === 'time'} className={mode==='time'?'active':''} onClick={()=>onModeChange('time')}>Time</button>
-          <button type="button" aria-pressed={mode === 'count'} className={mode==='count'?'active':''} onClick={()=>onModeChange('count')}>Count</button>
+    <section className="popup-share" aria-label="Platform contribution">
+      <div className="popup-share-head">
+        <h2>Share of total {mode === 'time' ? 'time' : 'reels'}</h2>
+        <div className="popup-share-toggle" role="group" aria-label="Share measurement">
+          <button type="button" aria-pressed={mode === 'time'} onClick={() => onModeChange('time')}>Time</button>
+          <button type="button" aria-pressed={mode === 'count'} onClick={() => onModeChange('count')}>Count</button>
         </div>
       </div>
-
-      <div className="donut-main">
-        <div className="donut-chart">
-          <ResponsiveContainer width={132} height={132}>
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="value"
-                cx="50%" cy="50%"
-                innerRadius={41}
-                outerRadius={62}
-                paddingAngle={2}
-                stroke="var(--bg-root)"
-                strokeWidth={1}
-                isAnimationActive={false}
-                // @ts-expect-error recharts types currently omit activeIndex
-                activeIndex={active}
-                activeShape={renderActive}
-                onMouseEnter={(_, idx)=>setActive(idx)}
-                onMouseLeave={()=>setActive(undefined)}
-              >
-                {data.map((e)=> <Cell key={e.platform} fill={e.color} stroke="var(--bg-root)" strokeWidth={1} />)}
-              </Pie>
-              <Tooltip content={<DonutCard mode={mode} />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="donut-center">
-            {mode==='time' ? (
-              <>
-                <div className="donut-center-value">{formatTime(totalTimeMs)}</div>
-                <div className="donut-center-sub">{totalCount} reels</div>
-              </>
-            ) : (
-              <>
-                <div className="donut-center-value">{totalCount}</div>
-                <div className="donut-center-sub">{formatTime(totalTimeMs)}</div>
-              </>
-            )}
-          </div>
+      <div className="popup-share-body">
+        <div className="popup-share-donut">
+          <PieChart width={108} height={108}>
+            <Pie
+              data={data}
+              dataKey="value"
+              cx="50%"
+              cy="50%"
+              innerRadius={34}
+              outerRadius={51}
+              paddingAngle={2}
+              stroke="var(--bg-root)"
+              strokeWidth={1}
+              isAnimationActive={false}
+            >
+              {data.map(item => (
+                <Cell key={item.platform} fill={item.color} />
+              ))}
+            </Pie>
+            <Tooltip content={<DonutTooltip mode={mode} />} />
+          </PieChart>
         </div>
-
-        <div className="donut-legend">
-          {data.map(i=> <span key={i.platform} className="donut-legend-item"><span className="dot" style={{background:i.color}} />{i.label} {i.pct}%</span>)}
-        </div>
+        {children}
       </div>
-    </div>
+    </section>
   );
 }

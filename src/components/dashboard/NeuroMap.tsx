@@ -57,7 +57,7 @@ export function NeuroMap({ events, daysOfHistory }: NeuroMapProps) {
   return (
     <div className="lens-panel">
       <div className="lens-title">
-        DUAL-STATE NEURO MAP — foraging vs freeze{' '}
+        DUAL-STATE ATTENTION MAP — rapid flick vs extended linger{' '}
         <Badge variant={badge.state === 'calibrated' ? 'success' : 'warning'}>{badge.label}</Badge>
       </div>
       <div className="neuro-split">
@@ -66,15 +66,15 @@ export function NeuroMap({ events, daysOfHistory }: NeuroMapProps) {
           <span className="neuro-freeze" style={{ width: `${Math.round((freeze / classified) * 100)}%` }} />
         </div>
         <div className="neuro-labels">
-          <span>FORAGING {foraging} — stim hunger · frantic flick</span>
-          <span>FREEZE {freeze} — dissociated · tab-close paralysis</span>
+          <span>RAPID FLICK {foraging} — High velocity · quick skips</span>
+          <span>EXTENDED LINGER {freeze} — Low velocity · long dwell</span>
         </div>
       </div>
       <div className="lens-grid3">
         <KpiCard
           label="Compulsion"
           value={compulsion !== null ? `${compulsion.toFixed(2)}×` : '—'}
-          sublabel={compulsion !== null && compulsion > 2 ? 'acute agitation' : 'near baseline'}
+          sublabel={compulsion !== null && compulsion > 2 ? 'elevated vs baseline' : 'near baseline'}
           accent={compulsion !== null && compulsion > 2 ? 'threat' : 'green'}
         />
         <KpiCard

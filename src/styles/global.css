@@ -12,9 +12,17 @@
   
   /* Telemetry Channels */
   --accent-green: #00ff88;
+  --usage-increased: #f4b860;
+  --usage-decreased: #2dd4bf;
+  --chart-overview: #80aaff;
+  --chart-youtube: #ff9478;
+  --chart-instagram: #c99aff;
+  --chart-facebook: #60d7ed;
+  --chart-previous: #e9c46a;
   --accent-cyan: #00b4d8;
   --accent-magenta: #ff0055;
   --accent-amber: #ffd700; /* amber/gold for moderate */
+  --accent-blue: #4f80ff;  /* Attention Pacing / Dwell: electric cobalt — hue 223°, distinct from FB cyan */
   --threat-red: #ff2a3b;   /* Threat / Defcon-1 alert / surge — blood crimson */
   --freeze-slate: #64748b; /* Dissociative freeze — cold slate, never FB cyan */
   --platform-yt: #ff6b4a;  /* YT: warm coral-vermilion — hue ~11°, distinct from threat red and IG */

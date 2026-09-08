@@ -34,10 +34,10 @@ export function SessionGravity({ events }: SessionGravityProps) {
 
   return (
     <div className="lens-panel">
-      <div className="lens-title">SESSION GRAVITY — burstiness + runaway horizon</div>
+      <div className="lens-title">SESSION GRAVITY — inter-arrival dispersion & continuous runs</div>
       <div className="lens-grid3">
-        <KpiCard label="Fano Factor" value={fano !== null ? fano.toFixed(1) : '—'} sublabel={fano !== null && fano > 5 ? 'bursty doom loop' : 'sporadic visits'} accent={fano !== null && fano > 5 ? 'threat' : 'green'} />
-        <KpiCard label="Runaways" value={runaways.length} sublabel="cold entry > 15m" accent={runaways.length > 0 ? 'threat' : 'default'} />
+        <KpiCard label="Fano Factor" value={fano !== null ? fano.toFixed(1) : '—'} sublabel={fano !== null && fano > 5 ? 'high burst variance' : 'uniform pacing'} accent={fano !== null && fano > 5 ? 'threat' : 'green'} />
+        <KpiCard label="Runaways" value={runaways.length} sublabel="idle >45m then >15m continuous" accent={runaways.length > 0 ? 'threat' : 'default'} />
         <KpiCard label="Sessions" value={sessions.length} sublabel="45m idle split" accent="default" />
       </div>
       <div className="lens-chart">

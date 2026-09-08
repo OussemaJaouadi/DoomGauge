@@ -1,0 +1,44 @@
+.settings-page { max-width: 860px; }
+.settings-mock-label { color: var(--text-secondary); font-size: 13px; }
+.settings-stop-loss { margin-top: 28px; }
+.settings-section-heading { display: flex; align-items: center; gap: 8px; }
+.settings-section-heading h2, .settings-future h2 { margin: 0; font-size: 18px; }
+.settings-rule-scope { display: flex; flex-wrap: wrap; gap: 24px; margin: 20px 0 24px; }
+.settings-control-group { display: grid; gap: 8px; }
+.settings-control-group > span { color: var(--text-secondary); font-size: 13px; }
+.settings-platforms { flex-wrap: wrap; }
+.settings-platforms button, .settings-platforms button > span { display: inline-flex; align-items: center; gap: 8px; }
+.settings-limit-row { display: grid; grid-template-columns: 24px minmax(140px, 1fr) minmax(160px, 220px) 44px; align-items: center; gap: 16px; padding: 24px 0; border-top: 1px solid var(--border-subtle); }
+.settings-count-icon { color: var(--usage-increased, #f4b860); }
+.settings-time-icon { color: var(--usage-decreased, #2dd4bf); }
+.settings-limit-name { display: grid; gap: 6px; }
+.settings-limit-name label { font-size: 16px; font-weight: 600; }
+.settings-limit-name > span { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; }
+.settings-limit-input > div { display: flex; align-items: baseline; gap: 10px; }
+.settings-limit-input input { width: 110px; min-width: 0; padding: 10px 12px; color: var(--text-primary); background: var(--bg-surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font: inherit; font-size: 24px; font-variant-numeric: tabular-nums; }
+.settings-limit-input input:disabled { opacity: .4; }
+.settings-limit-input input[aria-invalid="true"] { border-color: var(--usage-increased, #f4b860); }
+.settings-limit-input span { color: var(--text-secondary); font-size: 13px; }
+.settings-limit-input small { display: block; margin-top: 8px; color: var(--usage-increased, #f4b860); font-size: 12px; }
+.settings-toggle { width: 44px; height: 28px; padding: 3px; border: 1px solid var(--border-subtle); border-radius: 16px; background: var(--bg-root); cursor: pointer; }
+.settings-toggle > span { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--text-secondary); }
+.settings-toggle[aria-checked="true"] { background: var(--chart-overview); }
+.settings-toggle[aria-checked="true"] > span { transform: translateX(16px); background: var(--bg-root); }
+.settings-rule-result { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); padding: 20px 0; }
+.settings-rule-result > div { display: grid; gap: 6px; }
+.settings-rule-result strong { font-size: 16px; }
+.settings-rule-result span { color: var(--text-secondary); font-size: 13px; }
+.settings-preview-button { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg-surface-raised); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font: inherit; font-size: 13px; cursor: pointer; }
+.settings-preview-button:disabled { opacity: .45; cursor: default; }
+.settings-message-preview { display: flex; gap: 16px; align-items: center; padding: 24px; border: 1px solid var(--threat-red, #ff2a3b); background: var(--bg-root); }
+.settings-message-preview > svg { color: var(--threat-red, #ff2a3b); flex-shrink: 0; }
+.settings-message-preview h3 { margin: 6px 0; font-size: 20px; }
+.settings-message-preview p { margin: 0 0 8px; font-size: 15px; }
+.settings-message-preview span, .settings-message-preview small { color: var(--text-secondary); font-size: 13px; }
+.settings-future { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.settings-future p { color: var(--text-secondary); font-size: 14px; }
+@media (max-width: 650px) {
+  .settings-limit-row { grid-template-columns: 24px minmax(0, 1fr) 44px; }
+  .settings-limit-input { grid-column: 2; grid-row: 2; }
+  .settings-toggle { grid-column: 3; grid-row: 1; }
+}

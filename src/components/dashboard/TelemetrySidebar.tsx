@@ -31,8 +31,8 @@ export function TelemetrySidebar({
   dayparts, onToggleDaypart, isCollapsed, onToggleCollapse,
 }: TelemetrySidebarProps) {
   return (
-    <Sidebar brandText="DOOMGAUGE TELEMETRY" isCollapsed={isCollapsed} onToggleCollapse={onToggleCollapse}>
-      <div className="rack-section">ANALYTICAL LENSES</div>
+    <Sidebar brandText="DOOMGAUGE" isCollapsed={isCollapsed} onToggleCollapse={onToggleCollapse}>
+      <div className="rack-section">LENSES</div>
       <SidebarList>
         {LENSES.map((l) => (
           <SidebarItem
@@ -45,7 +45,7 @@ export function TelemetrySidebar({
         ))}
       </SidebarList>
 
-      <div className="rack-section">CHANNELS</div>
+      <div className="rack-section">PLATFORMS</div>
       <SidebarList>
         {PLATFORMS.map((p: Platform) => {
           const active = platforms[p];
@@ -57,13 +57,12 @@ export function TelemetrySidebar({
               className={`channel-switch ${active ? 'active' : 'muted'}`}
               onClick={() => onTogglePlatform(p)}
               aria-pressed={active}
-              title={`${meta.label}: ${active ? 'ARMED' : 'MUTED'}`}
+              title={`${meta.label}: ${active ? 'Active' : 'Hidden'}`}
             >
               <span
                 className="channel-led"
                 style={{
                   background: active ? meta.color : 'transparent',
-                  boxShadow: active ? `0 0 8px ${meta.color}` : 'none',
                   borderColor: active ? meta.color : 'var(--border-subtle)',
                 }}
               />
@@ -83,22 +82,20 @@ export function TelemetrySidebar({
       <SidebarList>
         {DAYPARTS.map((d) => {
           const active = dayparts[d.id];
-          const isGrave = d.id === 'GRAVEYARD';
           return (
             <button
               key={d.id}
               type="button"
-              className={`daypart-switch ${active ? 'active' : 'muted'} ${isGrave ? 'grave' : ''}`}
+              className={`daypart-switch ${active ? 'active' : 'muted'}`}
               onClick={() => onToggleDaypart(d.id)}
               aria-pressed={active}
-              title={`${d.label} (${d.range}): ${active ? 'ARMED' : 'MUTED'}`}
+              title={`${d.label} (${d.range}): ${active ? 'Active' : 'Hidden'}`}
             >
               <span
                 className="daypart-led"
                 style={{
-                  background: active ? (isGrave ? 'var(--threat-red)' : 'var(--accent-green)') : 'transparent',
-                  boxShadow: active ? (isGrave ? '0 0 8px rgba(255,42,59,0.6)' : '0 0 8px rgba(0,255,136,0.5)') : 'none',
-                  borderColor: active ? (isGrave ? 'var(--threat-red)' : 'var(--accent-green)') : 'var(--border-subtle)',
+                  background: active ? 'var(--text-secondary)' : 'transparent',
+                  borderColor: active ? 'var(--text-secondary)' : 'var(--border-subtle)',
                 }}
               />
               <span className="daypart-name">{d.label}</span>

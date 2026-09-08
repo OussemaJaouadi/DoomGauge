@@ -1,0 +1,14 @@
+.viewing-distribution { gap: 9px; }
+.distribution-bars { display: grid; gap: 8px; }
+.distribution-row { display: grid; grid-template-columns: 84px minmax(0, 1fr) 36px; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--text-secondary); }
+.distribution-track { display: flex; height: 18px; background: var(--border-subtle); border-radius: 2px; overflow: hidden; }
+.distribution-segment { height: 100%; flex-shrink: 0; }
+.distribution-segment.selected { box-shadow: inset 0 -2px var(--text-primary); }
+.distribution-total { text-align: right; }
+.distribution-legend { display: flex; justify-content: space-between; gap: 4px; flex-wrap: wrap; }
+.distribution-legend button { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; min-height: 28px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.75rem; cursor: pointer; }
+.distribution-legend button[aria-pressed="true"] { color: var(--text-primary); border-bottom-color: var(--accent-blue); }
+.distribution-legend button:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.distribution-legend button > span { width: 8px; height: 8px; border-radius: 1px; }
+.distribution-detail { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; margin: 0; font-size: 0.75rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.distribution-detail strong, .distribution-detail b { color: var(--text-primary); }

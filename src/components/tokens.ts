@@ -16,7 +16,11 @@ export const chartTokens = {
   accentGreen: '#00ff88',
   accentAmber: '#ffd700',
   threatRed: '#ff2a3b',
+  allPlatforms: '#4f80ff',
   freezeSlate: '#64748b',
+  /** Surface B scoped supporting text / borders (docs/DESIGN.md telemetry refinement). */
+  telemetryTextSecondary: '#c0cbd8',
+  telemetryBorder: '#3b4d63',
   fontMono: 'JetBrains Mono, ui-monospace, SF Mono, Cascadia Code, Fira Code, monospace',
 } as const;
 

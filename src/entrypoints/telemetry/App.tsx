@@ -1,142 +1,79 @@
-import React, { useState } from 'react';
-import { getTelemetryFixture } from '../../data/mock';
-import type { Daypart, Lens, TimeRange } from '../../types/telemetry';
-import { LENSES } from '../../types/telemetry';
-import type { Platform } from '../../types/models';
+import { hintFacts } from '../../components/ui/hintContent';
+import { useMemo, useState, type CSSProperties } from 'react';
+import { Activity, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
 import { PLATFORMS } from '../../types/models';
-import { formatTime, localDateKey } from '../../utils/time';
-import { binDayparts, daypartOfHour, hourlyMatrix } from '../../utils/telemetry';
+import { DAYPARTS, type Daypart, type TimeRange } from '../../types/telemetry';
+import type { PageSelection, TelemetryPage } from '../../types/telemetryPreview';
+import { buildPreviewDataset } from '../../data/telemetryPreview';
+import { clockMinute, minuteOfDay, observationRollups, observationSessions, periodBounds, RANGE_LENGTH, scopedSessions, selectObservations, shiftDate } from '../../utils/telemetryPreview';
+import { localDateKey } from '../../utils/time';
+import { platformMeta } from '../../components/platformMeta';
+import { AnalysisWorkspace } from '../../components/telemetry/AnalysisWorkspace';
+import { TelemetryFilters } from '../../components/telemetry/TelemetryFilters';
+import { Clock } from '../../components/ui/Clock';
+import { SettingsPage } from '../../components/settings/SettingsPage';
 import './App.css';
 
-// Control plane + lenses
-import { TelemetrySidebar } from '../../components/dashboard/TelemetrySidebar';
-import { TelemetryTopBar } from '../../components/dashboard/TelemetryTopBar';
-import { MacroTrajectory } from '../../components/dashboard/MacroTrajectory';
-import { CircadianClock } from '../../components/dashboard/CircadianClock';
-import { SurvivalCurves } from '../../components/dashboard/SurvivalCurves';
-import { SessionGravity } from '../../components/dashboard/SessionGravity';
-import { NeuroMap } from '../../components/dashboard/NeuroMap';
-
-const LENS_DESC: Record<Lens, string> = {
-  trajectory: 'VOL · 3CH · DEBT',
-  circadian: '24H INTENSITY · 4 DAYPARTS',
-  survival: 'S(t) · CLIFF · LOCK-IN',
-  gravity: 'FANO · RUNAWAYS · SESSIONS',
-  neuro: 'FORAGE/FREEZE · CI · ROI',
-};
-
-const RANGE_DAYS: Record<TimeRange, number> = { day: 1, '7d': 7, '30d': 30 };
+const pages: TelemetryPage[] = ['overview', ...PLATFORMS];
 
 export default function App() {
-  const [lens, setLens] = useState<Lens>('trajectory');
-  const [range, setRange] = useState<TimeRange>('7d');
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [platforms, setPlatforms] = useState<Record<Platform, boolean>>({
-    youtube: true,
-    instagram: true,
-    facebook: true,
-  });
-  const [dayparts, setDayparts] = useState<Record<Daypart, boolean>>({
-    MORNING: true,
-    AFTERNOON: true,
-    PRIME: true,
-    GRAVEYARD: true,
-  });
-
-  const fixture = getTelemetryFixture(endDate, range);
-  const activePlatforms = PLATFORMS.filter((p) => platforms[p]);
-  const visibleRollups = fixture.rollups.filter((r) => platforms[r.platform]);
-  const visibleEvents = fixture.events.filter(
-    (e) => platforms[e.platform] && dayparts[daypartOfHour(new Date(e.ts).getHours())],
-  );
-
-  const step = RANGE_DAYS[range];
-  const goBack = () => setEndDate((d) => new Date(d.getTime() - step * 86400000));
-  const goForward = () => setEndDate((d) => {
-    const next = new Date(d.getTime() + step * 86400000);
-    const today = new Date();
-    return next > today ? today : next;
-  });
-
-  const dates = [...new Set(visibleRollups.map((r) => r.date))].sort();
-  const sliceLabel =
-    range === 'day' || dates.length <= 1
-      ? localDateKey(endDate)
-      : `${dates[0]} → ${dates[dates.length - 1]}`;
-  const totalDrained = formatTime(visibleRollups.reduce((s, r) => s + r.totalActiveMs, 0));
-
+  const [now] = useState(() => new Date());
+  const [page, setPage] = useState<TelemetryPage>('overview');
+  const [destination, setDestination] = useState<'analysis' | 'settings'>('analysis');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selections, setSelections] = useState<Record<TelemetryPage, PageSelection>>(() => Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'windows' }])) as Record<TelemetryPage, PageSelection>);
+  const [daypart, setDaypart] = useState<Daypart[]>(() => DAYPARTS.map(option => option.id));
+  const { range, endDate, view } = selections[page];
+  const context = `${page}-${range}-${localDateKey(endDate)}-${daypart}-${view}`;
+  const update = (patch: Partial<PageSelection>) => setSelections(value => ({ ...value, [page]: { ...value[page], ...patch } }));
+  const bounds = periodBounds(endDate, range, now);
+  const dateFormatter = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric',
+    ...(bounds.start.getFullYear() !== now.getFullYear() || endDate.getFullYear() !== now.getFullYear() ? { year: 'numeric' as const } : {}) });
+  const dateLabel = range === 'day' ? dateFormatter.format(endDate) : dateFormatter.formatRange(bounds.start, endDate);
+  const historyStart = shiftDate(bounds.previousStart, -1).getTime();
+  const historyEnd = bounds.cutoff.getTime();
+  const dataset = useMemo(() => buildPreviewDataset(new Date(historyStart), new Date(historyEnd)), [historyStart, historyEnd]);
+  const observations = dataset.events;
+  const fullSessions = useMemo(() => observationSessions(observations), [observations]);
+  const events = selectObservations(observations, bounds.start.getTime(), historyEnd, page, daypart);
+  const previous = selectObservations(observations, bounds.previousStart.getTime(), bounds.previousCutoff.getTime(), page, daypart);
+  const sessions = scopedSessions(fullSessions, events);
+  const previousDates = bounds.dates.map((_, i) => localDateKey(shiftDate(bounds.previousStart, i)));
+  const isToday = localDateKey(endDate) === localDateKey(now);
+  const title = page === 'overview' ? 'Overview' : platformMeta[page].label;
   const exportJson = () => {
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      range,
-      slice: sliceLabel,
-      rollups: visibleRollups,
-    };
-    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const rollups = observationRollups(events, bounds.dates).filter(r => (page === 'overview' || r.platform === page) && r.reelCount > 0);
+    const url = URL.createObjectURL(new Blob([JSON.stringify(rollups)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `doomgauge-export-${localDateKey(new Date())}.json`;
+    a.download = `doomgauge-export-${localDateKey(now)}.json`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-
-  const lensMeta = LENSES.find((l) => l.id === lens)!;
-
-  return (
-    <div className="app-shell">
-      <TelemetrySidebar
-        lens={lens}
-        onLensChange={setLens}
-        platforms={platforms}
-        onTogglePlatform={(p) => setPlatforms((v) => ({ ...v, [p]: !v[p] }))}
-        dayparts={dayparts}
-        onToggleDaypart={(d) => setDayparts((v) => ({ ...v, [d]: !v[d] }))}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => {
-          setIsCollapsed((c) => !c);
-          setTimeout(() => window.dispatchEvent(new Event('resize')), 220);
-        }}
-      />
-
-      <main className="main-content">
-        <TelemetryTopBar
-          range={range}
-          onRangeChange={setRange}
-          endDate={endDate}
-          onBack={goBack}
-          onForward={goForward}
-          sliceLabel={sliceLabel}
-          totalDrained={totalDrained}
-          onExport={exportJson}
-          onClose={() => window.close()}
-        />
-
-        <div className="view-container">
-          <div className="view-header">
-            <h1 className="view-title">
-              {lensMeta.index} // {lensMeta.label.toUpperCase()}
-            </h1>
-            <p className="view-desc">
-              {LENS_DESC[lens]} · {activePlatforms.length}CH
-            </p>
-          </div>
-
-          <div className="dashboard-grid" key={`${isCollapsed ? 'col' : 'exp'}-${lens}-${range}`}>
-            {lens === 'trajectory' && <MacroTrajectory rollups={visibleRollups} visible={platforms} />}
-            {lens === 'circadian' && (
-              <CircadianClock
-                matrix={hourlyMatrix(visibleEvents, RANGE_DAYS[range], endDate)}
-                bins={binDayparts(visibleEvents)}
-              />
-            )}
-            {lens === 'survival' && <SurvivalCurves events={visibleEvents} />}
-            {lens === 'gravity' && <SessionGravity events={visibleEvents} />}
-            {lens === 'neuro' && <NeuroMap events={visibleEvents} daysOfHistory={RANGE_DAYS[range]} />}
-          </div>
+  return <div className={`telemetry-app workspace-shell${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+    <aside className="analysis-sidebar" id="telemetry-sidebar">
+      <button type="button" className="analysis-sidebar-toggle" aria-controls="telemetry-sidebar" aria-expanded={!sidebarCollapsed}
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setSidebarCollapsed(value => !value)}>
+        {sidebarCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+      </button>
+      <a href="#telemetry-content" className="telemetry-skip">Skip to content</a>
+      <div className="analysis-brand" aria-label="DoomGauge"><Activity size={19} /><span>DOOMGAUGE</span></div>
+      <nav aria-label="Telemetry pages">{pages.map(p => <button type="button" key={p} aria-label={p === 'overview' ? 'Overview' : platformMeta[p].label} title={p === 'overview' ? 'Overview' : platformMeta[p].label} aria-current={destination === 'analysis' && page === p ? 'page' : undefined} onClick={() => { setPage(p); setDestination('analysis'); }} style={p !== 'overview' ? { '--page-color': platformMeta[p].color } as CSSProperties : undefined}>
+        {p === 'overview' ? <LayoutDashboard size={17} /> : platformMeta[p].icon}<span>{p === 'overview' ? 'Overview' : platformMeta[p].label}</span>
+      </button>)}</nav>
+      <nav className="analysis-sidebar-footer" aria-label="App preferences"><button type="button" aria-label="Settings" title="Settings" aria-current={destination === 'settings' ? 'page' : undefined} onClick={() => setDestination('settings')}><Settings size={17} /><span>Settings</span></button></nav>
+    </aside>
+    <main id="telemetry-content" className="analysis-main" tabIndex={-1}>
+      <div className="analysis-content">
+        {destination === 'settings' ? <SettingsPage /> : <>
+        <div className="analysis-page-head"><div className="analysis-page-identity"><h1>{title}</h1><Clock /></div>
+        <TelemetryFilters range={range} onRangeChange={(value: TimeRange) => update({ range: value })} dateLabel={dateLabel}
+          onBack={() => update({ endDate: shiftDate(endDate, -RANGE_LENGTH[range]) })} onForward={() => { const next = shiftDate(endDate, RANGE_LENGTH[range]); update({ endDate: next > now ? now : next }); }} forwardDisabled={isToday}
+          daypart={daypart} onDaypartChange={setDaypart} onExport={exportJson} comparisonLabel={hintFacts([['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`], ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`], ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days']])} />
         </div>
-      </main>
-    </div>
-  );
+        <AnalysisWorkspace key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={dataset.coverage} dates={bounds.dates} previousDates={previousDates} completeDates={bounds.completeDates} page={page} throughHour={isToday ? now.getHours() : 23} />
+        </>}
+      </div>
+    </main>
+  </div>;
 }

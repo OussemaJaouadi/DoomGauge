@@ -30,13 +30,12 @@ export function CircadianClock({ matrix, bins }: CircadianClockProps) {
 
   return (
     <div className="lens-panel">
-      <div className="lens-title">CIRCADIAN VULNERABILITY CLOCK — 24h intensity</div>
+      <div className="lens-title">CIRCADIAN INTENSITY — 24h distribution</div>
       <div className="heatmap" role="img" aria-label="Hourly intensity heatmap">
         {matrix.map((row, d) => (
           <div key={d} className="heatmap-row">
             <span className="heatmap-day">D-{matrix.length - d}</span>
             {row.map((v, h) => {
-              const grave = hourDaypart(h) === 'GRAVEYARD';
               const hot = v / max;
               return (
                 <span
@@ -47,9 +46,7 @@ export function CircadianClock({ matrix, bins }: CircadianClockProps) {
                     background:
                       v === 0
                         ? 'transparent'
-                        : grave
-                          ? `rgba(255,42,59,${0.15 + hot * 0.85})`
-                          : `rgba(0,255,136,${0.12 + hot * 0.88})`,
+                        : `rgba(79, 128, 255, ${0.12 + hot * 0.88})`,
                   }}
                 />
               );
@@ -59,7 +56,7 @@ export function CircadianClock({ matrix, bins }: CircadianClockProps) {
       </div>
       <div className="lens-grid4">
         {DAYPARTS.map((d) => (
-          <div key={d.id} className="daypart-chip" data-grave={d.id === 'GRAVEYARD'}>
+          <div key={d.id} className="daypart-chip">
             <div className="daypart-name">{d.label} <span>{d.range}</span></div>
             <div className="daypart-value">{DAYPART_HOURS[d.id].length}h · {bins[d.id].reels} reels</div>
             <div className="daypart-sub">{formatTime(bins[d.id].activeMs)}</div>
@@ -67,7 +64,7 @@ export function CircadianClock({ matrix, bins }: CircadianClockProps) {
         ))}
       </div>
       <div className="lens-note">
-        GRAVEYARD DRAIN: {formatTime(graveyard.activeMs)} post-23:00 ({graveyard.reels} reels) — circadian collapse zone.
+        GRAVEYARD WINDOW: {formatTime(graveyard.activeMs)} active (23:00–06:00 · {graveyard.reels} reels).
       </div>
     </div>
   );

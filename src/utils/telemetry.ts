@@ -2,6 +2,8 @@
 // No side effects — covered by src/__tests__/telemetry.test.ts.
 
 import type { Daypart, TelemetryEvent } from '../types/telemetry';
+import type { Platform } from '../types/models';
+import { PLATFORMS } from '../types/models';
 
 /** Canonical daypart bins (spec R7 AC2/AC5). */
 export function daypartOfHour(hour: number): Daypart {
@@ -47,6 +49,56 @@ export function hourlyMatrix(events: TelemetryEvent[], days: number, endDate: Da
     row[h] = (row[h] ?? 0) + 1;
   }
   return rows;
+}
+
+export interface HourlyTrajectoryBin {
+  date: string;
+  hour: number;
+  youtube: number;
+  instagram: number;
+  facebook: number;
+  total: number;
+}
+
+/** 24 hourly bins of active minutes per platform for single-day trajectory lens. */
+export function buildHourlyTrajectory(
+  events: TelemetryEvent[],
+  visible: Record<Platform, boolean>,
+): HourlyTrajectoryBin[] {
+  const hourMap: Record<number, Record<Platform, number>> = {};
+  for (let h = 0; h < 24; h++) {
+    hourMap[h] = { youtube: 0, instagram: 0, facebook: 0 };
+  }
+  for (const e of events) {
+    const h = new Date(e.ts).getHours();
+    if (hourMap[h]) {
+      hourMap[h][e.platform] = (hourMap[h][e.platform] ?? 0) + e.durationMs;
+    }
+  }
+
+  return Array.from({ length: 24 }, (_, h) => {
+    const hourLabel = `${String(h).padStart(2, '0')}:00`;
+    let hourTotalMins = 0;
+    const bin: HourlyTrajectoryBin = {
+      date: hourLabel,
+      hour: h,
+      youtube: 0,
+      instagram: 0,
+      facebook: 0,
+      total: 0,
+    };
+
+    for (const p of PLATFORMS) {
+      if (!visible[p]) continue;
+      const ms = hourMap[h]?.[p] ?? 0;
+      const mins = Math.round((ms / 60000) * 10) / 10;
+      bin[p] = mins;
+      hourTotalMins += mins;
+    }
+
+    bin.total = Math.round(hourTotalMins * 10) / 10;
+    return bin;
+  });
 }
 
 /** Gaps (seconds) between consecutive reel watches. */

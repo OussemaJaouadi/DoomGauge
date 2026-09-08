@@ -63,41 +63,39 @@
   display: none;
 }
 
-/* Mid-edge rail handle: phosphor-green instrument identity, distinct from
-   both --bg-surface and --bg-root. Same active language as the tab glow. */
+/* Mid-edge rail handle: clean, machined instrument handle */
 .rail-handle {
   position: absolute;
-  right: -12px;
+  right: -10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
+  width: 20px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-surface-raised);
-  border: 1px solid rgba(0, 255, 136, 0.45);
-  border-radius: 7px;
-  color: var(--accent-green);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 700;
   z-index: 5;
   padding: 0;
-  box-shadow: 0 0 0 1px var(--bg-root), 0 0 12px rgba(0, 255, 136, 0.18);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
 .rail-handle:hover {
   color: var(--text-primary);
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 1px var(--bg-root), 0 0 20px rgba(0, 255, 136, 0.35);
+  border-color: var(--text-muted);
 }
 
 .nav-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .nav-item {
@@ -112,7 +110,7 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-align: left;
@@ -128,9 +126,8 @@
 .nav-item.active {
   background: var(--bg-surface-raised);
   border-color: var(--border-subtle);
-  border-left-color: var(--accent-green);
+  border-left-color: var(--text-primary);
   color: var(--text-primary);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.1);
 }
 
 .nav-spacer {
@@ -139,7 +136,7 @@
 
 .rack-section {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--text-muted);
@@ -215,21 +212,25 @@
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  padding: 2px 5px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .channel-badge.on {
-  color: var(--accent-green);
-  background: rgba(0, 255, 136, 0.1);
-  border-color: rgba(0, 255, 136, 0.25);
+  color: var(--text-primary);
+  background: var(--bg-surface-raised);
+  border-color: var(--border-subtle);
 }
 
 .channel-badge.off {
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--border-subtle);
+  background: transparent;
+  border-color: transparent;
 }
 
 /* Daypart Switch */
@@ -237,14 +238,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg-root);
   color: var(--text-secondary);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   transition: all 0.15s ease;
@@ -265,14 +266,9 @@
 }
 
 .daypart-switch.muted {
-  opacity: 0.45;
+  opacity: 0.4;
   color: var(--text-muted);
   background: transparent;
-}
-
-.daypart-switch.grave.active {
-  border-color: rgba(255, 42, 59, 0.35);
-  background: rgba(255, 42, 59, 0.05);
 }
 
 .daypart-led {
@@ -281,7 +277,7 @@
   border-radius: 50%;
   flex-shrink: 0;
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .daypart-name {
@@ -289,35 +285,30 @@
 }
 
 .daypart-range {
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   margin-left: auto;
   margin-right: 4px;
 }
 
 .daypart-badge {
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
 }
 
 .daypart-badge.on {
-  color: var(--accent-green);
-  background: rgba(0, 255, 136, 0.1);
-  border-color: rgba(0, 255, 136, 0.25);
-}
-
-.daypart-switch.grave.active .daypart-badge.on {
-  color: var(--threat-red);
-  background: rgba(255, 42, 59, 0.1);
-  border-color: rgba(255, 42, 59, 0.3);
+  color: var(--text-primary);
+  background: var(--bg-surface-raised);
+  border-color: var(--border-subtle);
 }
 
 .daypart-badge.off {
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--border-subtle);
+  background: transparent;
+  border-color: transparent;
 }

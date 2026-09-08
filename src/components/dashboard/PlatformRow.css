@@ -1,12 +1,12 @@
 .platform-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 12px 14px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
   position: relative;
   font-family: var(--font-mono);
   appearance: none;
@@ -15,10 +15,10 @@
 
 .platform-row-chevron {
   position: absolute;
-  right: 10px;
-  top: 12px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  right: 12px;
+  top: 14px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   opacity: 0;
   transition: opacity 0.15s, transform 0.15s;
 }
@@ -28,19 +28,32 @@
   transform: translateX(2px);
 }
 
-.platform-row:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+.platform-row[data-platform="youtube"] {
+  background: color-mix(in srgb, var(--platform-yt) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-yt) 25%, var(--border-subtle));
+}
+.platform-row[data-platform="youtube"]:hover {
+  background: color-mix(in srgb, var(--platform-yt) 14%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-yt) 40%, var(--border-subtle));
 }
 
-.platform-row[data-platform="youtube"] { background: rgba(255, 51, 68, 0.06); border-color: rgba(255, 51, 68, 0.14); }
-.platform-row[data-platform="youtube"]:hover { background: rgba(255, 51, 68, 0.1); border-color: rgba(255, 51, 68, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(255,51,68,0.14); }
+.platform-row[data-platform="instagram"] {
+  background: color-mix(in srgb, var(--platform-ig) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-ig) 25%, var(--border-subtle));
+}
+.platform-row[data-platform="instagram"]:hover {
+  background: color-mix(in srgb, var(--platform-ig) 14%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-ig) 40%, var(--border-subtle));
+}
 
-.platform-row[data-platform="instagram"] { background: rgba(168, 85, 247, 0.06); border-color: rgba(168, 85, 247, 0.14); }
-.platform-row[data-platform="instagram"]:hover { background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(168,85,247,0.14); }
-
-.platform-row[data-platform="facebook"] { background: rgba(0, 180, 216, 0.06); border-color: rgba(0, 180, 216, 0.14); }
-.platform-row[data-platform="facebook"]:hover { background: rgba(0, 180, 216, 0.1); border-color: rgba(0, 180, 216, 0.24); box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 12px rgba(0,180,216,0.14); }
+.platform-row[data-platform="facebook"] {
+  background: color-mix(in srgb, var(--platform-fb) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-fb) 25%, var(--border-subtle));
+}
+.platform-row[data-platform="facebook"]:hover {
+  background: color-mix(in srgb, var(--platform-fb) 14%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--platform-fb) 40%, var(--border-subtle));
+}
 
 .platform-row-main {
   display: flex;
@@ -55,7 +68,7 @@
 }
 
 .platform-row-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text-primary);
   flex: 1;
@@ -63,30 +76,46 @@
 }
 
 .platform-row-count {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 800;
   color: var(--text-primary);
-  min-width: 28px;
+  min-width: 32px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .platform-row-time {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
   min-width: 64px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.platform-row-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.platform-row-pct {
+  font-size: 0.75rem;
+  font-weight: 800;
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .platform-row-bar {
-  height: 4px;
+  height: 6px;
   background: var(--border-grid);
-  border-radius: 9999px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .platform-row-bar-fill {
   height: 100%;
-  border-radius: 9999px;
+  border-radius: var(--radius-sm);
   transition: width 0.3s ease;
 }

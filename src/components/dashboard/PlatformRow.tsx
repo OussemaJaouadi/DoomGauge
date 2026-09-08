@@ -51,12 +51,12 @@ export function PlatformRow({ platform, count, timeMs, maxCount, mode = 'time', 
         <span className="platform-row-icon" style={{ color: meta.color }}>{meta.icon}</span>
         <span className="platform-row-label">{meta.label}</span>
         <span className="platform-row-count" style={{ color: mode === 'count' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-          {count} <span style={{ fontSize: '0.65rem', fontWeight: 500, color: 'var(--text-muted)' }}>reels</span>
+          {count} <span className="platform-row-unit">reels</span>
         </span>
         <span className="platform-row-time" style={{ color: mode === 'time' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
           {formatTime(timeMs)}
         </span>
-        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: meta.color, minWidth: '32px', textAlign: 'right' }}>
+        <span className="platform-row-pct" style={{ color: meta.color }}>
           {pct}%
         </span>
       </div>

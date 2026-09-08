@@ -23,43 +23,36 @@ export function TelemetryTopBar({
 
   return (
     <header className="telemetry-topbar">
-      {/* 1. Left: Cockpit System Callout */}
       <div className="telemetry-brand-block">
-        <div className="telemetry-pulse-socket" title="System Live Telemetry">
-          <span className="telemetry-pulse-dot" />
-        </div>
-        <div className="telemetry-brand-titles">
-          <span className="telemetry-brand-title">DOOMGAUGE</span>
-          <span className="telemetry-brand-sub">FLIGHT RECORDER</span>
-        </div>
+        <span className="telemetry-brand-title">DOOMGAUGE</span>
+        <span className="telemetry-brand-sub">TELEMETRY</span>
       </div>
 
-      {/* 2. Center: Unified Flight Window Controller */}
       <div className="flight-controller">
-        <div className="flight-horizon-group">
+        <div className="flight-horizon-group" role="group" aria-label="Time horizon">
           <button
             type="button"
             className={`horizon-btn ${range === 'day' ? 'active' : ''}`}
             onClick={() => onRangeChange('day')}
-            title="Single day observation"
+            aria-pressed={range === 'day'}
           >
-            DAY
+            Day
           </button>
           <button
             type="button"
             className={`horizon-btn ${range === '7d' ? 'active' : ''}`}
             onClick={() => onRangeChange('7d')}
-            title="7-day rolling window"
+            aria-pressed={range === '7d'}
           >
-            7D
+            7d
           </button>
           <button
             type="button"
             className={`horizon-btn ${range === '30d' ? 'active' : ''}`}
             onClick={() => onRangeChange('30d')}
-            title="30-day macro trend"
+            aria-pressed={range === '30d'}
           >
-            30D
+            30d
           </button>
         </div>
 
@@ -71,11 +64,10 @@ export function TelemetryTopBar({
             className="flight-step-btn"
             onClick={onBack}
             aria-label="Previous observation window"
-            title="Step backward"
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="flight-window-label" title="Active observation window">
+          <span className="flight-window-label">
             {sliceLabel}
           </span>
           <button
@@ -84,17 +76,15 @@ export function TelemetryTopBar({
             onClick={onForward}
             disabled={isToday}
             aria-label="Next observation window"
-            title={isToday ? 'Anchored to current day' : 'Step forward'}
           >
             <ChevronRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* 3. Right: Telemetry Gauge & Fast Utility Triggers */}
       <div className="telemetry-payload-group">
         <div className="drained-capsule" title="Cumulative active scrolling time in this window">
-          <span className="drained-label">DRAINED</span>
+          <span className="drained-label">Active Time</span>
           <span className="drained-value">{totalDrained}</span>
         </div>
 
@@ -104,18 +94,18 @@ export function TelemetryTopBar({
             className="tool-btn export-tool-btn"
             onClick={onExport}
             aria-label="Export minified JSON"
-            title="Export minified JSON telemetry (R8)"
+            title="Export minified JSON"
           >
-            <Download size={13} />
+            <Download size={14} />
           </button>
           <button
             type="button"
             className="tool-btn close-tool-btn"
             onClick={onClose}
             aria-label="Close telemetry tab"
-            title="Close telemetry command center"
+            title="Close tab"
           >
-            <X size={13} />
+            <X size={14} />
           </button>
         </div>
       </div>
