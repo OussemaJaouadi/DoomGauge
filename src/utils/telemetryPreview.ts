@@ -1,3 +1,4 @@
+import { clipObservations } from '../tracking/measurements';
 import { PLATFORMS, type Platform } from '../types/models';
 import type { TimeRange, DayRollup } from '../types/telemetry';
 import type { DaypartFilter, ObservationSession, PreviewObservation, RecurringWindow, TelemetryPage } from '../types/telemetryPreview';
@@ -30,19 +31,19 @@ export function periodBounds(endDate: Date, range: TimeRange, now: Date) {
 }
 
 export function selectObservations(events: readonly PreviewObservation[], start: number, cutoff: number, page: TelemetryPage, daypart: DaypartFilter) {
-  return events.filter(e => e.ts >= start && e.ts < cutoff && e.endedTs <= cutoff &&
-    (page === 'overview' || e.platform === page) &&
-    (daypart === 'all' || (typeof daypart === 'string' ? daypartOfHour(new Date(e.ts).getHours()) === daypart : daypart.includes(daypartOfHour(new Date(e.ts).getHours())))));
+  return clipObservations(events.filter(e=>e.activeIntervals || e.endedTs<=cutoff), start, cutoff, daypart).filter(e => page === 'overview' || e.platform === page);
 }
 export function observationTotals(events: readonly PreviewObservation[]) {
   const activeMs = events.reduce((sum, e) => sum + e.durationMs, 0);
   const skips = events.filter(e => e.skipped).length;
-  return { activeMs, reels: events.length, skips, skipPct: events.length ? skips / events.length * 100 : null,
+  const reels = events.filter(e => e.countInScope !== false).length;
+  const completed = events.filter(e => e.countInScope !== false && (!e.status || e.status === 'completed')).length;
+  return { activeMs, reels, completed, skips, skipPct: completed ? skips / completed * 100 : null,
     medianMs: quantile(events.map(e => e.durationMs), 0.5), averageMs: events.length ? activeMs / events.length : null };
 }
 export function observationRollups(events: readonly PreviewObservation[], dates: readonly string[]): DayRollup[] {
   return dates.flatMap(date => PLATFORMS.map(platform => {
-    const totals = observationTotals(events.filter(e => e.platform === platform && localDateKey(new Date(e.ts)) === date));
+    const totals = observationTotals(clipObservations(events, new Date(`${date}T00:00:00`).getTime(), shiftDate(new Date(`${date}T00:00:00`), 1).getTime()).filter(e => e.platform === platform));
     return { date, platform, reelCount: totals.reels, skipCount: totals.skips, totalActiveMs: totals.activeMs };
   }));
 }
@@ -63,7 +64,7 @@ export function observationSessions(events: readonly PreviewObservation[]): Obse
 }
 export function scopedSessions(sessions: readonly ObservationSession[], events: readonly PreviewObservation[]) {
   const ids = new Set(events.map(e => e.id));
-  return sessions.map(session => ({ ...session, events: session.events.filter(e => ids.has(e.id)) })).filter(s => s.events.length > 0);
+  return sessions.map(session => ({ ...session, events: session.events.filter(e => ids.has(e.id)).map(e => events.find(selected => selected.id === e.id)!) })).filter(s => s.events.length > 0);
 }
 export function minuteOfDay(ts: number) {
   const d = new Date(ts);
@@ -146,11 +147,16 @@ export function platformTotals(events: readonly PreviewObservation[]) {
 
 export interface TrajectoryRow { label: string; youtube: number; instagram: number; facebook: number; previous: number }
 export function trajectoryRows(events: readonly PreviewObservation[], previous: readonly PreviewObservation[], dates: readonly string[], previousDates: readonly string[], hourly: boolean, metric: 'time' | 'reels', throughHour = 23): TrajectoryRow[] {
-  const sum = (items: readonly PreviewObservation[]) => metric === 'time' ? observationTotals(items).activeMs / 60_000 : items.length;
+  const sum = (items: readonly PreviewObservation[]) => metric === 'time' ? observationTotals(items).activeMs / 60_000 : observationTotals(items).reels;
   return Array.from({ length: hourly ? Math.max(0, Math.min(24, throughHour + 1)) : dates.length }, (_, i) => {
-    const matches = (e: PreviewObservation, dateKeys: readonly string[]) => hourly ? new Date(e.ts).getHours() === i : localDateKey(new Date(e.ts)) === dateKeys[i];
-    const current = events.filter(e => matches(e, dates));
-    const row = { label: hourly ? clockMinute(i * 60) : dates[i]!.slice(5), previous: sum(previous.filter(e => matches(e, previousDates))) } as TrajectoryRow;
+    const scoped = (items: readonly PreviewObservation[], keys: readonly string[]) => {
+      const start = new Date(`${keys[hourly ? 0 : i]}T00:00:00`);
+      if (hourly) start.setHours(i);
+      const end = new Date(start); if (hourly) end.setHours(end.getHours()+1); else end.setDate(end.getDate()+1);
+      return clipObservations(items, start.getTime(), end.getTime());
+    };
+    const current = scoped(events, dates);
+    const row = { label: hourly ? clockMinute(i * 60) : dates[i]!.slice(5), previous: sum(scoped(previous, previousDates)) } as TrajectoryRow;
     for (const platform of PLATFORMS) row[platform] = sum(current.filter(e => e.platform === platform));
     return row;
   });

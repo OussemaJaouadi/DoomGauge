@@ -133,3 +133,11 @@ Shared UI states implemented across the inventoried popup, telemetry, evidence a
 - [x] Automated palette contrast, preference resolution, controller ordering/failures/sync, transaction completion/abort and additive migration coverage.
 - [ ] Manual visual acceptance of both themes, overlays, charts, native controls and state previews (no browser automation requested).
 
+### Live tracking and recovery
+- [x] Shared visit schema, focused-window timer, active intervals and cumulative retry outbox.
+- [x] Content entrypoints and route/video detectors for YouTube, Instagram and Facebook.
+- [x] Validated background ingestion, additive database migration, commit acknowledgments, recovery and dirty rollup rebuilding.
+- [x] Live popup/telemetry queries, real loading/error states, interrupted records and conservative coverage handling.
+- [x] Interval-based hourly/calendar attribution and start-based reel counts; completed-only quick-skip rates.
+- [x] Automated transaction/migration/retry/recovery, adapter, clock, focus, buffering, coverage and midnight reconciliation tests.
+- [ ] Manual acceptance on actual logged-in feeds: SPA entry/exit, rapid scrolling, automatic loops, two focused windows, buffering, browser close/reopen and forced worker restart. No browser automation requested.

@@ -6,6 +6,9 @@ export type View = { kind: 'tabs'; tab: Tab } | { kind: 'platform'; platform: Pl
 
 /** Preview-only observations; does not change the production event protocol. */
 export interface PopupMockView {
+  completed?: boolean;
+  skipped?: boolean;
+  countInScope?: boolean;
   id: string;
   platform: Platform;
   startedAt: number;

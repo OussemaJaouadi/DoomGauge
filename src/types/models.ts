@@ -45,6 +45,7 @@ export interface ChartItem {
 }
 
 export interface PlatformStats {
+  completedCount?: number;
   count: number;
   timeMs: number;
   skip: number;

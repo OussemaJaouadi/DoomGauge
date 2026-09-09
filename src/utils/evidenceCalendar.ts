@@ -1,3 +1,4 @@
+import { clipObservations } from '../tracking/measurements';
 import type { ObservationCoverage, ObservationSession, PreviewObservation, RecurringWindow } from '../types/telemetryPreview';
 import { hasObservationCoverage } from './telemetryInsights';
 import { shiftDate } from './telemetryPreview';
@@ -8,13 +9,13 @@ export function calendarEvidence(dates: readonly string[], events: readonly Prev
     const start = new Date(`${date}T00:00:00`), end = shiftDate(start, 1);
     if (window) { start.setMinutes(window.startMinute); end.setTime(new Date(`${date}T00:00:00`).getTime()); end.setMinutes(window.endMinute); }
     const startTs = start.getTime(), endTs = end.getTime();
-    const selected = events.filter(event => localDateKey(new Date(event.ts)) === date);
+    const selected = clipObservations(events,startTs,endTs);
     const ids = new Set(selected.map(event => event.id));
     const matching = sessions.filter(session => session.startTs < endTs && session.endTs > startTs);
-    const contribution = (session: ObservationSession) => session.events.reduce((sum, event) => sum + (ids.has(event.id) ? event.durationMs : 0), 0);
+    const contribution = (session: ObservationSession) => session.events.reduce((sum, event) => sum + (selected.find(e=>e.id===event.id)?.durationMs ?? 0), 0);
     const ranked = [...matching].sort((a, b) => contribution(b) - contribution(a) || b.startTs - a.startTs || a.id.localeCompare(b.id));
     const status = hasObservationCoverage(coverage, startTs, endTs) ? 'complete' : selected.length || coverage.some(interval => interval.startTs < endTs && interval.endTs > startTs) ? 'partial' : 'unobserved';
-    return { date, events: selected, sessions: matching, activeMs: selected.reduce((sum, event) => sum + event.durationMs, 0), reels: selected.length, status, defaultSessionId: ranked[0]?.id ?? null };
+    return { date, events: selected, sessions: matching, activeMs: selected.reduce((sum, event) => sum + event.durationMs, 0), reels: selected.filter(e=>e.countInScope!==false).length, status, defaultSessionId: ranked[0]?.id ?? null };
   });
 }
 export interface CalendarSelection { date: string; id: string | null; records: boolean }

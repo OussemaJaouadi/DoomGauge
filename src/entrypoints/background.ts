@@ -1,8 +1,10 @@
+import { installTrackingBackground } from "../tracking/background";
 import { defineBackground } from 'wxt/utils/define-background';
 import { handleThemeRequest, isThemeRequest } from '../theme/protocol';
 import { readTheme, writeTheme } from '../theme/storage';
 
 export default defineBackground(() => {
+  installTrackingBackground();
   let queue: Promise<unknown> = Promise.resolve();
   chrome.runtime.onMessage.addListener((message: unknown, sender, reply) => {
     if (!isThemeRequest(message)) return false;

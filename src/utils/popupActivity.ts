@@ -51,13 +51,13 @@ export function appendViewToSessions(
       startedAt: view.startedAt,
       endedAt: view.endedAt,
       activeMs: view.activeMs,
-      reelCount: 1,
+      reelCount: view.countInScope === false ? 0 : 1,
       platforms: [view.platform],
     });
   } else {
     current.endedAt = Math.max(current.endedAt, view.endedAt);
     current.activeMs += view.activeMs;
-    current.reelCount += 1;
+    current.reelCount += view.countInScope === false ? 0 : 1;
     if (!current.platforms.includes(view.platform)) {
       current.platforms.push(view.platform);
     }
@@ -85,15 +85,16 @@ export function summarizePopupViews(views: readonly PopupMockView[]) {
   const totalMs = views.reduce((sum, view) => sum + view.activeMs, 0);
   const platforms = PLATFORMS.map(platform => {
     const platformViews = views.filter(view => view.platform === platform);
-    const count = platformViews.length;
+    const count = platformViews.filter(v => v.countInScope !== false).length;
+    const completedCount = platformViews.filter(v => v.completed !== false && v.countInScope !== false).length;
     const timeMs = platformViews.reduce((sum, view) => sum + view.activeMs, 0);
-    const skip = platformViews.filter(view => view.activeMs < 3000).length;
-    const measured = platformViews.filter(view => Number.isFinite(view.videoDurationMs) && view.videoDurationMs! > 0);
+    const skip = platformViews.filter(view => view.completed !== false && view.countInScope !== false && (view.skipped ?? view.activeMs < 3000)).length;
+    const measured = platformViews.filter(view => view.completed !== false && view.countInScope !== false && Number.isFinite(view.videoDurationMs) && view.videoDurationMs! > 0);
     const early = measured.filter(view => view.activeMs / view.videoDurationMs! < 0.5).length;
     const hourly = Array.from({ length: 24 }, () => 0);
-    for (const view of platformViews) hourly[new Date(view.startedAt).getHours()]! += 1;
+    for (const view of platformViews.filter(v => v.countInScope !== false)) hourly[new Date(view.startedAt).getHours()]! += 1;
     return {
-      platform, count, timeMs, skip, hourly,
+      platform, count, completedCount, timeMs, skip, hourly,
       avgFlick: avgFlickSec(timeMs, count),
       velocity: timeMs > 0 ? (count / (timeMs / 60000)).toFixed(1) : '0.0',
       share: totalMs > 0 ? Math.round(timeMs / totalMs * 100) : 0,
@@ -101,7 +102,8 @@ export function summarizePopupViews(views: readonly PopupMockView[]) {
     } satisfies PlatformStats & { platform: typeof platform };
   });
   const totalSkips = platforms.reduce((sum, p) => sum + p.skip, 0);
-  return { totalMs, totalCount: views.length, totalSkips, platforms, impatience: impatiencePct(totalSkips, views.length) };
+  const totalCount = platforms.reduce((sum,p)=>sum+p.count,0), totalCompleted = platforms.reduce((sum,p)=>sum+p.completedCount,0);
+  return { totalMs, totalCount, totalCompleted, totalSkips, platforms, impatience: impatiencePct(totalSkips, totalCompleted) };
 }
 
 export function deltaTrend(delta: number): 'worse' | 'better' | 'neutral' {
@@ -117,13 +119,14 @@ export function summarizeViewingDistribution(views: readonly PopupMockView[]) {
     { label: '30–<60s', upperMs: 60_000 },
     { label: '≥60s', upperMs: Infinity },
   ].map(bucket => ({ ...bucket, count: 0, activeMs: 0 }));
-  const durations = views.map(view => view.activeMs).sort((a, b) => a - b);
-  for (const activeMs of durations) {
+  const durations = views.filter(view=>view.countInScope!==false).map(view => view.activeMs).sort((a, b) => a - b);
+  for (const view of views) {
+    const activeMs=view.activeMs;
     const bucket = buckets.find(bucket => activeMs < bucket.upperMs)!;
-    bucket.count += 1;
+    bucket.count += view.countInScope === false ? 0 : 1;
     bucket.activeMs += activeMs;
   }
-  const totalMs = durations.reduce((sum, value) => sum + value, 0);
+  const totalMs = views.reduce((sum, view) => sum + view.activeMs, 0);
   const middle = Math.floor(durations.length / 2);
   const medianMs = durations.length === 0 ? null : durations.length % 2
     ? durations[middle]!

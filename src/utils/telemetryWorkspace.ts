@@ -1,3 +1,4 @@
+import { clipObservations } from '../tracking/measurements';
 import type { ObservationSession, PreviewObservation, RecurringWindow } from '../types/telemetryPreview';
 import { localDateKey } from './time';
 import { minuteOfDay, shiftDate, startOfDay } from './telemetryPreview';
@@ -39,10 +40,18 @@ export function evidenceReducer(state: EvidenceState, action: EvidenceAction): E
 }
 export function activeEvidence(state: EvidenceState, context: string) { return state.context === context ? state.stack.at(-1) : undefined; }
 export function evidenceEvents(events: readonly PreviewObservation[], evidence: Evidence) {
+  if(evidence.kind === 'day') {
+    const start=new Date(evidence.date+'T00:00:00'); if(evidence.hour!==undefined)start.setHours(evidence.hour);
+    const end=new Date(start); if(evidence.hour!==undefined)end.setHours(end.getHours()+1);else end.setDate(end.getDate()+1);
+    return clipObservations(events,start.getTime(),end.getTime());
+  }
+  if(evidence.kind === 'window' && events.some(e=>e.activeIntervals)) return evidence.window.matchingDates.flatMap(date=>{
+    const start=new Date(date+'T00:00:00'),end=new Date(start);start.setMinutes(evidence.window.startMinute);end.setMinutes(evidence.window.endMinute);
+    return clipObservations(events,start.getTime(),end.getTime());
+  });
   const windowDates = new Set(evidence.kind === 'window' ? evidence.window.matchingDates : []);
   return events.filter(event => {
     if (evidence.kind === 'window') return windowDates.has(localDateKey(new Date(event.ts))) && minuteOfDay(event.ts) >= evidence.window.startMinute && minuteOfDay(event.ts) < evidence.window.endMinute;
-    if (evidence.kind === 'day') return localDateKey(new Date(event.ts)) === evidence.date && (evidence.hour === undefined || new Date(event.ts).getHours() === evidence.hour);
     if (evidence.kind === 'bucket') { const bucket = DURATION_BUCKETS[evidence.index]; return bucket !== undefined && event.durationMs >= bucket.lower && event.durationMs < bucket.upper; }
     return true;
   });
@@ -66,7 +75,7 @@ export function evidenceTimeline(sessions: readonly ObservationSession[], events
       session, startTs: Math.max(startTs, session.startTs), endTs: Math.min(endTs, session.endTs),
       clippedStart: session.startTs < startTs, clippedEnd: session.endTs > endTs,
     }));
-    const activeMs = events.filter(event => localDateKey(new Date(event.ts)) === date).reduce((sum, event) => sum + event.durationMs, 0);
+    const activeMs = clipObservations(events,startTs,endTs).reduce((sum, event) => sum + event.durationMs, 0);
     return [{ date, startTs, endTs, spans, activeMs }];
   });
 }

@@ -8,6 +8,9 @@ export type TelemetryMetric = 'time' | 'reels';
 export type DaypartFilter = 'all' | Daypart | readonly Daypart[];
 export interface ObservationCoverage { startTs: number; endTs: number }
 export interface PreviewObservation extends TelemetryEvent {
+  status?: 'open' | 'completed' | 'interrupted';
+  activeIntervals?: { start: number; end: number }[];
+  countInScope?: boolean;
   id: string;
   endedTs: number;
   entryRoute?: 'Reels feed' | 'Direct link' | 'Home feed';
