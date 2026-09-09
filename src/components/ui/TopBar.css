@@ -46,7 +46,7 @@
   background: var(--bg-surface-raised);
   color: var(--text-primary);
   border-color: var(--border-subtle);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.12);
+  box-shadow: none;
 }
 
 .time-nav button:disabled {

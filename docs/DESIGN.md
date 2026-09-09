@@ -168,3 +168,18 @@ Hint call-site audit (shared copy lives in `src/components/ui/hintContent.ts`; d
 | Retained PatternsView | Period comparison; platform comparison/shares; mechanics measurement definitions |
 | Retained SessionTimeline | Grouping / original boundaries / selected scatter |
 | Retained InterventionInsights | Concentration rank/share; scoped return gap/eligibility; recurring-window criteria |
+
+Fluid page-width correction supersedes the earlier capped main canvas: telemetry content fills the available main column, with left alignment and existing 28/20/16px responsive horizontal padding. Settings no longer adds its own 860px cap. Evidence overlays and popovers keep their separate width constraints.
+
+Range-specific evidence dates: week mode uses seven chronological buttons across the overlay, with weekday/date, exact time, reel count and 36px vertical comparison bars. Below 600px content width, buttons wrap into four columns without hiding dates. Month mode keeps weekday alignment, compact horizontal bars and 72px minimum cell height. Both show an explicit date range and selected outline; week details use four metric columns, reducing to two on narrow containers.
+
+Calendar grid correction supersedes separated date tiles: contiguous seven-column grid with shared one-pixel rules, weekday header, square date-first cells and muted measurements. Monthly leading/trailing blanks complete calendar weeks. Week mode retains seven columns at narrow widths with contained horizontal scrolling; small 20px activity ticks replace large chart blocks. Selected dates use an inset outline and restrained tint.
+
+Shared UI states: static neutral geometry replaces data without shimmer or fake chart traces. Templates cover one/multiple metrics, donut, chart, week/month calendar, rows, bounded record tables and settings rows. Empty/error messages use sentence case, a short explanation and a scoped action where available, without decorative state cards. Measured zero remains 0; unknown shares remain —. State controls are development-only and do not alter production navigation.
+
+### Shared theme revision — September 2026
+The current palette source is `src/theme/palette.ts`, superseding dark-only color values above. System is the default; explicit Light/Dark choices persist across popup and telemetry. Neutral page/panel/raised surfaces provide hierarchy. Controls use `border-control`; passive separators use `border-subtle`. Blue identifies interaction, platform coral/violet/cyan identify sources, amber/teal indicate increases/decreases, gold identifies the previous period, and red is reserved for urgent states. Hints and passive cards have no decorative glow or colored surface.
+
+Charts resolve the same CSS roles as the DOM, including tooltip surfaces and sequential duration colors. All main, secondary, muted and semantic foreground roles pass 4.5:1 against all three palette surfaces; essential boundary/focus and duration colors pass 3:1. This is a numeric palette check, not a claim of completed visual/accessibility acceptance. Manually inspect both themes and OS switching, donut hover, dialog hints, calendar selection, chart legends, table controls and state previews. Browser automation was intentionally not used.
+
+Settings retains available width. At 1040px of content width, stop-loss configuration and summary/preview form two columns; below that they stack. Appearance is saved independently of the stop-loss mock and its development state previews.

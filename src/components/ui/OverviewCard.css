@@ -10,13 +10,8 @@
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   font-family: var(--font-mono);
-  transition: border-color 0.2s, background-color 0.2s;
 }
 
-.overview-card:hover {
-  border-color: var(--text-secondary);
-  background: var(--bg-surface-raised);
-}
 
 .overview-card-header {
   display: flex;
@@ -43,7 +38,7 @@
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
-  color: #f0f6fc;
+  color: var(--text-primary);
   display: flex;
   align-items: baseline;
   gap: 4px;
@@ -94,7 +89,7 @@
 
 /* Baseline: clear, muted slate-400, zero glare */
 .overview-footer-baseline {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.72rem;
   line-height: 1;
@@ -104,7 +99,5 @@
 .overview-card-accent-teal { --overview-accent: var(--usage-decreased); }
 .overview-card-accent-blue { --overview-accent: var(--accent-blue); }
 .overview-card-accent-neutral { --overview-accent: var(--text-secondary); }
-.overview-card:not(.overview-card-accent-neutral) { border-color: color-mix(in srgb, var(--overview-accent) 45%, var(--border-subtle)); }
 .overview-card .overview-card-icon { color: var(--overview-accent); }
-.overview-card:not(.overview-card-accent-neutral):hover { border-color: var(--overview-accent); }
 

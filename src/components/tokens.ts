@@ -1,34 +1,15 @@
-// MIRROR DISCIPLINE: Recharts cannot read CSS vars, so these hexes duplicate
-// src/styles/global.css + docs/DESIGN.md. Change all three together. Ever.
+// CSS roles resolve in SVG strokes/fills as well as DOM styles. Palette SSOT: theme/palette.ts.
 export const chartTokens = {
-  bgRoot: '#090d13',
-  bgSurface: '#0f141c',
-  borderSubtle: '#1c2838',
-  borderGrid: '#16222f',
-  textPrimary: '#f0f6fc',
-  textSecondary: '#8b949e',
-  textMuted: '#545d68',
-  platform: {
-    youtube: '#ff6b4a',
-    instagram: '#a855f7',
-    facebook: '#00b4d8',
-  },
-  accentGreen: '#00ff88',
-  accentAmber: '#ffd700',
-  threatRed: '#ff2a3b',
-  allPlatforms: '#4f80ff',
-  freezeSlate: '#64748b',
-  /** Surface B scoped supporting text / borders (docs/DESIGN.md telemetry refinement). */
-  telemetryTextSecondary: '#c0cbd8',
-  telemetryBorder: '#3b4d63',
-  fontMono: 'JetBrains Mono, ui-monospace, SF Mono, Cascadia Code, Fira Code, monospace',
+  bgRoot: 'var(--bg-root)', bgSurface: 'var(--bg-surface)', borderSubtle: 'var(--border-subtle)', borderGrid: 'var(--border-grid)',
+  textPrimary: 'var(--text-primary)', textSecondary: 'var(--text-secondary)', textMuted: 'var(--text-muted)',
+  platform: { youtube: 'var(--platform-yt)', instagram: 'var(--platform-ig)', facebook: 'var(--platform-fb)' },
+  accentGreen: 'var(--usage-decreased)', accentAmber: 'var(--usage-increased)', threatRed: 'var(--threat-red)',
+  allPlatforms: 'var(--chart-overview)', freezeSlate: 'var(--freeze-slate)',
+  telemetryTextSecondary: 'var(--text-secondary)', telemetryBorder: 'var(--border-subtle)',
+  fontMono: 'var(--font-mono)',
 } as const;
-
-/** Shared Recharts theme: oscilloscope grid, muted mono ticks, square data dots. */
 export const chartTheme = {
-  grid: { stroke: '#16222f', strokeDasharray: '3 3', strokeOpacity: 0.6 },
-  tick: { fill: '#545d68', fontFamily: 'JetBrains Mono, ui-monospace, monospace', fontSize: 10 },
-  axisLine: { stroke: '#1c2838' },
-  cursor: { fill: 'rgba(255,255,255,0.03)' },
-  dotRadius: 2,
+  grid: { stroke: 'var(--border-grid)', strokeDasharray: '3 3', strokeOpacity: 0.6 },
+  tick: { fill: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 12 },
+  axisLine: { stroke: 'var(--border-subtle)' }, cursor: { fill: 'var(--chart-hover)' }, dotRadius: 2,
 } as const;

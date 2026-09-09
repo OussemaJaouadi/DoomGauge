@@ -1,4 +1,4 @@
-.workspace-shell .analysis-content { max-width: 1120px; margin: 0; padding: 20px 28px; }
+.workspace-shell .analysis-content { padding: 20px 28px; }
 .workspace-shell .analysis-page-head { margin-bottom: 14px; }
 .workspace-shell :is(.analysis-date-context, .analysis-date-context small, .analysis-choices button, .daypart-trigger, .daypart-popover label span) { font-size: 13px; }
 .workspace-shell .analysis-page-identity { gap: 10px 18px; }
@@ -40,7 +40,7 @@
 .evidence-drawer:not([open]) { display: none; }
 .evidence-drawer[open] { display: block; }
 .evidence-drawer.evidence-modal { position: fixed; inset: 0 0 0 auto; width: clamp(720px, 68vw, 1040px); height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
-.evidence-drawer::backdrop { background: #0009; }
+.evidence-drawer::backdrop { background: var(--overlay-scrim); }
 body:has(.evidence-modal[open]) { overflow: hidden; }
 .evidence-header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle); }
 .workspace-shell .evidence-header h2 { flex: 1; font-size: 20px; }

@@ -1,0 +1,44 @@
+.state-region { min-width: 0; }
+.state-region-metrics { min-height: 110px; }
+.state-region-chart, .state-region-donut { min-height: 220px; }
+.state-region-calendar { min-height: 310px; }
+.state-region-table { min-height: 340px; }
+.state-region-settings { min-height: 320px; }
+.state-region-rows { min-height: 120px; }
+.state-region > .ui-state { min-height: inherit; }
+.state-skeleton { min-height: inherit; padding: 12px 0; }
+.state-skeleton > div { display: grid; gap: 12px; }
+.state-skeleton span:not(.state-sr-only) { display: block; background: var(--bg-surface-raised); border-radius: var(--radius-sm); height: 24px; }
+.skeleton-metrics > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.skeleton-metrics span:not(.state-sr-only) { height: 84px; }
+.skeleton-chart > div { height: 200px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.skeleton-chart span:not(.state-sr-only) { height: 1px; background: var(--border-subtle); }
+.skeleton-donut > div { grid-template-columns: 140px minmax(0, 1fr); align-items: center; }
+.skeleton-donut span:first-child { grid-row: span 3; width: 140px; height: 140px; border-radius: 50%; background: transparent; border: 20px solid var(--bg-surface-raised); }
+.skeleton-calendar > div { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
+.skeleton-calendar span:not(.state-sr-only) { height: 52px; border-radius: 0; }
+.skeleton-table > div { gap: 8px; }
+.skeleton-table span:not(.state-sr-only) { height: 26px; }
+.skeleton-settings span:not(.state-sr-only) { height: 110px; }
+.state-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.state-preview-controls { font-size: 12px; margin: 8px 0; color: var(--text-secondary); }
+.state-preview-controls > summary { cursor: pointer; width: fit-content; }
+.state-preview-controls > div { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.state-preview-controls label { display: grid; gap: 4px; }
+.state-preview-controls select { max-width: 220px; }
+.state-preview-controls :is(button, select) { padding: 6px 8px; color: var(--text-primary); background: var(--bg-surface-raised); border: 1px solid var(--border-subtle); font: inherit; }
+.state-preview-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+.state-preview-buttons button[aria-pressed="true"] { border-color: var(--text-primary); }
+.state-inline-action { margin-top: 4px; padding: 8px 12px; border: 1px solid var(--border-subtle); background: var(--bg-surface-raised); color: var(--text-primary); font: inherit; cursor: pointer; }
+.state-region-metric { min-height: 110px; }
+.skeleton-metric span:not(.state-sr-only) { height: 84px; }
+.skeleton-calendar span:not(.state-sr-only) { height: 72px; }
+.skeleton-week > div { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
+.skeleton-week span:not(.state-sr-only) { height: 110px; border-radius: 0; }
+.state-region-week { min-height: 170px; }
+.telemetry-overview > .state-region > .overview-card { height: 100%; }
+.popup-shell > .state-region { flex-shrink: 0; }
+.popup-shell .skeleton-metrics > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.donut-unavailable { width: 108px; height: 108px; display: grid; place-items: center; color: var(--text-secondary); border: 1px solid var(--border-subtle); border-radius: 50%; }
+.state-preview-controls { position: relative; z-index: 3; }
+.state-region-table .state-skeleton { max-height: 440px; overflow: hidden; }

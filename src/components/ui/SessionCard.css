@@ -45,9 +45,9 @@
 .session-card-time {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface-raised);
   padding: 2px 6px;
   border-radius: 3px;
   border: 1px solid var(--border-subtle);
@@ -115,17 +115,17 @@
   overflow: hidden;
   background: var(--bg-root);
   margin: 3px 0 1px 0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
 }
 
 .session-bar-active {
-  background: linear-gradient(90deg, #ff2a3b, #ff6b4a);
+  background: var(--usage-increased);
   height: 100%;
   transition: width 0.3s ease;
 }
 
 .session-bar-dwell {
-  background: #243447;
+  background: var(--bg-surface-raised);
   height: 100%;
   transition: width 0.3s ease;
 }
@@ -149,7 +149,7 @@
 }
 
 .session-foot-dwell {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .session-foot-item .dot {
@@ -160,11 +160,11 @@
 }
 
 .dot-active {
-  background: var(--threat-red);
+  background: var(--usage-increased);
 }
 
 .dot-dwell {
-  background: #64748b;
+  background: var(--text-muted);
 }
 
 .session-card-empty-note {

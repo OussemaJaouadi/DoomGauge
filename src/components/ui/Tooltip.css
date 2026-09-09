@@ -19,7 +19,7 @@
   white-space: nowrap;
   z-index: 50;
   pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: var(--shadow-overlay);
 }
 
 .ui-tooltip-top {
@@ -47,5 +47,5 @@
   white-space: nowrap;
   z-index: 20;
   pointer-events: none;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  box-shadow: var(--shadow-overlay);
 }

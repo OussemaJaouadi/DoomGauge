@@ -1,7 +1,5 @@
 .popup-shell {
-  --text-secondary: #a8b3c2;
-  --text-muted: #a8b3c2;
-  --popup-pattern-text: #ff8fb4;
+  --popup-pattern-text: var(--text-secondary);
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
   width: 540px;
   height: 580px;
@@ -18,7 +16,7 @@
   overflow: hidden;
 }
 .popup-shell .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-shrink: 0; }
-.popup-shell .brand { font: 800 0.875rem var(--font-mono); letter-spacing: 0.16em; color: var(--text-secondary); border: 0; background: none; padding: 0; cursor: pointer; }
+.popup-shell .brand { font: 800 0.875rem var(--font-mono); letter-spacing: 0.16em; color: var(--text-secondary); border: 0; background: none; padding: 0; cursor: default; }
 .popup-shell .preview-pill { font-size: 0.75rem; color: var(--text-secondary); }
 .popup-shell .overview-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; flex-shrink: 0; }
 .popup-shell .overview-card { padding: 10px 12px; gap: 8px; }
@@ -68,3 +66,5 @@
   .popup-shell .ui-tabs-content, .popup-shell .platform-detail { animation: none; }
   .popup-shell .platform-row-bar-fill, .popup-shell .platform-row, .popup-shell .ui-kpi-card, .popup-shell .overview-card, .popup-shell .ui-tabs-trigger { transition: none; }
 }
+.popup-live { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.popup-live > [role="status"] { color: var(--text-secondary); font-size: 12px; }

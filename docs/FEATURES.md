@@ -109,3 +109,15 @@ Multi-day calendar evidence: recurring-window and duration/session bucket inspec
 Settings foundation: a gear entry at the sidebar bottom opens a minimal Settings page. The sidebar preview notice is removed. Preferences, saved limits and enforcement remain future work.
 
 Settings now includes an interactive stop-loss mock: daily/session period, combined platform selection, independent reel-count and active-minute limits, and an inline message preview. Defaults are illustrative; changes are local component state and are neither saved nor enforced. AI analysis and tab-switch tracking remain future items.
+
+Telemetry and Settings now use the available page width beside the sidebar, including when collapsed, instead of leaving space beyond fixed content caps.
+
+Evidence date presentation now adapts to range: up to seven dates use a chronological week strip with exact active time, reel counts and vertical bars; longer ranges retain the compact weekday calendar. Both show the date range, preserve coverage markers and inspect one selected day without extra navigation.
+
+Evidence dates use a continuous calendar grid instead of separated cards. Weekday headers, complete monthly week rows and date-first typography make the date structure explicit; existing day/session selection remains unchanged.
+
+UI states: popup, telemetry and Settings now share static skeletons, concise empty states and local errors with Retry. Development-only States controls preview the whole surface or one mounted region; data presets cover zero activity, filters, insufficient history and previous-only comparisons. Production builds omit preview controls; popup brand-click cycling is removed. Filters/navigation and evidence Back/Close remain available. Undefined platform shares display — rather than 0%.
+
+### Shared appearance preference
+Implemented System / Light / Dark in Settings, shared by popup and telemetry. Theme applies before app rendering, follows OS changes in System mode, and syncs committed changes to open surfaces. Saving failures retain the local choice and offer Retry. This preference is real; stop-loss controls remain an unsaved, unenforced mock. Both themes retain platform identities while neutral surfaces carry layout hierarchy. Acceptance criteria: active v1 spec, “Shared dark/light visual system”.
+

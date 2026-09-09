@@ -51,7 +51,7 @@ export default function HourlyBars({ data }: { data: HourItem[] }) {
             <CartesianGrid stroke={chartTokens.borderGrid} strokeDasharray="3 3" opacity={0.6} vertical={false} />
             <XAxis dataKey="label" tick={{ fill: chartTokens.textSecondary, fontFamily: chartTokens.fontMono, fontSize: 11 }} axisLine={{ stroke: chartTokens.borderSubtle }} tickLine={false} interval={2} />
             <YAxis tick={{ fill: chartTokens.textSecondary, fontFamily: chartTokens.fontMono, fontSize: 11 }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
-            <Tooltip content={<HourTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+            <Tooltip content={<HourTooltip />} cursor={{ fill: 'var(--chart-hover)' }} />
             {PLATFORMS.map(p => {
               const topVisible = [...PLATFORMS].reverse().find(pf => visible[pf]);
               return visible[p] && (

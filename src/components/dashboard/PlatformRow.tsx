@@ -38,13 +38,15 @@ export function PlatformRow({ platform, count, timeMs, maxCount, mode = 'time', 
   } else if (maxCount && maxCount > 0) {
     pct = Math.round((count / maxCount) * 100);
   }
+  const available = (mode === 'time' ? totalTimeMs : totalCount) ?? maxCount ?? 0;
+  const shareLabel = available > 0 ? `${pct}%` : '—';
   const Component: any = onClick ? 'button' : 'div';
   return (
     <Component
       className="platform-row"
       data-platform={platform}
       onClick={onClick}
-      aria-label={`View ${meta.label} details: ${formatTime(timeMs)}, ${count} reels (${pct}% of total ${mode})`}
+      aria-label={`View ${meta.label} details: ${formatTime(timeMs)}, ${count} reels (${available > 0 ? `${pct}% of total ${mode}` : "share unavailable"})`}
       style={onClick ? { cursor: 'pointer', width: '100%', textAlign: 'left' } as any : undefined}
     >
       <div className="platform-row-main">
@@ -57,7 +59,7 @@ export function PlatformRow({ platform, count, timeMs, maxCount, mode = 'time', 
           {formatTime(timeMs)}
         </span>
         <span className="platform-row-pct" style={{ color: meta.color }}>
-          {pct}%
+          {shareLabel}
         </span>
       </div>
       <div className="platform-row-bar">

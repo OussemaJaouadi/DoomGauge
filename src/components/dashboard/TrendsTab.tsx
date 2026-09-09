@@ -1,3 +1,4 @@
+import { StateRegion } from '../ui/StateRegion';
 import React from 'react';
 import HourlyBars from '../charts/HourlyBars';
 import { SessionCard } from '../ui/SessionCard';
@@ -20,7 +21,7 @@ export function TrendsTab({
 
   return (
     <div className="trends-tab">
-      <SessionCard
+      <StateRegion id="popup.hourly-summary" label="Session summary" shape="metrics"><SessionCard
         label="Worst Vortex"
         timeRange={worstVortex ? `${worstVortex.startTime} – ${worstVortex.endTime}` : null}
         elapsedMs={worstVortex?.elapsedMs ?? 0}
@@ -40,7 +41,7 @@ export function TrendsTab({
         </span>
       </div>
 
-      <HourlyBars data={hourlyData} />
+      </StateRegion><StateRegion id="popup.hourly-chart" label="Hourly activity" shape="chart"><HourlyBars data={hourlyData} /></StateRegion>
     </div>
   );
 }

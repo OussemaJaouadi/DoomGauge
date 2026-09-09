@@ -116,3 +116,20 @@ Calendar evidence refinement implemented: multi-day window/bucket calendar, one 
 Settings foundation implemented: bottom gear navigation, isolated minimal page and notice/style removal. Analysis selection state stays in App; conditional workspace unmount closes evidence. Static inspection confirms collapsed labels retain accessible names, shared active/focus styles and responsive footer navigation. Validation: 109 tests pass; typecheck/build pass; React Doctor reports no errors. Visual/interaction acceptance remains manual; no browser automation used.
 
 Settings stop-loss mock implemented with ephemeral daily/session, platform and threshold controls, validation and inline preview. Validation: 110 tests pass, including numeric boundary checks; typecheck/build pass. Interactive browser acceptance remains manual as requested. No persistence or enforcement is implemented.
+
+Fluid page-width correction implemented: removed shared/workspace/Settings width caps, retaining left alignment, responsive padding and independent overlay sizing. Static search confirms no remaining main-content or Settings max-width rule; scoped whitespace check and production build pass. No browser automation used; visual acceptance remains manual.
+
+Range-specific calendar refinement implemented. Validation: 110 tests pass; typecheck/build pass. Rendering checks distinguish week/month layouts, per-day reel counts and weekday headers while retaining one-day timeline and selection checks. No browser automation; visual acceptance remains manual.
+
+Calendar grid correction implemented. Validation: 110 tests pass, including seven weekday headers for both ranges; typecheck/build pass. No browser automation; appearance remains for user review.
+
+Shared UI states implemented across the inventoried popup, telemetry, evidence and Settings regions. Validation: 119 tests pass; typecheck/build pass. Tests cover override precedence, targeted recovery, sibling state isolation, skeleton semantics and shape families, filter/settings actions, deterministic popup fixtures and zero-denominator shares. Production bundle search confirms preview-control labels/brand cycling are absent. Browser geometry, keyboard transitions and actual render-exception recovery remain manual acceptance checks as requested; no browser automation or new dependencies used.
+
+### Shared dark/light visual system
+- [x] Root semantic palettes and chart roles; neutral passive cards/hints; differentiated controls and typography cascade correction.
+- [x] System / Light / Dark Settings control, bounded startup, local save-failure Retry, OS updates and cross-surface committed notifications.
+- [x] Minimal background message boundary and additive IndexedDB preference store; preserve existing activity stores and permissions.
+- [x] Content-width Settings columns; real Appearance outside mock state region.
+- [x] Automated palette contrast, preference resolution, controller ordering/failures/sync, transaction completion/abort and additive migration coverage.
+- [ ] Manual visual acceptance of both themes, overlays, charts, native controls and state previews (no browser automation requested).
+

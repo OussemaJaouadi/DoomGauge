@@ -14,7 +14,7 @@
   height: 22px;
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-control);
   color: var(--text-secondary);
   cursor: pointer;
   padding: 0;
@@ -22,43 +22,7 @@
   flex-shrink: 0;
 }
 
-/* Amber variant */
-.ui-hint-btn-amber {
-  background: color-mix(in srgb, var(--accent-amber) 10%, var(--bg-surface));
-  border-color: color-mix(in srgb, var(--accent-amber) 40%, var(--border-subtle));
-  color: var(--accent-amber);
-}
-
-.ui-hint-btn-amber:hover,
-.ui-hint-btn-amber.active {
-  background: color-mix(in srgb, var(--accent-amber) 22%, var(--bg-surface));
-  border-color: var(--accent-amber);
-  color: #fff;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-amber) 30%, transparent);
-}
-
-/* Blue variant */
-.ui-hint-btn-blue {
-  background: color-mix(in srgb, var(--accent-blue) 10%, var(--bg-surface));
-  border-color: color-mix(in srgb, var(--accent-blue) 40%, var(--border-subtle));
-  color: var(--accent-blue);
-}
-
-.ui-hint-btn-blue:hover,
-.ui-hint-btn-blue.active {
-  background: color-mix(in srgb, var(--accent-blue) 22%, var(--bg-surface));
-  border-color: var(--accent-blue);
-  color: #fff;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-blue) 30%, transparent);
-}
-
-/* Neutral variant */
-.ui-hint-btn-neutral:hover,
-.ui-hint-btn-neutral.active {
-  background: var(--bg-surface-raised);
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
-}
+.ui-hint-btn:hover, .ui-hint-btn.active { background: var(--bg-surface-raised); color: var(--text-primary); border-color: var(--border-control); }
 
 .ui-hint-btn:focus-visible {
   outline: 2px solid var(--text-primary);
@@ -75,12 +39,12 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-overlay);
   z-index: 50;
   font-family: var(--font-mono);
   font-size: 0.78rem;
   line-height: 1.45;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
@@ -88,11 +52,11 @@
 }
 
 .ui-hint-popover-amber {
-  border-top: 2px solid var(--accent-amber);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .ui-hint-popover-blue {
-  border-top: 2px solid var(--accent-blue);
+  border-top: 1px solid var(--border-subtle);
 }
 .hint-facts { margin: 0; display: grid; gap: 9px; font-size: 13px; }
 .hint-facts > div { display: grid; grid-template-columns: minmax(72px, .7fr) minmax(0, 1.3fr); gap: 10px; }

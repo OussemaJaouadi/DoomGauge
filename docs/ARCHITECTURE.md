@@ -108,3 +108,17 @@ ReelRecords pagination and page-size controls precede the bounded table viewport
 Telemetry App owns a separate analysis/settings destination alongside its existing platform and selection state. SettingsPage is isolated from analytics UI; switching destinations unmounts AnalysisWorkspace (closing evidence), while period/date/view/daypart selections remain in App. No storage changes.
 
 SettingsPage owns ephemeral mock period/platform/threshold/toggle/preview state. Threshold validation gates preview; editing configuration dismisses stale previews. No storage, background service, tracking or blocking integration is introduced. Leaving Settings discards the mock edits.
+
+The shared analysis-content rule owns full main-column width and left alignment; Workspace.css only adjusts its padding. SettingsPage fills that shared content region. Overlay and popup width rules remain independently scoped.
+
+CalendarEvidence derives its week/month presentation from the provided date count (<=7 versus >7). Both presentations reuse the same daily evidence model, shared bar maximum, reducer and records flow; no measurement or interface changes. Week mode places the inspector below a full-width strip, while month mode preserves the adjacent inspector where space permits.
+
+CalendarEvidence now renders weekday headers in both modes and leading/trailing monthly blank cells. The scroll wrapper preserves seven-column geometry on narrow screens. These are presentation-only changes; daily aggregation and selection state are unchanged.
+
+StatePreviewProvider lives above each app and owns development overrides, mounted-region registration and deterministic data presets. StateRegion resolves whole-page precedence, regional overrides and actual states, renders geometry-specific Skeleton/EmptyState/ErrorState, and wraps normal child rendering in RegionErrorBoundary. Retry clears the affected override and any governing page override while preserving unrelated regional overrides. Actual asynchronous status/retry can be supplied later; no async service or artificial wait is introduced now. Normal mode respects actual empty conditions. ViewingView's ResizeObserver follows the mounted SVG node with effect cleanup so a chart restored from a state preview is measured again.
+
+### Theme persistence boundary
+`src/theme/palette.ts` defines root semantic colors consumed by CSS and SVG charts. Both entrypoints await `initializeTheme()` before mounting React; a 1.5-second message timeout falls back to System. `ThemeController` manages optimistic changes, ordered saves, save errors and committed notifications; Settings renders its shared state.
+
+A minimal WXT background accepts `theme:get` / `theme:set` only from extension-page senders, serializes operations, and broadcasts `theme:changed` after transaction commit. Only that background calls the theme storage adapter. IndexedDB `doomgauge-v1` gains an out-of-line-key `preferences` store with key `theme`; the adapter opens the current version, then upgrades additively if needed, preserving existing stores. Connections close on version changes; blocked/error/aborted operations report failure. No new permissions, browser storage APIs or network calls. Analytics remains on the existing mock-data path.
+

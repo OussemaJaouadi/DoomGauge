@@ -480,3 +480,23 @@ Record pagination refinement: place count, 10/25/50 row choices and page navigat
 Settings foundation: bottom sidebar navigation reuses existing icon, collapsed, active and focus styles. A separate app destination renders SettingsPage in the shared capped content shell, replacing filters and workspace while keeping parent-owned analysis state. Minimal heading and placeholder sentence only.
 
 Settings mock: use visible period choices and platform buttons above two aligned limit rows. Each row has a metric icon, labeled numeric value/unit and independent switch. A concise combined-rule summary and inline message preview follow; urgent red appears only in the preview. Stack numeric inputs under labels on narrow screens. Mark unsaved/non-enforced status once beside the page heading. No nested tabs, save controls or fake enforcement.
+
+Fluid width correction: analysis-content uses width:100%, min-width:0 and margin:0; remove shared and workspace max-width caps. SettingsPage also uses width:100% and min-width:0. Keep existing sidebar tracks, padding breakpoints and component-level input/overlay bounds.
+
+Range-specific calendar refinement: derive week mode from <=7 dates, omit weekday-grid padding and use a full-width chronological strip plus inspector below. Longer ranges retain weekday-aligned cells beside the inspector. Reuse calendar data and selection reducers unchanged; only bar orientation, cell detail and layout differ. The shared maximum governs both bar types; month labels retain exact values in accessible descriptions and the day inspector.
+
+Calendar grid correction: shared grid background supplies one-pixel rules; cells have no individual border or radius. Place weekday headings outside date buttons, complete monthly weeks with blank cells and preserve seven columns in a contained horizontal scroll region. Date numbers lead over muted measurements; selection uses inset outline plus tint.
+
+Shared state implementation: StateRegion takes id, label, shape, optional skeletonCount, actual UIState/empty reason, allowed reasons and recovery callbacks. StatePreviewProvider registers mounted regions and supplies overrides/presets; whole-page non-normal overrides take precedence. Reset removes overrides and data presets; regional Retry removes its own and governing page override, keeping sibling overrides. Empty reasons are activity, filters, history, followup, unobserved, session and settings. Skeleton decorations are aria-hidden inside one labeled status; regions use aria-busy. Error boundaries retry normal child rendering and log exceptions. Shared AnalysisPanel supports retained chart callers as well as the active curve.
+
+State-region inventory:
+- Popup: overview metrics; platform donut/list; quick skips, viewing distribution and average; hourly session summary and chart; platform headline/secondary metrics, abandonment and hourly chart. Header, tabs, platform Back and telemetry footer remain outside states.
+- Telemetry: each overview metric; Returns; windows/trends/sessions/viewing canvas. Sidebar, page filters, view navigation and Settings destination remain outside states.
+- Evidence: totals, return summary, calendar, selected-day inspector, interval timeline, return pairs, selected session, measured mechanics, duration curve and record viewport. Record filters/pagination and overlay Close/Back remain available. Skeleton table rows are clipped to the existing 440px viewport bound.
+- Settings: configuration skeleton/error/restore-defaults preview; normal inline validation remains unchanged. No saved-settings API or persistence is implied.
+
+### Shared theme implementation
+Palette SSOT: `src/theme/palette.ts`; `components/tokens.ts` exports CSS references for charts. `theme/client.ts` installs root tokens before either app mounts and tracks OS/runtime changes. `theme/controller.ts` owns optimistic selection, serialized saves and retry state. `ThemeControl` lives outside mock Settings StateRegion. The minimal background handles validated extension-page theme messages and broadcasts after IndexedDB commit. `theme/storage.ts` adds preferences without replacing existing stores. Save failures keep local selection; startup failures use System after bounded waiting.
+
+Settings uses a 1040px content-container breakpoint for configuration beside the existing summary/preview. Low-specificity telemetry resets allow component heading, input and table spacing to win. Native controls, overlay scrims, hint surfaces and chart fills inherit root theme roles.
+

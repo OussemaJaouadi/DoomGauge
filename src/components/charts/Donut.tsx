@@ -39,7 +39,7 @@ export function Donut({ items, mode, onModeChange, children }: {
       </div>
       <div className="popup-share-body">
         <div className="popup-share-donut">
-          <PieChart width={108} height={108}>
+          <>{total === 0 ? <span className="donut-unavailable" role="img" aria-label="Platform shares unavailable: no activity">—</span> : <PieChart width={108} height={108}>
             <Pie
               data={data}
               dataKey="value"
@@ -57,7 +57,7 @@ export function Donut({ items, mode, onModeChange, children }: {
               ))}
             </Pie>
             <Tooltip content={<DonutTooltip mode={mode} />} />
-          </PieChart>
+          </PieChart>}</>
         </div>
         {children}
       </div>

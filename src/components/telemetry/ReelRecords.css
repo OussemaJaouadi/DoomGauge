@@ -3,7 +3,7 @@
 .records-heading h3 { margin: 0; }
 .records-heading > span, .records-pagination, .records-dates label { font-size: 13px; color: var(--text-secondary); }
 .records-dates label { display: grid; gap: 4px; }
-.records-dates input { color-scheme: dark; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 8px; font: inherit; }
+.records-dates input { color-scheme: inherit; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 8px; font: inherit; }
 .records-viewport { max-height: 440px; overflow: auto; border: 1px solid var(--border-subtle); }
 .records-viewport table { width: 100%; min-width: 460px; border-collapse: separate; border-spacing: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
 .records-viewport th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-raised); text-align: left; color: var(--text-secondary); font-size: 13px; }
@@ -27,3 +27,4 @@
 .records-pagination nav button:disabled { opacity: .35; cursor: default; }
 .records-panel :is(button, input, [tabindex]):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .records-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.records-dates input, .records-pagination nav button { border-color: var(--border-control); }

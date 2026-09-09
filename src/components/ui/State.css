@@ -4,38 +4,38 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 32px 16px;
-  background: var(--bg-surface);
-  border: 1px dashed var(--border-grid);
+  padding: 20px 12px;
+  background: transparent;
+  border: 0;
   border-radius: var(--radius-sm);
   text-align: center;
 }
 
 .ui-state-icon {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   opacity: 0.6;
 }
 
 .ui-state-error .ui-state-icon {
-  color: var(--accent-magenta);
+  color: var(--text-primary);
   opacity: 1;
 }
 
 .ui-state-title {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
 .ui-state-error .ui-state-title {
-  color: var(--accent-magenta);
+  color: var(--text-primary);
 }
 
 .ui-state-hint {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 13px;
   color: var(--text-secondary);
 }

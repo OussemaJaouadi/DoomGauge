@@ -1,16 +1,15 @@
-html:has(.telemetry-app) { color-scheme: dark; }
 body:has(.telemetry-app) { padding: 0; }
-.telemetry-app { color-scheme: dark; --bg-surface: #141c26; --bg-surface-raised: #243447; --border-subtle: #3b4d63; --text-secondary: #c0cbd8; --text-muted: #c0cbd8; display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 100vh; color: var(--text-primary); background: var(--bg-root); font: 14px/1.5 var(--font-mono); font-variant-numeric: tabular-nums; }
+.telemetry-app { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 100vh; color: var(--text-primary); background: var(--bg-root); font: 14px/1.5 var(--font-mono); font-variant-numeric: tabular-nums; }
 .telemetry-app * { box-sizing: border-box; }
-.telemetry-app button, .telemetry-app select, .telemetry-app input { font: inherit; }
+:where(.telemetry-app) :where(button, select, input) { font: inherit; }
 .telemetry-app button { cursor: pointer; }
 .telemetry-app button:disabled { opacity: .4; cursor: default; }
 .telemetry-app :is(button, a, input, select, summary):focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
-.telemetry-app h1, .telemetry-app h2, .telemetry-app h3, .telemetry-app p { margin: 0; }
-.telemetry-app h1 { font-size: 22px; line-height: 1.3; letter-spacing: -.02em; }
-.telemetry-app h2 { font-size: 15px; font-weight: 700; }
-.telemetry-app h3 { font-size: 14px; }
-.telemetry-app small { font-size: 12px; }
+:where(.telemetry-app) :where(h1, h2, h3, p) { margin: 0; }
+:where(.telemetry-app) h1 { font-size: 22px; line-height: 1.3; letter-spacing: -.02em; }
+:where(.telemetry-app) h2 { font-size: 15px; font-weight: 700; }
+:where(.telemetry-app) h3 { font-size: 14px; }
+:where(.telemetry-app) small { font-size: 12px; }
 .analysis-sidebar { position: sticky; top: 0; height: 100vh; padding: 28px 16px; display: flex; flex-direction: column; gap: 36px; background: var(--bg-surface); border-right: 1px solid var(--border-subtle); }
 .analysis-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .07em; }
 .analysis-brand svg { color: var(--accent-green); }
@@ -42,7 +41,7 @@ body:has(.telemetry-app) { padding: 0; }
 .analysis-daypart { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 12px; color: var(--text-secondary); }
 .analysis-daypart select { padding: 7px; max-width: 210px; background: var(--bg-root); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
 .analysis-export { padding: 6px 10px; font-size: 12px; }
-.analysis-content { padding: 18px 28px; max-width: 1600px; margin: 0 auto; }
+.analysis-content { width: 100%; min-width: 0; padding: 18px 28px; margin: 0; }
 .analysis-page-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; align-items: center; margin-bottom: 16px; }
 .analysis-page-head > span { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
 .analysis-summary { display: flex; flex-wrap: wrap; gap: 12px 32px; padding: 12px 0; border-top: 1px solid var(--border-subtle); }
@@ -50,7 +49,7 @@ body:has(.telemetry-app) { padding: 0; }
 .analysis-summary > div > span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 12px; }
 .analysis-summary strong { font-size: 20px; line-height: 1.2; }
 .analysis-summary small { grid-column: 1 / -1; color: var(--text-secondary); }
-.telemetry-app .delta-worse { color: #ff7882; }
+.telemetry-app .delta-worse { color: var(--usage-increased); }
 .telemetry-app .delta-better { color: var(--accent-green); }
 .analysis-section-navigation { display: flex; align-items: center; margin: 0 0 16px; border-bottom: 1px solid var(--border-subtle); }
 .analysis-section-navigation > span { color: var(--text-secondary); font-size: 12px; }
@@ -69,7 +68,7 @@ body:has(.telemetry-app) { padding: 0; }
 .recurring-window { display: flex; flex-direction: column; gap: 5px; padding: 6px 0; text-align: left; border: 0; background: transparent; color: var(--text-primary); }
 .window-track { position: relative; width: 100%; height: 10px; background: var(--bg-root); border-radius: var(--radius-sm); }
 .window-track > span { position: absolute; top: 0; height: 100%; background: var(--accent-blue); border-radius: var(--radius-sm); }
-.recurring-window:hover .window-track > span { background: #8aaaff; }
+.recurring-window:hover .window-track > span { background: var(--chart-overview); }
 .window-readout { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; font-size: 12px; }
 .window-readout > span { color: var(--text-secondary); }
 .platform-comparison { display: flex; flex-direction: column; gap: 10px; padding: 0 0 14px; background: transparent; border: 0; border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); text-align: left; }
@@ -108,8 +107,8 @@ body:has(.telemetry-app) { padding: 0; }
 .session-picker button { background: var(--bg-root); border: 1px solid var(--border-subtle); color: var(--text-primary); padding: 10px; text-align: left; font-size: 12px; }
 .telemetry-app summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; padding: 4px 0; }
 .analysis-table-scroll { overflow: auto; max-height: 260px; margin-top: 12px; }
-.telemetry-app table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.telemetry-app th, .telemetry-app td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+:where(.telemetry-app) table { width: 100%; border-collapse: collapse; font-size: 12px; }
+:where(.telemetry-app) :where(th, td) { text-align: left; padding: 8px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
 .viewing-curve { display: block; width: 100%; height: 275px; overflow: visible; }
 .viewing-curve text { font-family: var(--font-mono); font-size: 12px; fill: var(--text-secondary); }
 .viewing-threshold { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 12px; }
@@ -126,7 +125,7 @@ body:has(.telemetry-app) { padding: 0; }
 .daypart-control { position: relative; display: flex; gap: 5px; }
 .daypart-trigger, .daypart-reset, .daypart-done { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 36px; padding: 7px 10px; color: var(--text-primary); background: var(--bg-surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 12px; }
 .daypart-trigger[aria-expanded="true"] { border-color: var(--accent-blue); }
-.daypart-popover { position: absolute; top: calc(100% + 8px); right: 0; width: 275px; max-width: calc(100vw - 48px); z-index: 20; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); box-shadow: 0 10px 28px #0008; }
+.daypart-popover { position: absolute; top: calc(100% + 8px); right: 0; width: 275px; max-width: calc(100vw - 48px); z-index: 20; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); box-shadow: var(--shadow-overlay); }
 .daypart-popover fieldset { padding: 0; margin: 0; border: 0; }
 .daypart-popover legend { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
 .daypart-popover label { display: flex; align-items: center; gap: 10px; padding: 9px; border-radius: var(--radius-sm); cursor: pointer; }
@@ -230,3 +229,5 @@ body:has(.telemetry-app) { padding: 0; }
 
 .analysis-sidebar .analysis-sidebar-footer { margin-top: auto; display: flex; flex-direction: column; }
 .settings-page > p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+.analysis-daypart select, .viewing-threshold input { border-color: var(--border-control); }
+.tracking-status { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 12px; margin: 0 0 12px; }

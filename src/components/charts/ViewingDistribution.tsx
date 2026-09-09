@@ -7,10 +7,10 @@ import './ViewingDistribution.css';
 
 const colors = [
   'var(--accent-amber)',
-  'color-mix(in srgb, var(--accent-blue) 40%, var(--bg-root))',
-  'color-mix(in srgb, var(--accent-blue) 70%, var(--bg-root))',
+  'var(--duration-short)',
+  'var(--duration-medium)',
   'var(--accent-blue)',
-  'color-mix(in srgb, var(--accent-blue) 55%, white)',
+  'var(--duration-long)',
 ];
 
 const share = (value: number, available: boolean) => available ? `${value.toFixed(1)}%` : '—';
