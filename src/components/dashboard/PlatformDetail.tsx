@@ -1,3 +1,5 @@
+import { useStatePreview } from '../ui/StatePreview';
+import { StateRegion } from '../ui/StateRegion';
 import { measurementHints } from '../ui/hintContent';
 // React & 3rd-party
 import { useState } from 'react';
@@ -53,7 +55,8 @@ export function PlatformDetail({
   const lineColor = chartTokens.accentAmber;
   const accent = platform === 'youtube' ? 'yt' : platform === 'instagram' ? 'ig' : 'fb';
 
-  const { pct: skipPct, of10: fill } = skipDiagnostics(d.skip, d.count);
+  const { overrides } = useStatePreview();
+  const { pct: skipPct, of10: fill } = skipDiagnostics(d.skip, d.completedCount ?? d.count);
   const flick = avgFlickSec(d.timeMs, d.count);
   const hourlyData = d.hourly.slice(0, throughHour).map((v, i) => ({
     label: String(i).padStart(2, '0'),
@@ -72,26 +75,26 @@ export function PlatformDetail({
       <div className="detail-header" style={{ borderLeftColor: color }}>
         <span className="detail-icon" style={{ color }}>{meta.icon}</span>
         <span className="detail-title">{pName}</span>
-        <span className="detail-sub">{d.share}% of total active time</span>
+        <span className="detail-sub">{overrides.page && overrides.page.status !== "success" ? "" : d.count ? `${d.share}% of total active time` : "Share unavailable"}</span>
       </div>
 
-      <div className="detail-hero">
+      <StateRegion id="popup.platform-metrics" label="Platform metrics" shape="metrics"><div className="detail-hero">
         <KpiCard icon={<Clock size={14} />} label="Active Time" value={formatTime(d.timeMs)} accent={accent} />
         <KpiCard icon={<Hash size={14} />} label="Reel Count" value={d.count} accent={accent} />
-      </div>
+      </div></StateRegion>
 
-      <div className="detail-grid3">
+      <StateRegion id="popup.platform-signals" label="Platform signals" shape="metrics"><div className="detail-grid3">
         <KpiCard
           icon={<Zap size={13} />}
           label="Impatience"
-          value={d.count ? `${skipPct}%` : '—'}
-          unit={`${d.skip}/${d.count}`}
+          value={(d.completedCount ?? d.count) ? `${skipPct}%` : '—'}
+          unit={`${d.skip}/${d.completedCount ?? d.count}`}
           accent="magenta"
         />
         <KpiCard
           icon={<Activity size={13} />}
           label="Velocity"
-          value={d.velocity}
+          value={d.count ? d.velocity : '—'}
           unit="reels/min"
           accent="amber"
         />
@@ -102,9 +105,9 @@ export function PlatformDetail({
           unit="per reel"
           accent="default"
         />
-      </div>
+      </div></StateRegion>
 
-      <div className="detail-section">
+<StateRegion id="popup.abandonment" label="Abandonment">      <div className="detail-section">
         <div className="detail-section-header">
           <span className="detail-section-title">Abandonment telemetry</span>
           <Hint
@@ -117,7 +120,7 @@ export function PlatformDetail({
         <div className="abandonment-item">
           <div className="abandonment-row">
             <span className="abandonment-label">Bailed &lt;3s</span>
-            <span className="abandonment-stat">{d.skip} / {d.count} reels</span>
+            <span className="abandonment-stat">{d.skip} / {d.completedCount ?? d.count} completed</span>
           </div>
           <div className="detail-filmstrip" aria-hidden="true">
             {Array.from({ length: 10 }, (_, i) => (
@@ -137,7 +140,7 @@ export function PlatformDetail({
         </div>
       </div>
 
-      <div className="detail-section">
+</StateRegion><StateRegion id="popup.platform-hourly" label="Platform hourly activity" shape="chart">      <div className="detail-section">
         <div className="detail-section-title">Today by hour · reels</div>
         <div className="detail-chart">
           <ResponsiveContainer width="100%" height={120}>
@@ -157,7 +160,7 @@ export function PlatformDetail({
                 width={24}
                 allowDecimals={false}
               />
-              <Tooltip content={<DetailHourTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <Tooltip content={<DetailHourTooltip />} cursor={{ fill: 'var(--chart-hover)' }} />
               {showBars && (
                 <Bar
                   dataKey="value"
@@ -216,7 +219,7 @@ export function PlatformDetail({
             Trend line
           </button>
         </div>
-      </div>
+      </div></StateRegion>
     </div>
   );
 }

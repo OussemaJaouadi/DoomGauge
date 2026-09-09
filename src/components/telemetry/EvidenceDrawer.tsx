@@ -1,3 +1,5 @@
+import { StateRegion } from '../ui/StateRegion';
+import { StatePreviewControls } from '../ui/StatePreview';
 import { hintFacts, measurementHints } from '../ui/hintContent';
 import { useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
@@ -49,6 +51,7 @@ export function EvidenceDrawer({ evidence, events, sessions, fullSessions, rates
   return <dialog ref={dialog} className="evidence-drawer evidence-modal" aria-labelledby="evidence-title" aria-modal="true"
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <header className="evidence-header"><h2 id="evidence-title" ref={heading} tabIndex={-1}>{titleFor(evidence)}</h2><button type="button" onClick={onClose} aria-label="Close evidence"><X size={20} /></button></header>
+    <StatePreviewControls scope="evidence." />
     <EvidenceContent key={JSON.stringify(evidence)} evidence={evidence} events={events} sessions={sessions} fullSessions={fullSessions} rates={rates} page={page} dates={dates} coverage={coverage} />
   </dialog>;
 }
@@ -70,7 +73,7 @@ function EvidenceContent({ evidence, events, sessions, fullSessions, rates, page
   if (detail.records && selectedSession) return <div className="evidence-body"><button type="button" className="workspace-text-button" onClick={() => dispatch({ type: 'back' })}><ArrowLeft size={16} /> Back to session</button><ReelRecords key={selectedSession.id} events={selectedSession.events} /></div>;
   return <div className="evidence-body">
     {evidence.kind === 'returns' ? <>
-      <div className="evidence-totals"><b>{rate?.returnedCount ?? 0} returns</b><span>{rate?.eligibleCount ?? 0} eligible endings</span><Hint label="About return coverage" text={measurementHints.returnCoverage} accent="blue" /></div>
+      <StateRegion id="evidence.return-summary" label="Return summary" shape="metrics" reasons={["followup", "activity"]}><div className="evidence-totals"><b>{rate?.returnedCount ?? 0} returns</b><span>{rate?.eligibleCount ?? 0} eligible endings</span><Hint label="About return coverage" text={measurementHints.returnCoverage} accent="blue" /></div></StateRegion>
       {rate?.matches.length ? <ReturnTimeline matches={rate.matches} selectedId={detail.id} onSelect={select} /> : <NoObservations>{rate?.eligibleCount ? 'No returns in this threshold.' : 'Not enough observed follow-up.'}</NoObservations>}
     </> : evidence.kind !== 'session' ? <>
       <EvidenceSummary events={selectedEvents} />
@@ -83,7 +86,7 @@ function EvidenceContent({ evidence, events, sessions, fullSessions, rates, page
 
 function EvidenceSummary({ events }: { events: PreviewObservation[] }) {
   const totals = observationTotals(events);
-  return <div className="evidence-overview"><div className="evidence-totals"><b>{formatTime(totals.activeMs)}</b><span>{totals.reels} reels</span></div><div className="evidence-platforms">{platformTotals(events).filter(item => item.reels).map(item => <div key={item.platform}><span><i style={{ background: platformMeta[item.platform].color }} />{platformMeta[item.platform].label}</span><b>{formatTime(item.activeMs)}</b></div>)}</div></div>;
+  return <StateRegion id="evidence.summary" label="Evidence totals" shape="metrics"><div className="evidence-overview"><div className="evidence-totals"><b>{formatTime(totals.activeMs)}</b><span>{totals.reels} reels</span></div><div className="evidence-platforms">{platformTotals(events).filter(item => item.reels || item.activeMs).map(item => <div key={item.platform}><span><i style={{ background: platformMeta[item.platform].color }} />{platformMeta[item.platform].label}</span><b>{formatTime(item.activeMs)}</b></div>)}</div></div></StateRegion>;
 }
 
 function SelectedSession({ session, selectedEvents, unfiltered, onRecords }: { session: ObservationSession; selectedEvents: PreviewObservation[]; unfiltered: boolean; onRecords: () => void }) {
@@ -93,17 +96,17 @@ function SelectedSession({ session, selectedEvents, unfiltered, onRecords }: { s
   const span = Math.max(1, session.endTs - session.startTs);
   const clock = sessionClockRange(session.startTs, session.endTs);
   const mechanics = mechanicsSummary(matching);
-  return <section className="selected-session">
+  return <StateRegion id="evidence.session" label="Selected session" shape="rows" reasons={["session", "activity", "unobserved"]}><section className="selected-session">
     <div className="evidence-visual-heading"><h3>{clock.dateLabel} · {clock.clockLabel}</h3><Hint label="About selected session" text={hintFacts([['Active / reels', unfiltered ? 'Full return session' : 'Selected evidence only'], ['Elapsed', 'Full original session'], ['Muted', 'Outside selection']], 'View spans include internal pauses.')} accent="blue" /></div>
     {unfiltered && <span className="evidence-note">Unfiltered return</span>}
     <div className="selected-session-metrics"><div><span>Selected active</span><b>{formatTime(totals.activeMs)}</b></div><div><span>Full elapsed</span><b>{formatTime(session.endTs - session.startTs)}</b></div><div><span>Reels</span><b>{totals.reels}</b></div><div><span>Quick skips</span><b>{totals.skips}</b></div></div>
     <div className="session-sequence" role="img" aria-label="Chronological view spans; muted spans fall outside the selected evidence">{session.events.map(event => <span key={event.id} title={`${platformMeta[event.platform].label}: ${formatTime(event.durationMs)} active`} style={{ left: `${(event.ts - session.startTs) / span * 100}%`, width: `${(event.endedTs - event.ts) / span * 100}%`, background: platformMeta[event.platform].color, opacity: ids.has(event.id) ? 1 : .25 }} />)}</div>
-    <div className="selected-mechanics">
+    <StateRegion id="evidence.mechanics" label="Measured mechanics" reasons={["unobserved"]}><div className="selected-mechanics">
       {mechanics.entryMeasured > 0 && <span>Entry routes <b>{mechanics.entries.filter(item => item.count).map(item => `${item.route} ${item.count}`).join(' · ')}</b></span>}
       {mechanics.replayCount !== null && <span>Replays <b>{mechanics.replayCount}</b></span>}
       {mechanics.commentMs !== null && <span>Comments open <b>{formatTime(mechanics.commentMs)}</b></span>}
       <Hint label="About measured mechanics" text={hintFacts([['Entry routes', `${mechanics.entryMeasured}/${matching.length} measured`], ['Replays', `${mechanics.replayMeasured}/${matching.length} measured`], ['Comments', `${mechanics.commentMeasured}/${matching.length} measured`]], 'Simulated coverage. Unmeasured values are omitted, not zero.')} accent="blue" />
     </div>
-    <button type="button" className="workspace-text-button" onClick={onRecords}>View reel records</button>
-  </section>;
+    </StateRegion><button type="button" className="workspace-text-button" onClick={onRecords}>View reel records</button>
+  </section></StateRegion>;
 }

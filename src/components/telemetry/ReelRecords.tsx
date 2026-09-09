@@ -1,3 +1,4 @@
+import { StateRegion } from '../ui/StateRegion';
 import { useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type { Platform } from '../../types/models';
@@ -43,11 +44,11 @@ export function ReelRecords({ events }: { events: readonly PreviewObservation[] 
       <div className="records-page-size"><span>Rows</span><div className="analysis-choices" role="group" aria-label="Rows per page">{[10, 25, 50].map(count => <button type="button" key={count} aria-pressed={size === count} onClick={() => { setSize(count); changePage(0); }}>{count}</button>)}</div></div>
       <nav aria-label="Reel record pages"><button type="button" aria-label="First page" disabled={result.page === 0} onClick={() => changePage(0)}><ChevronsLeft size={18} /></button><button type="button" aria-label="Previous page" disabled={result.page === 0} onClick={() => changePage(result.page - 1)}><ChevronLeft size={18} /></button><span>{result.page + 1} / {result.pageCount}</span><button type="button" aria-label="Next page" disabled={result.page + 1 === result.pageCount} onClick={() => changePage(result.page + 1)}><ChevronRight size={18} /></button><button type="button" aria-label="Last page" disabled={result.page + 1 === result.pageCount} onClick={() => changePage(result.pageCount - 1)}><ChevronsRight size={18} /></button></nav>
     </div>
-    <div className="records-viewport" ref={viewport} tabIndex={0} role="region" aria-label="Reel records table">
-      <table><caption className="records-sr-only">Reel records from the full session. Times are local.</caption><thead><tr>{sortHeader('started', 'Started')}<th scope="col">Platform</th>{sortHeader('active', 'Active')}{sortHeader('elapsed', 'Elapsed')}</tr></thead>
-        <tbody>{result.rows.map(event => <tr key={event.id}><td><time dateTime={new Date(event.ts).toISOString()}><b>{timeFormat.format(event.ts)}</b><span>{dateFormat.format(event.ts)}</span></time></td><td><span className="record-platform"><i style={{ background: platformMeta[event.platform].color }} />{platformMeta[event.platform].label}</span></td><td className="record-number">{formatTime(event.durationMs)}</td><td className="record-number">{formatTime(event.endedTs - event.ts)}</td></tr>)}
-          {!result.total && <tr><td colSpan={4} className="records-empty">{events.length ? 'No reels match these filters.' : 'No reel records in this session.'}</td></tr>}
+    <StateRegion id="evidence.records" label="Reel records" shape="table" skeletonCount={size} reasons={["activity", "filters", "session"]} onClearFilters={() => changeFilters(defaults)}><div className="records-viewport" ref={viewport} tabIndex={0} role="region" aria-label="Reel records table">
+      <table><caption className="records-sr-only">Reel records from the full session. Times are local.</caption><thead><tr>{sortHeader('started', 'Started')}<th scope="col">Platform</th>{sortHeader('active', 'Active')}{sortHeader('elapsed', 'Elapsed')}<th scope="col">Status</th></tr></thead>
+        <tbody>{result.rows.map(event => <tr key={event.id}><td><time dateTime={new Date(event.ts).toISOString()}><b>{timeFormat.format(event.ts)}</b><span>{dateFormat.format(event.ts)}</span></time></td><td><span className="record-platform"><i style={{ background: platformMeta[event.platform].color }} />{platformMeta[event.platform].label}</span></td><td className="record-number">{formatTime(event.durationMs)}</td><td className="record-number">{formatTime(event.endedTs - event.ts)}</td><td>{event.status === 'open' ? 'In progress' : event.status === 'interrupted' ? 'Interrupted' : 'Completed'}</td></tr>)}
+          {!result.total && <tr><td colSpan={5} className="records-empty">{events.length ? 'No reels match these filters.' : 'No reel records in this session.'}</td></tr>}
         </tbody></table>
-    </div>
+    </div></StateRegion>
   </section>;
 }

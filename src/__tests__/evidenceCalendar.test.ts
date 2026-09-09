@@ -61,6 +61,9 @@ test('7 and 30 day calendars render one day timeline and no month navigation', (
     expect((html.match(/class="calendar-day calendar-day-/g) ?? []).length).toBe(length);
     expect((html.match(/class="evidence-date-row"/g) ?? []).length).toBe(1);
     expect(html.includes(`Session ${length - 1}`)).toBe(true);
+    expect(html.includes(length === 7 ? 'calendar-evidence-week' : 'calendar-evidence-month')).toBe(true);
+    expect((html.match(/class="calendar-week-reels"/g) ?? []).length).toBe(length === 7 ? 7 : 0);
+    expect((html.match(/class="calendar-weekday"/g) ?? []).length).toBe(7);
     const offset = (new Date(`${dates[0]}T12:00:00`).getDay() + 6) % 7;
     expect(Math.ceil((offset + length) / 7) <= 6).toBe(true);
   }

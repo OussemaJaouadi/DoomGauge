@@ -10,6 +10,9 @@ import { EvidenceDrawer } from './EvidenceDrawer';
 import './Workspace.css';
 
 interface WorkspaceProps {
+  comparisonAvailable?: boolean;
+  onClearFilters?: () => void;
+  filterEmpty?: boolean;
   context: string; view: WorkspaceView; onViewChange: (view: WorkspaceView) => void; events: PreviewObservation[]; previous: PreviewObservation[];
   sessions: ObservationSession[]; fullSessions: ObservationSession[]; coverage: ObservationCoverage[];
   dates: string[]; previousDates: string[]; completeDates: string[]; throughHour: number; page: TelemetryPage;
@@ -27,7 +30,7 @@ export function AnalysisWorkspace(props: WorkspaceProps) {
   };
   const close = () => dispatch({ type: 'close' });
   return <div className="analysis-workspace">
-    <TelemetryOverview totals={observationTotals(events)} previous={observationTotals(props.previous)} rates={rates} selected={selected} onInspect={inspect} />
+    <TelemetryOverview comparisonAvailable={props.comparisonAvailable} totals={observationTotals(events)} previous={observationTotals(props.previous)} rates={rates} selected={selected} onInspect={inspect} />
     <div className="workspace-view-buttons"><ChoiceGroup label="Analysis view" value={view} onChange={props.onViewChange} choices={[{ value: 'windows', label: 'Time windows' }, { value: 'trends', label: 'Trends' }, { value: 'sessions', label: 'Sessions' }, { value: 'viewing', label: 'Viewing' }]} /></div>
     <div className="workspace-main">
       <WorkspaceCanvas {...props} windows={windows} selected={selected} onInspect={inspect} />

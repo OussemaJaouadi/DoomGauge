@@ -1,3 +1,7 @@
+import { Hint } from '../../components/ui/Hint';
+import { useTracking } from '../../tracking/client';
+import { StateRegion } from '../../components/ui/StateRegion';
+import { hasObservationCoverage } from '../../utils/telemetryInsights';
 import { hintFacts } from '../../components/ui/hintContent';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { Activity, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
@@ -11,20 +15,23 @@ import { platformMeta } from '../../components/platformMeta';
 import { AnalysisWorkspace } from '../../components/telemetry/AnalysisWorkspace';
 import { TelemetryFilters } from '../../components/telemetry/TelemetryFilters';
 import { Clock } from '../../components/ui/Clock';
+import { StatePreviewControls, useStatePreview } from '../../components/ui/StatePreview';
 import { SettingsPage } from '../../components/settings/SettingsPage';
 import './App.css';
 
 const pages: TelemetryPage[] = ['overview', ...PLATFORMS];
 
 export default function App() {
-  const [now] = useState(() => new Date());
+  const { preset } = useStatePreview();
+  const now = new Date();
+  const preview = Boolean(import.meta.env.DEV && (new URLSearchParams(location.search).get('data') === 'mock' || preset !== 'normal'));
   const [page, setPage] = useState<TelemetryPage>('overview');
   const [destination, setDestination] = useState<'analysis' | 'settings'>('analysis');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selections, setSelections] = useState<Record<TelemetryPage, PageSelection>>(() => Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'windows' }])) as Record<TelemetryPage, PageSelection>);
   const [daypart, setDaypart] = useState<Daypart[]>(() => DAYPARTS.map(option => option.id));
   const { range, endDate, view } = selections[page];
-  const context = `${page}-${range}-${localDateKey(endDate)}-${daypart}-${view}`;
+  const context = `${preset}-${page}-${range}-${localDateKey(endDate)}-${daypart}-${view}`;
   const update = (patch: Partial<PageSelection>) => setSelections(value => ({ ...value, [page]: { ...value[page], ...patch } }));
   const bounds = periodBounds(endDate, range, now);
   const dateFormatter = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric',
@@ -32,11 +39,17 @@ export default function App() {
   const dateLabel = range === 'day' ? dateFormatter.format(endDate) : dateFormatter.formatRange(bounds.start, endDate);
   const historyStart = shiftDate(bounds.previousStart, -1).getTime();
   const historyEnd = bounds.cutoff.getTime();
-  const dataset = useMemo(() => buildPreviewDataset(new Date(historyStart), new Date(historyEnd)), [historyStart, historyEnd]);
+  const queryEnd = new Date(endDate); queryEnd.setHours(24,0,0,0);
+  const live = useTracking(historyStart, queryEnd.getTime(), !preview);
+  const dataset = preview ? buildPreviewDataset(new Date(historyStart), new Date(historyEnd)) : live;
+  const coveredDates = preview ? bounds.completeDates : bounds.completeDates.filter(date => { const start = new Date(date+'T00:00:00'); return hasObservationCoverage(dataset.coverage,start.getTime(),shiftDate(start,1).getTime()); });
+  const comparisonAvailable = preview || hasObservationCoverage(dataset.coverage,bounds.previousStart.getTime(),historyEnd);
   const observations = dataset.events;
   const fullSessions = useMemo(() => observationSessions(observations), [observations]);
-  const events = selectObservations(observations, bounds.start.getTime(), historyEnd, page, daypart);
-  const previous = selectObservations(observations, bounds.previousStart.getTime(), bounds.previousCutoff.getTime(), page, daypart);
+  const selectedEvents = selectObservations(observations, bounds.start.getTime(), historyEnd, page, daypart);
+  const selectedPrevious = selectObservations(observations, bounds.previousStart.getTime(), bounds.previousCutoff.getTime(), page, daypart);
+  const events = preset === 'zero' || preset === 'filtered' || preset === 'previousOnly' ? [] : preset === 'insufficient' ? selectedEvents.slice(0, 2) : selectedEvents;
+  const previous = preset === 'zero' || preset === 'filtered' || preset === 'insufficient' ? [] : selectedPrevious;
   const sessions = scopedSessions(fullSessions, events);
   const previousDates = bounds.dates.map((_, i) => localDateKey(shiftDate(bounds.previousStart, i)));
   const isToday = localDateKey(endDate) === localDateKey(now);
@@ -65,13 +78,17 @@ export default function App() {
     </aside>
     <main id="telemetry-content" className="analysis-main" tabIndex={-1}>
       <div className="analysis-content">
+        <StatePreviewControls />
         {destination === 'settings' ? <SettingsPage /> : <>
         <div className="analysis-page-head"><div className="analysis-page-identity"><h1>{title}</h1><Clock /></div>
         <TelemetryFilters range={range} onRangeChange={(value: TimeRange) => update({ range: value })} dateLabel={dateLabel}
           onBack={() => update({ endDate: shiftDate(endDate, -RANGE_LENGTH[range]) })} onForward={() => { const next = shiftDate(endDate, RANGE_LENGTH[range]); update({ endDate: next > now ? now : next }); }} forwardDisabled={isToday}
           daypart={daypart} onDaypartChange={setDaypart} onExport={exportJson} comparisonLabel={hintFacts([['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`], ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`], ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days']])} />
         </div>
-        <AnalysisWorkspace key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={dataset.coverage} dates={bounds.dates} previousDates={previousDates} completeDates={bounds.completeDates} page={page} throughHour={isToday ? now.getHours() : 23} />
+        {!preview && <p className="tracking-status" role="status">{live.savingFailed ? 'Saving interrupted. Keep tracking tabs open to retry.' : 'Recorded activity · gaps in tracking remain unknown'}<Hint label="About live measurements" text="Live totals include unfinished visits. Quick skips use completed visits. Comparisons and return insights require observed coverage." /></p>}
+        <StateRegion id="telemetry.live" label="Recorded activity" shape="chart" onRetry={live.retry} actual={preview ? undefined : live.status === 'success' && !dataset.events.length ? {status:'empty',reason:'unobserved'} : {status:live.status}}>
+        <AnalysisWorkspace comparisonAvailable={comparisonAvailable} key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={preset === 'insufficient' ? [] : dataset.coverage} dates={bounds.dates} previousDates={previousDates} completeDates={preset === 'insufficient' ? coveredDates.slice(-1) : coveredDates} page={page} throughHour={isToday ? now.getHours() : 23} filterEmpty={!events.length && daypart.length < DAYPARTS.length} onClearFilters={() => setDaypart(DAYPARTS.map(option => option.id))} />
+        </StateRegion>
         </>}
       </div>
     </main>
