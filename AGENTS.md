@@ -1,18 +1,20 @@
 # DoomGauge
 
-A personal (non-SaaS) Chrome extension to quantify doom-scrolling on
-short-form video: YouTube Shorts, Instagram Reels, Facebook Reels.
+- Personal Chrome extension; YouTube Shorts, Instagram Reels, Facebook Reels.
 
 ## Goal
-Build awareness of *how much* reels I scroll daily (count + active time),
-per platform, to reduce its impact on my ADHD. v1 is analysis-only
-(local, in-browser). Future versions add richer "brain metrics".
+- Daily count + active time, per platform; support ADHD awareness.
+- v1: local analysis. Future: richer insights and limits.
 
 ## How to work (spec-driven)
-- `.spec/<version>/` is the implementation source of truth (per-version spec + design with AC). `docs/` is the product/design companion.
+- `.spec/<version>/`: implementation contract. `docs/`: product/design guide.
 - Do not implement without a spec item in the active `.spec/<version>/`.
-- Each feature has acceptance criteria in `.spec/<version>/spec.md`. Validate before marking done.
-- Amend `docs/FEATURES.md` + `docs/ARCHITECTURE.md` as scope grows — never rewrite.
+- Validate spec acceptance criteria before marking done.
+- Docs: short bullets, tables, accurate Mermaid; each rule once.
+- Edit existing sections with targeted patches; history belongs in Git.
+- Shared types → `src/types`; reusable helpers → `src/utils`.
+- Code: descriptive names, braced control flow, one operation per line; name complex conditions.
+- Commit only after the user's manual testing and explicit approval.
 
 ## Docs
 - .spec/doom-gauge-v1/spec.md   — v1 requirements + acceptance criteria (SSOT for build)
@@ -20,12 +22,10 @@ per platform, to reduce its impact on my ADHD. v1 is analysis-only
 - docs/DESIGN.md        — visual system (Neuro-Spike Telemetry) & design tokens
 - docs/FEATURES.md      — vision map v1 vs future (points to .spec/ for AC)
 - docs/ARCHITECTURE.md  — system shape, data flow, storage (overview; details in .spec/)
-- docs/PSYCHOLOGY.md    — user cognitive profile, dopamine slot-machine mechanics, urgency design rules
+- docs/PSYCHOLOGY.md    — cognitive preferences and interpretation limits
 - docs/STACK.md         — tooling + dependencies + rationale
 
 ## Commit convention
-Commits are prefixed with a meaningful icon + a Conventional Commits type:
-
 | Icon | Type | When |
 | --- | --- | --- |
 | 💡 | `feat` | new functionality |
@@ -42,7 +42,7 @@ Commits are prefixed with a meaningful icon + a Conventional Commits type:
 | 🌱 | `init` | initial project setup (first commit only) |
 | 🗄️ | `backend` | server / DuckDB / API side |
 
-Format: `<icon> <type>: <short present-tense summary>`
+- Format: `<icon> <type>: <short present-tense summary>`.
 
 ## Run / test (bun)
 - dev:    `bun run dev`    (WXT hot-reload)
