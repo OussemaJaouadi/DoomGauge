@@ -8,7 +8,10 @@
     "dev": "wxt",
     "build": "wxt build",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:actual": "WXT_DATA_MODE=actual wxt",
+    "build:actual": "WXT_DATA_MODE=actual wxt build",
+    "build:dev": "WXT_DATA_MODE=dev wxt build"
   },
   "dependencies": {
     "lucide-react": "^1.38.0",
