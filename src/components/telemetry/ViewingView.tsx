@@ -1,12 +1,21 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import { measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { useEffect, useMemo, useState } from 'react';
-import type { PreviewObservation, TelemetryPage } from '../../types/telemetryPreview';
+
+// Types & Models
 import { PLATFORMS } from '../../types/models';
-import { durationCurve, observationTotals } from '../../utils/telemetryPreview';
-import { platformMeta } from '../platformMeta';
+import type { PreviewObservation, TelemetryPage } from '../../types/telemetryPreview';
+
+// UI Components
 import { AnalysisPanel, NoObservations } from './Primitives';
+import { StateRegion } from '../ui/StateRegion';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { contentState } from '../../utils/uiState';
+import { durationCurve, observationTotals } from '../../utils/telemetryPreview';
+import { measurementHints } from '../ui/hintContent';
 
 const curvePatterns = { youtube: '', instagram: '8 4', facebook: '2 4' };
 
@@ -14,15 +23,25 @@ export function ViewingView({ events, page }: { events: PreviewObservation[]; pa
   const [threshold, setThreshold] = useState(3);
   const [width, setWidth] = useState(980);
   const [svg, setSvg] = useState<SVGSVGElement | null>(null);
+
   useEffect(() => {
-    if (!svg) return;
-    const observer = new ResizeObserver(entries => { const next = entries[0]?.contentRect.width; if (next) setWidth(next); });
+    if (!svg) {
+      return;
+    }
+    const observer = new ResizeObserver(entries => {
+      const next = entries[0]?.contentRect.width;
+      if (next) {
+        setWidth(next);
+      }
+    });
     observer.observe(svg);
     return () => observer.disconnect();
   }, [svg]);
+
   const curves = useMemo(() => (page === 'overview' ? PLATFORMS : [page]).map(platform => {
     const observations = events.filter(e => e.platform === platform);
     return { platform, observations, points: durationCurve(observations), ...observationTotals(observations) };
+
   }), [events, page]);
   const maxSeconds = Math.max(3, ...events.map(e => e.durationMs / 1000));
   const selected = Math.min(threshold, maxSeconds);

@@ -1,25 +1,24 @@
-import { QUICK_SKIP_MS } from '../config/tracking';
 import { clipObservations } from './trackingMeasurements';
 import type { ObservationSession, PreviewObservation, RecurringWindow } from '../types/telemetryPreview';
 import { localDateKey } from './time';
 import { minuteOfDay, shiftDate, startOfDay } from './telemetryPreview';
+import {
+  DURATION_BUCKETS,
+  SESSION_BUCKETS,
+  type DurationBucketSpec,
+  type SessionBucketSpec,
+} from '../types/telemetry';
+import type { Evidence, EvidenceState, EvidenceAction } from '../types/telemetryPreview';
 
-export const DURATION_BUCKETS = [
-  { label: '<3s', lower: 0, upper: QUICK_SKIP_MS },
-  { label: '3–<10s', lower: QUICK_SKIP_MS, upper: 10000 },
-  { label: '10–<30s', lower: 10000, upper: 30000 },
-  { label: '30–<60s', lower: 30000, upper: 60000 },
-  { label: '≥60s', lower: 60000, upper: Infinity },
-];
-export type Evidence = { kind: 'sessionBucket'; index: number } | { kind: 'window'; window: RecurringWindow } | { kind: 'day'; date: string; hour?: number } |
-  { kind: 'session'; id: string; unfiltered?: boolean } | { kind: 'bucket'; index: number } |
-  { kind: 'returns'; minutes: number } | { kind: 'curve' };
-export interface EvidenceState { context: string; stack: Evidence[] }
-export const SESSION_BUCKETS = [
-  { label: '<1m', lower: 0, upper: 60000 }, { label: '1–<3m', lower: 60000, upper: 180000 },
-  { label: '3–<5m', lower: 180000, upper: 300000 }, { label: '5–<10m', lower: 300000, upper: 600000 },
-  { label: '10–<20m', lower: 600000, upper: 1200000 }, { label: '≥20m', lower: 1200000, upper: Infinity },
-];
+export {
+  DURATION_BUCKETS,
+  SESSION_BUCKETS,
+  type DurationBucketSpec,
+  type SessionBucketSpec,
+  type Evidence,
+  type EvidenceState,
+  type EvidenceAction,
+};
 export function sessionDistribution(sessions: readonly ObservationSession[]) {
   const buckets = SESSION_BUCKETS.map(bucket => ({ ...bucket, sessions: [] as ObservationSession[], activeMs: 0 }));
   for (const session of sessions) {
@@ -29,8 +28,6 @@ export function sessionDistribution(sessions: readonly ObservationSession[]) {
   }
   return buckets;
 }
-export type EvidenceAction = { type: 'open'; context: string; evidence: Evidence } |
-  { type: 'push'; context: string; evidence: Evidence } | { type: 'back' } | { type: 'close' };
 export function evidenceReducer(state: EvidenceState, action: EvidenceAction): EvidenceState {
   switch (action.type) {
     case 'open': return { context: action.context, stack: [action.evidence] };

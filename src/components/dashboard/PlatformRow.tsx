@@ -52,18 +52,18 @@ export function PlatformRow({ platform, count, timeMs, maxCount, mode = 'time', 
       <div className="platform-row-main">
         <span className="platform-row-icon" style={{ color: meta.color }}>{meta.icon}</span>
         <span className="platform-row-label">{meta.label}</span>
-        <span className="platform-row-count" style={{ color: mode === 'count' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+        <span className="platform-row-count" style={{ color: mode === 'count' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
           {count} <span className="platform-row-unit">reels</span>
         </span>
         <span className="platform-row-time" style={{ color: mode === 'time' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
           {formatTime(timeMs)}
         </span>
-        <span className="platform-row-pct" style={{ color: meta.color }}>
+        <span className="platform-row-pct" title={`${pct}% share of total ${mode}`}>
           {shareLabel}
         </span>
       </div>
       <div className="platform-row-bar">
-        <div className="platform-row-bar-fill" style={{ width: `${pct}%`, background: meta.color }} />
+        <div className="platform-row-bar-fill" style={{ transform: `scaleX(${Math.max(0, Math.min(100, pct)) / 100})`, background: meta.color }} />
       </div>
       {onClick && <span className="platform-row-chevron">→</span>}
     </Component>

@@ -1,13 +1,24 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import { measurementHints } from '../ui/hintContent';
-import type { ObservationSession, PreviewObservation, RecurringWindow } from '../../types/telemetryPreview';
-import type { SessionReturn } from '../../utils/telemetryInsights';
-import { evidenceTimeline } from '../../utils/telemetryWorkspace';
-import { clockMinute, sessionClockRange } from '../../utils/telemetryPreview';
-import { formatTime } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
+// Types & Models
+import type {
+  ObservationSession,
+  PreviewObservation,
+  RecurringWindow,
+  SessionReturn,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { measurementHints } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+import { clockMinute, sessionClockRange } from '../../utils/telemetryPreview';
+import { evidenceTimeline } from '../../utils/telemetryWorkspace';
 
 function SessionMark({ session, start, end, selected, selectedIds, onSelect }: { session: ObservationSession; start: number; end: number; selected: boolean; selectedIds: Set<string>; onSelect: () => void }) {
   const left = Math.max(start, session.startTs), right = Math.min(end, session.endTs);

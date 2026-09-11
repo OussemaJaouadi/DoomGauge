@@ -1,9 +1,14 @@
+// React & 3rd-party
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, Download, SlidersHorizontal, X } from 'lucide-react';
+
+// Types & Models
 import { DAYPARTS, type Daypart, type TimeRange } from '../../types/telemetry';
+import type { HintContent } from '../ui/hintContent';
+
+// UI Components
 import { ChoiceGroup } from './Primitives';
 import { Hint } from '../ui/Hint';
-import type { HintContent } from '../ui/hintContent';
 
 interface TelemetryFiltersProps {
   range: TimeRange;

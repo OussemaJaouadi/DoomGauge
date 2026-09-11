@@ -1,26 +1,27 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { useStatePreview } from '../ui/StatePreview';
-import { StateRegion } from '../ui/StateRegion';
-import { measurementHints } from '../ui/hintContent';
 // React & 3rd-party
-import { useState } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { ArrowLeft, Clock, Hash, Zap, Activity } from 'lucide-react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Components
-import { KpiCard } from '../ui/KpiCard';
-import { Hint } from '../ui/Hint';
-import { platformMeta } from '../platformMeta';
-
-// Utils & Data
-import { formatTime } from '../../utils/time';
-import { avgFlickSec, skipDiagnostics } from '../../utils/metrics';
 
 // Types
 import type { Platform, PlatformStats } from '../../types/models';
 
-// Styles & Tokens
+// UI Components
+import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
+import { useStatePreview } from '../ui/StatePreview';
+
+// Tokens & Meta
 import { chartTokens } from '../tokens';
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { avgFlickSec, skipDiagnostics } from '../../utils/metrics';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+import { measurementHints } from '../ui/hintContent';
+
+// Styles
 import './PlatformDetail.css';
 
 interface DetailHourTooltipProps {
@@ -58,6 +59,12 @@ export function PlatformDetail({
 
   const { overrides } = useStatePreview();
   const { pct: skipPct, of10: fill } = skipDiagnostics(d.skip, d.completedCount ?? d.count);
+  const earlyMatch = d.earlyExit.match(/^(\d+)\s*\/\s*(\d+)/);
+  const earlyCount = earlyMatch ? Number(earlyMatch[1]) : 0;
+  const measuredCount = earlyMatch ? Number(earlyMatch[2]) : 0;
+  const hasMeasured = measuredCount > 0;
+  const earlyPct = hasMeasured ? Math.round((earlyCount / measuredCount) * 100) : null;
+  const earlyFill = hasMeasured ? Math.min(10, Math.max(0, Math.round((earlyCount / measuredCount) * 10))) : 0;
   const flick = avgFlickSec(d.timeMs, d.count);
   const hourlyData = d.hourly.slice(0, throughHour).map((v, i) => ({
     label: String(i).padStart(2, '0'),
@@ -67,46 +74,85 @@ export function PlatformDetail({
   const [showBars, setShowBars] = useState(true);
   const [showLine, setShowLine] = useState(true);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onBack();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onBack]);
+
   return (
     <div className="platform-detail">
-      <button className="detail-back" onClick={onBack} type="button">
-        <ArrowLeft size={14} /> Back to Today
-      </button>
-
-      <div className="detail-header" style={{ borderLeftColor: color }}>
-        <span className="detail-icon" style={{ color }}>{meta.icon}</span>
-        <span className="detail-title">{pName}</span>
-        <span className="detail-sub">{overrides.page && overrides.page.status !== "success" ? "" : d.count ? `${d.share}% of total active time` : "Share unavailable"}</span>
+      <div className="detail-topbar">
+        <button
+          className="detail-back"
+          onClick={onBack}
+          type="button"
+          title="Back to Today (Esc)"
+          aria-label="Back to Today"
+        >
+          <ArrowLeft size={15} />
+        </button>
+        <div className="detail-brand-cluster">
+          <span className="detail-icon" style={{ color }}>{meta.icon}</span>
+          <span className="detail-title">{pName}</span>
+        </div>
+        <span className="detail-sub">
+          {overrides.page && overrides.page.status !== 'success'
+            ? ''
+            : d.count
+            ? `${d.share}% of total active time`
+            : 'Share unavailable'}
+        </span>
       </div>
 
-      <StateRegion state={readyState} id="popup.platform-metrics" label="Platform metrics" shape="metrics"><div className="detail-hero">
-        <KpiCard icon={<Clock size={14} />} label="Active Time" value={formatTime(d.timeMs)} accent={accent} />
-        <KpiCard icon={<Hash size={14} />} label="Reel Count" value={d.count} accent={accent} />
-      </div></StateRegion>
+      <StateRegion state={readyState} id="popup.platform-metrics" label="Platform metrics" shape="metrics">
+        <div className="detail-open-hero">
+          <div className="detail-open-stat">
+            <span className="detail-open-val">{formatTime(d.timeMs)}</span>
+            <span className="detail-open-lbl">Active Time</span>
+          </div>
+          <div className="detail-open-stat detail-open-stat-right">
+            <span className="detail-open-val">{d.count}</span>
+            <span className="detail-open-lbl">Reels Watched</span>
+          </div>
+        </div>
+      </StateRegion>
 
-      <StateRegion state={ratioState(d.count, 'activity')} id="popup.platform-signals" label="Platform signals" shape="metrics"><div className="detail-grid3">
-        <KpiCard
-          icon={<Zap size={13} />}
-          label="Impatience"
-          value={(d.completedCount ?? d.count) ? `${skipPct}%` : '—'}
-          unit={`${d.skip}/${d.completedCount ?? d.count}`}
-          accent="magenta"
-        />
-        <KpiCard
-          icon={<Activity size={13} />}
-          label="Velocity"
-          value={d.count ? d.velocity : '—'}
-          unit="reels/min"
-          accent="amber"
-        />
-        <KpiCard
-          icon={<Clock size={13} />}
-          label="Avg flick"
-          value={d.count ? `${flick}s` : '—'}
-          unit="per reel"
-          accent="default"
-        />
-      </div></StateRegion>
+      <StateRegion state={ratioState(d.count, 'activity')} id="popup.platform-signals" label="Platform signals" shape="metrics">
+        <div className="detail-open-signals">
+          <div className="detail-signal-col detail-signal-impatience" title="Quick skips: left video under 3 seconds">
+            <div className="detail-signal-header">
+              <Zap size={13} className="detail-signal-icon" />
+              <span className="detail-signal-val">{(d.completedCount ?? d.count) ? `${skipPct}%` : '—'}</span>
+              <span className="detail-signal-lbl">Impatience</span>
+            </div>
+            <span className="detail-signal-sub">{d.skip}/{d.completedCount ?? d.count} bailed</span>
+          </div>
+
+          <div className="detail-signal-col detail-signal-velocity" title="Velocity: consumption speed in reels per minute">
+            <div className="detail-signal-header">
+              <Activity size={13} className="detail-signal-icon" />
+              <span className="detail-signal-val">{d.count ? d.velocity : '—'}</span>
+              <span className="detail-signal-lbl">Velocity</span>
+            </div>
+            <span className="detail-signal-sub">reels / min</span>
+          </div>
+
+          <div className="detail-signal-col detail-signal-flick" title="Average flick: active seconds watched per reel">
+            <div className="detail-signal-header">
+              <Clock size={13} className="detail-signal-icon" />
+              <span className="detail-signal-val">{d.count ? `${flick}s` : '—'}</span>
+              <span className="detail-signal-lbl">Avg flick</span>
+            </div>
+            <span className="detail-signal-sub">per reel</span>
+          </div>
+        </div>
+      </StateRegion>
 
 <StateRegion state={ratioState(d.completedCount ?? d.count, 'completed')} id="popup.abandonment" label="Abandonment">      <div className="detail-section">
         <div className="detail-section-header">
@@ -121,13 +167,23 @@ export function PlatformDetail({
         <div className="abandonment-item">
           <div className="abandonment-row">
             <span className="abandonment-label">Bailed &lt;3s</span>
-            <span className="abandonment-stat">{d.skip} / {d.completedCount ?? d.count} completed</span>
+            <div className="abandonment-stat-cluster">
+              <span className="abandonment-pill">{skipPct}%</span>
+              <span className="abandonment-stat">{d.skip} / {d.completedCount ?? d.count} completed</span>
+            </div>
           </div>
-          <div className="detail-filmstrip" aria-hidden="true">
+          <div
+            className="detail-filmstrip"
+            aria-hidden="true"
+            style={{ '--platform-color': color } as CSSProperties}
+          >
             {Array.from({ length: 10 }, (_, i) => (
               <span
                 key={i}
-                style={{ background: i < fill ? color : 'var(--border-subtle)' }}
+                style={{
+                  background: i < fill ? color : 'var(--border-subtle)',
+                  color: i < fill ? color : undefined,
+                }}
               />
             ))}
           </div>
@@ -136,7 +192,29 @@ export function PlatformDetail({
         <div className="abandonment-item">
           <div className="abandonment-row">
             <span className="abandonment-label">Early exit (&lt;50%)</span>
-            <span className="abandonment-stat">{d.earlyExit}</span>
+            <div className="abandonment-stat-cluster">
+              <span className="abandonment-pill abandonment-pill-amber">
+                {hasMeasured ? `${earlyPct}%` : '—'}
+              </span>
+              <span className="abandonment-stat">
+                {hasMeasured ? `${earlyCount} / ${measuredCount} measured` : d.earlyExit}
+              </span>
+            </div>
+          </div>
+          <div
+            className="detail-filmstrip"
+            aria-hidden="true"
+            style={{ '--platform-color': 'var(--accent-amber)' } as CSSProperties}
+          >
+            {Array.from({ length: 10 }, (_, i) => (
+              <span
+                key={i}
+                style={{
+                  background: hasMeasured && i < earlyFill ? 'var(--accent-amber)' : 'var(--border-subtle)',
+                  color: hasMeasured && i < earlyFill ? 'var(--accent-amber)' : undefined,
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>

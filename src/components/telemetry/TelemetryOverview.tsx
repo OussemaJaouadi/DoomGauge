@@ -1,14 +1,20 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import { measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { Clock3, Hash } from 'lucide-react';
-import type { ReturnRate } from '../../utils/telemetryInsights';
-import type { Evidence } from '../../utils/telemetryWorkspace';
-import { formatTime } from '../../utils/time';
-import { observationTotals } from '../../utils/telemetryPreview';
-import { OverviewCard } from '../ui/OverviewCard';
+
+// Types & Models
+import type { Evidence, ReturnRate } from '../../types/telemetryPreview';
+
+// UI Components
 import { Hint } from '../ui/Hint';
+import { OverviewCard } from '../ui/OverviewCard';
 import { ReturnsControl } from './ReturnsControl';
+import { StateRegion } from '../ui/StateRegion';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { measurementHints } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+import { observationTotals } from '../../utils/telemetryPreview';
 
 interface OverviewProps {
   comparisonAvailable?: boolean;

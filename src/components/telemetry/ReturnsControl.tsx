@@ -1,7 +1,12 @@
-import { ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import type { ReturnRate } from '../../utils/telemetryInsights';
+// Types & Models
+import type { ReturnRate } from '../../types/telemetryPreview';
+
+// UI Components
 import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
+
+// Utilities & Helpers
+import { ratioState } from '../../utils/uiState';
 
 export function ReturnsControl({ rates, selected, onInspect }: {
   rates: ReturnRate[];

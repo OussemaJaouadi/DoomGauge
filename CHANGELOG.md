@@ -2,6 +2,25 @@
 
 > Append-only. One entry per iteration: date + commit subject + what changed.
 
+## 2026-09-11 — 💡 feat: popup telemetry interactions, bucket contracts SSOT, and domain types
+
+### Code Behavior & Architecture Changes:
+- **Interval Contract Change**: Purged mathematical interval strings (`3–<10s`, `10–<30s`, `1–<3m`, `≥20m`, etc.) in favor of clean telemetry intervals (`3–10s`, `10–30s`, `1–3m`, `>20m`, etc.) across viewing and session distributions.
+- **SSOT Centralization (DRY)**: Unified `DURATION_BUCKETS` and `SESSION_BUCKETS` in `src/types/telemetry.ts` with typed specs (`DurationBucketSpec`, `SessionBucketSpec`), eliminating duplicated bucket definitions across `popupActivity.ts` and `telemetryWorkspace.ts`.
+- **Engine Config Relocation**: Moved `SESSION_BREAK_MS` (60s session gap threshold) from `utils/popupActivity.ts` into `src/config/tracking.ts` alongside other engine thresholds.
+- **Domain Types Promotion**: Promoted `TemporalVortex`, `TemporalDaySummary`, `TemporalInsights`, and `ViewingDistribution` to first-class domain types in `src/types/popup.ts`; moved `Evidence`, `ReturnRate`, `SessionReturn`, `RecordFilters`, and `RecordSort` to `src/types/telemetryPreview.ts`.
+- **Runtime Alignment**: `summarizeViewingDistribution()` now builds dynamically from canonical `DURATION_BUCKETS`.
+- **Engineering Standards & Import Hygiene**: Codified `docs/STANDARDS.md`. Standardized import hierarchies across all chart, dashboard, telemetry, settings, and entrypoint modules into human-readable annotated trees; purged loose types from utils and unbraced one-liners.
+
+### UI & Telemetry Interactions:
+- Signals tab: restructured into a 3-panel behavioral telemetry instrument (Flick Cadence differential gauge, Attention Depth stacked distribution with dynamic 6px edge-guarded floating tooltip, and Impatience platform rack).
+- PlatformDetail: transformed platform metrics into an open two-tier telemetry strip (bold hero volume + inline behavioral signals) and added twin amber filmstrip visualizer for early exit (<50%).
+- Tactile telemetry micro-animations across KPI cards (fluid clock, clicker snap, zap spark, cadence pulse, Worst Vortex crimson pulse).
+- GPU-composited `scaleX` transitions on platform bars (zero layout thrashing).
+- Live natural clock and comparison hint in header; purged "vs yesterday" copy.
+- Platform share hint in Donut header and elevated share pills in platform rows.
+- Purged legacy prototype components and inline color overrides.
+
 ## 2026-09-05 — 🐛 fix: 7 telemetry defects (collapse, traversal, dates, matrix, tokens, badge, colors)
 - Collapse spill: hidden rows on collapsed rail; traversal clamps to today
 - NeuroMap date keys via tested `localDateKey`; circadian matrix live from filtered events

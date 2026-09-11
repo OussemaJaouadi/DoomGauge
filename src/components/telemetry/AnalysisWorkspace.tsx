@@ -1,14 +1,30 @@
+// React & 3rd-party
 import { useReducer, useRef } from 'react';
-import { StateRegion } from '../ui/StateRegion';
-import { readyState } from '../../utils/uiState';
-import type { ObservationCoverage, ObservationSession, PreviewObservation, TelemetryPage, WorkspaceView } from '../../types/telemetryPreview';
-import { rankedRecurringWindows, sessionReturnRates } from '../../utils/telemetryInsights';
-import { activeEvidence, evidenceReducer, type Evidence } from '../../utils/telemetryWorkspace';
-import { observationTotals } from '../../utils/telemetryPreview';
-import { TelemetryOverview } from './TelemetryOverview';
+
+// Types & Models
+import type {
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  TelemetryPage,
+  WorkspaceView,
+  Evidence,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { ChoiceGroup } from './Primitives';
-import { WorkspaceCanvas } from './WorkspaceCanvas';
 import { EvidenceDrawer } from './EvidenceDrawer';
+import { StateRegion } from '../ui/StateRegion';
+import { TelemetryOverview } from './TelemetryOverview';
+import { WorkspaceCanvas } from './WorkspaceCanvas';
+
+// Utilities & Helpers
+import { readyState } from '../../utils/uiState';
+import { observationTotals } from '../../utils/telemetryPreview';
+import { rankedRecurringWindows, sessionReturnRates } from '../../utils/telemetryInsights';
+import { activeEvidence, evidenceReducer } from '../../utils/telemetryWorkspace';
+
+// Styles
 import './Workspace.css';
 
 interface WorkspaceProps {

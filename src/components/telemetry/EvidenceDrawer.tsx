@@ -1,21 +1,44 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import { StatePreviewControls } from '../ui/StatePreview';
-import { hintFacts, measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
-import type { ObservationCoverage, ObservationSession, PreviewObservation, TelemetryPage } from '../../types/telemetryPreview';
-import { DURATION_BUCKETS, SESSION_BUCKETS, sessionDistribution, detailReducer, evidenceEvents, type Evidence } from '../../utils/telemetryWorkspace';
-import type { ReturnRate } from '../../utils/telemetryInsights';
-import { clockMinute, mechanicsSummary, observationTotals, platformTotals, scopedSessions, sessionClockRange } from '../../utils/telemetryPreview';
-import { formatTime } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
-import { Hint } from '../ui/Hint';
-import { ViewingView } from './ViewingView';
-import { NoObservations } from './Primitives';
-import { EvidenceTimeline, ReturnTimeline } from './EvidenceTimeline';
-import { ReelRecords } from './ReelRecords';
+
+// Types & Models
+import type {
+  Evidence,
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  ReturnRate,
+  TelemetryPage,
+} from '../../types/telemetryPreview';
+import { DURATION_BUCKETS, SESSION_BUCKETS } from '../../types/telemetry';
+
+// UI Components
 import { CalendarEvidence } from './CalendarEvidence';
+import { EvidenceTimeline, ReturnTimeline } from './EvidenceTimeline';
+import { Hint } from '../ui/Hint';
+import { NoObservations } from './Primitives';
+import { ReelRecords } from './ReelRecords';
+import { StatePreviewControls } from '../ui/StatePreview';
+import { StateRegion } from '../ui/StateRegion';
+import { ViewingView } from './ViewingView';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { hintFacts, measurementHints } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+import {
+  clockMinute,
+  mechanicsSummary,
+  observationTotals,
+  platformTotals,
+  scopedSessions,
+  sessionClockRange,
+} from '../../utils/telemetryPreview';
+import { detailReducer, evidenceEvents, sessionDistribution } from '../../utils/telemetryWorkspace';
 
 interface DrawerProps {
   dates: string[]; coverage: ObservationCoverage[];

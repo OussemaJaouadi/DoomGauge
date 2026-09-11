@@ -1,5 +1,25 @@
 .popup-share { display: flex; flex-direction: column; gap: 14px; }
 .popup-share-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.popup-share-title-group { display: inline-flex; align-items: center; gap: 6px; }
+.popup-share-title-group .ui-hint-btn {
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+.popup-share-title-group .ui-hint-btn:hover,
+.popup-share-title-group .ui-hint-btn.active {
+  background: var(--bg-surface-raised);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+.popup-share-title-group .ui-hint-btn svg {
+  width: 12px;
+  height: 12px;
+}
 .popup-share-toggle { display: flex; padding: 2px; gap: 2px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
 .popup-share-toggle button { font: 600 0.75rem var(--font-mono); padding: 5px 8px; border: 1px solid transparent; border-radius: 2px; color: var(--text-secondary); background: transparent; cursor: pointer; }
 .popup-share-toggle button[aria-pressed="true"] { color: var(--text-primary); background: var(--bg-surface-raised); border-color: var(--text-secondary); }

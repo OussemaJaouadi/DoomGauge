@@ -1,8 +1,14 @@
+// React & 3rd-party
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
+// UI Components
 import App from './App';
-import { initializeTheme } from '../../theme/client';
 import { StatePreviewProvider } from '../../components/ui/StatePreview';
+
+// Theme & Initialization
+import { initializeTheme } from '../../theme/client';
+
 
 await initializeTheme();
 

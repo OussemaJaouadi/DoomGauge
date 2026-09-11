@@ -1,36 +1,26 @@
-import { QUICK_SKIP_MS } from '../config/tracking';
+import { QUICK_SKIP_MS, SESSION_BREAK_MS } from '../config/tracking';
 import { PLATFORMS } from '../types/models';
 import type { HourItem, Platform, PlatformStats } from '../types/models';
-import type { PopupActivitySession, PopupMockView } from '../types/popup';
+import type {
+  PopupActivitySession,
+  PopupMockView,
+  TemporalDaySummary,
+  TemporalInsights,
+  TemporalVortex,
+  ViewingDistribution,
+  ViewingDistributionBucket,
+} from '../types/popup';
+import { DURATION_BUCKETS } from '../types/telemetry';
 import { avgFlickSec, impatiencePct } from './metrics';
 
-export const SESSION_BREAK_MS = 60_000;
-
-export interface TemporalVortex {
-  startTime: string;
-  endTime: string;
-  activeMs: number;
-  elapsedMs: number;
-  gapMs: number;
-  reelCount: number;
-  platforms: Platform[];
-}
-
-export interface TemporalDaySummary {
-  sessionCount: number;
-  totalActiveMs: number;
-  totalElapsedMs: number;
-  avgSessionActiveMs: number;
-  concentrationPct: number;
-  activeConcentrationPct: number;
-  worstReelCount: number;
-  totalReelCount: number;
-}
-
-export interface TemporalInsights {
-  worstVortex: TemporalVortex | null;
-  daySummary: TemporalDaySummary;
-}
+export { SESSION_BREAK_MS } from '../config/tracking';
+export type {
+  TemporalDaySummary,
+  TemporalInsights,
+  TemporalVortex,
+  ViewingDistribution,
+  ViewingDistributionBucket,
+} from '../types/popup';
 
 /** Completed observations in a local day's preview window. No duration inference. */
 export function viewsThroughCutoff(views: readonly PopupMockView[], dayStart: number, cutoff: number) {
@@ -113,14 +103,13 @@ export function deltaTrend(delta: number): 'worse' | 'better' | 'neutral' {
 }
 
 /** Buckets use active viewing duration, never video length or elapsed span. */
-export function summarizeViewingDistribution(views: readonly PopupMockView[]) {
-  const buckets = [
-    { label: '<3s', upperMs: QUICK_SKIP_MS },
-    { label: '3–<10s', upperMs: 10_000 },
-    { label: '10–<30s', upperMs: 30_000 },
-    { label: '30–<60s', upperMs: 60_000 },
-    { label: '≥60s', upperMs: Infinity },
-  ].map(bucket => ({ ...bucket, count: 0, activeMs: 0 }));
+export function summarizeViewingDistribution(views: readonly PopupMockView[]): ViewingDistribution {
+  const buckets = DURATION_BUCKETS.map(bucket => ({
+    label: bucket.label,
+    upperMs: bucket.upper,
+    count: 0,
+    activeMs: 0,
+  }));
   const durations = views.filter(view=>view.countInScope!==false).map(view => view.activeMs).sort((a, b) => a - b);
   for (const view of views) {
     const activeMs=view.activeMs;
@@ -144,8 +133,6 @@ export function summarizeViewingDistribution(views: readonly PopupMockView[]) {
     })),
   };
 }
-
-export type ViewingDistribution = ReturnType<typeof summarizeViewingDistribution>;
 
 export function formatActivityClock(timestamp: number): string {
   const date = new Date(timestamp);

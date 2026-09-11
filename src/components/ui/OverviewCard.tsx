@@ -15,6 +15,7 @@ export interface OverviewCardProps {
   delta?: OverviewDeltaConfig | React.ReactNode;
   baseline?: React.ReactNode;
   sub?: React.ReactNode;
+  hint?: React.ReactNode;
   accent?: 'blue' | 'amber' | 'teal' | 'neutral';
   trend?: 'worse' | 'better' | 'neutral';
   className?: string;
@@ -27,6 +28,7 @@ export function OverviewCard({
   delta,
   baseline,
   sub,
+  hint,
   accent,
   trend = 'neutral',
   className = '',
@@ -63,17 +65,17 @@ export function OverviewCard({
   return (
     <div className={`overview-card overview-card-${trend} overview-card-accent-${resolvedAccent} ${className}`}>
       <div className="overview-card-header">
-        <span className="overview-card-label">{label}</span>
+        <div className="overview-card-header-main">
+          <span className="overview-card-label">{label}</span>
+          {hint && <span className="overview-card-hint">{hint}</span>}
+        </div>
         {icon && <span className="overview-card-icon">{icon}</span>}
       </div>
       <div className="overview-card-value">{value}</div>
       <div className="overview-card-footer">
         {renderDelta()}
         {baseline && (
-          <>
-            <span className="overview-footer-sep">·</span>
-            <span className="overview-footer-baseline">{baseline}</span>
-          </>
+          <span className="overview-footer-baseline">{baseline}</span>
         )}
         {sub}
       </div>

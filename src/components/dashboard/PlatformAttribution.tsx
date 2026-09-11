@@ -1,6 +1,13 @@
+// React & 3rd-party
 import React from 'react';
+
+// Models & Constants
 import { PLATFORMS } from '../../types/models';
+
+// Tokens
 import { chartTokens } from '../tokens';
+
+// Utilities & Helpers
 import { formatTime } from '../../utils/time';
 
 export interface PlatformAttributionProps {

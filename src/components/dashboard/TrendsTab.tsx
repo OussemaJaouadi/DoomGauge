@@ -1,12 +1,23 @@
-import { readyState, contentState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
+// React & 3rd-party
 import React from 'react';
+
+// Types & Models
+import type { HourItem } from '../../types/models';
+import type { TemporalInsights } from '../../types/popup';
+
+// UI Components
 import HourlyBars from '../charts/HourlyBars';
 import { SessionCard } from '../ui/SessionCard';
+import { StateRegion } from '../ui/StateRegion';
+
+// Utilities & Helpers
 import { formatTime } from '../../utils/time';
-import type { HourItem } from '../../types/models';
-import type { TemporalInsights } from '../../utils/popupActivity';
+import { readyState, contentState } from '../../utils/uiState';
+
+// Data & Mocks
 import { HOURLY_MOCK, POPUP_INSIGHTS } from '../../data/popupMock';
+
+// Styles
 import './TrendsTab.css';
 
 interface TrendsTabProps {

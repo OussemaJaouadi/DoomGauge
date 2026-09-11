@@ -1,20 +1,44 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { hasObservationCoverage } from '../../utils/telemetryInsights';
-import { StateRegion } from '../ui/StateRegion';
-import { useStatePreview } from '../ui/StatePreview';
-import { measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { useState } from 'react';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import type { ObservationSession, PreviewObservation, RankedRecurringWindow, TelemetryPage, WorkspaceView } from '../../types/telemetryPreview';
-import type { Evidence } from '../../utils/telemetryWorkspace';
-import { DURATION_BUCKETS, sessionDistribution, evidenceEvents } from '../../utils/telemetryWorkspace';
-import { clockMinute, minuteOfDay, observationTotals, trajectoryRows } from '../../utils/telemetryPreview';
-import { formatTime, localDateKey } from '../../utils/time';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+// Types & Models
 import { PLATFORMS } from '../../types/models';
-import { platformMeta } from '../platformMeta';
-import { Hint } from '../ui/Hint';
+import { DURATION_BUCKETS } from '../../types/telemetry';
+import type {
+  Evidence,
+  ObservationSession,
+  PreviewObservation,
+  RankedRecurringWindow,
+  TelemetryPage,
+  WorkspaceView,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { ChoiceGroup, NoObservations } from './Primitives';
+import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
 import { TimelinePlot } from './SessionTimeline';
+import { useStatePreview } from '../ui/StatePreview';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { clockMinute, minuteOfDay, observationTotals, trajectoryRows } from '../../utils/telemetryPreview';
+import { evidenceEvents, sessionDistribution } from '../../utils/telemetryWorkspace';
+import { formatTime } from '../../utils/time';
+import { hasObservationCoverage } from '../../utils/telemetryInsights';
+import { measurementHints } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 
 interface CanvasProps {
   coverage?: {startTs:number;endTs:number}[];
@@ -86,13 +110,46 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
 
 function TrendPlot({ events, previous, dates, previousDates, throughHour, page, selected, onInspect, coverage }: Pick<CanvasProps, 'events' | 'previous' | 'dates' | 'previousDates' | 'throughHour' | 'page' | 'selected' | 'onInspect' | 'coverage'>) {
   const daily = dates.length === 1;
-  const rows = trajectoryRows(events, previous, dates, previousDates, daily, 'time', throughHour).map((row,i) => {
-    const covered=(keys: readonly string[])=>{const start=new Date(keys[daily?0:i]+'T00:00:00');if(daily)start.setHours(i);const end=new Date(start);if(daily)end.setHours(end.getHours()+1);else end.setDate(end.getDate()+1);return !coverage||hasObservationCoverage(coverage,start.getTime(),end.getTime());};
-    const current=row.youtube+row.instagram+row.facebook;
-    return {...row,current:current || covered(dates) ? current : null,previous:row.previous || covered(previousDates) ? row.previous : null};
+  const rows = trajectoryRows(events, previous, dates, previousDates, daily, 'time', throughHour).map((row, index) => {
+    const isCovered = (keys: readonly string[]) => {
+      const dateKey = keys[daily ? 0 : index];
+      const start = new Date(`${dateKey}T00:00:00`);
+      if (daily) {
+        start.setHours(index);
+      }
+      const end = new Date(start);
+      if (daily) {
+        end.setHours(end.getHours() + 1);
+      } else {
+        end.setDate(end.getDate() + 1);
+      }
+      return !coverage || hasObservationCoverage(coverage, start.getTime(), end.getTime());
+    };
+
+    const current = row.youtube + row.instagram + row.facebook;
+    const currentCovered = current > 0 || isCovered(dates);
+    const previousCovered = row.previous > 0 || isCovered(previousDates);
+
+    return {
+      ...row,
+      current: currentCovered ? current : null,
+      previous: previousCovered ? row.previous : null,
+    };
   });
-  const inspect = (index: number) => { if (rows[index]) onInspect({ kind: 'day', date: daily ? dates[0]! : dates[index]!, ...(daily ? { hour: index } : {}) }); };
-  if (!events.length && !previous.length) return <NoObservations />;
+
+  const inspect = (index: number) => {
+    if (rows[index]) {
+      onInspect({
+        kind: 'day',
+        date: daily ? dates[0]! : dates[index]!,
+        ...(daily ? { hour: index } : {}),
+      });
+    }
+  };
+
+  if (!events.length && !previous.length) {
+    return <NoObservations />;
+  }
   const color = `var(--chart-${page})`;
   return <>
     <div className="workspace-trend-key"><span style={{ borderBottom: `3px solid ${color}` }}>Selected period</span><span style={{ borderBottom: '2px dashed var(--chart-previous)' }}>Previous period</span></div>

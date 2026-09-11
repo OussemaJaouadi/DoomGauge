@@ -25,3 +25,45 @@ export interface PopupActivitySession {
   reelCount: number;
   platforms: Platform[];
 }
+
+export interface TemporalVortex {
+  startTime: string;
+  endTime: string;
+  activeMs: number;
+  elapsedMs: number;
+  gapMs: number;
+  reelCount: number;
+  platforms: Platform[];
+}
+
+export interface TemporalDaySummary {
+  sessionCount: number;
+  totalActiveMs: number;
+  totalElapsedMs: number;
+  avgSessionActiveMs: number;
+  concentrationPct: number;
+  activeConcentrationPct: number;
+  worstReelCount: number;
+  totalReelCount: number;
+}
+
+export interface TemporalInsights {
+  worstVortex: TemporalVortex | null;
+  daySummary: TemporalDaySummary;
+}
+
+export interface ViewingDistributionBucket {
+  label: string;
+  upperMs: number;
+  count: number;
+  activeMs: number;
+  countPct: number;
+  timePct: number;
+}
+
+export interface ViewingDistribution {
+  totalCount: number;
+  totalMs: number;
+  medianMs: number | null;
+  buckets: ViewingDistributionBucket[];
+}

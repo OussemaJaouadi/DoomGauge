@@ -1,15 +1,13 @@
 import { QUICK_SKIP_MS } from '../config/tracking';
 import type { Platform } from '../types/models';
-import type { PreviewObservation } from '../types/telemetryPreview';
+import type {
+  PreviewObservation,
+  RecordFilters,
+  RecordSort,
+} from '../types/telemetryPreview';
 import { localDateKey } from './time';
 
-export type RecordSort = 'started' | 'active' | 'elapsed';
-export interface RecordFilters {
-  platforms: readonly Platform[];
-  quickSkips: boolean;
-  from: string;
-  to: string;
-}
+export type { RecordFilters, RecordSort };
 export function filterReelRecords(events: readonly PreviewObservation[], filters: RecordFilters, sort: RecordSort, descending: boolean) {
   const value = (event: PreviewObservation) => sort === 'started' ? event.ts : sort === 'active' ? event.durationMs : event.endedTs - event.ts;
   return events.filter(event => {

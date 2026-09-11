@@ -1,13 +1,28 @@
-import { measurementHints, hintFacts } from '../ui/hintContent';
+// React & 3rd-party
 import { useState } from 'react';
-import type { ObservationCoverage, ObservationSession, PreviewObservation, RecurringWindow, TelemetryPage } from '../../types/telemetryPreview';
-import { sessionConcentration, sessionReturnRates, rankedRecurringWindows } from '../../utils/telemetryInsights';
-import { clockMinute, minuteOfDay, observationTotals } from '../../utils/telemetryPreview';
-import { formatTime, localDateKey } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
+
+// Types & Models
+import { PLATFORMS } from '../../types/models';
+import type {
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  RecurringWindow,
+  TelemetryPage,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { AnalysisPanel, NoObservations } from './Primitives';
 import { SessionDetail, TimelinePlot } from './SessionTimeline';
-import { PLATFORMS } from '../../types/models';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime, localDateKey } from '../../utils/time';
+import { hintFacts, measurementHints } from '../ui/hintContent';
+import { clockMinute, minuteOfDay, observationTotals } from '../../utils/telemetryPreview';
+import { rankedRecurringWindows, sessionConcentration, sessionReturnRates } from '../../utils/telemetryInsights';
 
 interface InterventionInsightsProps {
   events: PreviewObservation[]; sessions: ObservationSession[]; fullSessions: ObservationSession[];

@@ -1,6 +1,17 @@
-import type { ObservationCoverage, ObservationSession, PreviewObservation, RankedRecurringWindow, TelemetryPage } from '../types/telemetryPreview';
+import type {
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  RankedRecurringWindow,
+  TelemetryPage,
+  SessionReturn,
+  ReturnRate,
+} from '../types/telemetryPreview';
 import { localDateKey } from './time';
 import { minuteOfDay, observationTotals, recurringWindows } from './telemetryPreview';
+
+export type { SessionReturn, ReturnRate };
+
 
 export function sessionConcentration(sessions: readonly ObservationSession[]) {
   const ranked = sessions.map(session => ({ session, activeMs: observationTotals(session.events).activeMs }))
@@ -27,8 +38,6 @@ export function hasObservationCoverage(coverage: readonly ObservationCoverage[],
   return false;
 }
 
-export interface SessionReturn { origin: ObservationSession; next: ObservationSession; gapMs: number }
-export interface ReturnRate { minutes: number; eligibleCount: number; returnedCount: number; percentage: number | null; matches: SessionReturn[] }
 
 export function sessionReturnRates(fullSessions: readonly ObservationSession[], selectedSessions: readonly ObservationSession[], coverage: readonly ObservationCoverage[], page: TelemetryPage): ReturnRate[] {
   const originIds = new Set(selectedSessions.map(session => session.id));

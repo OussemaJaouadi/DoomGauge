@@ -10,13 +10,47 @@
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   font-family: var(--font-mono);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.2s ease;
 }
 
+.overview-card:hover {
+  background: var(--bg-surface-raised);
+}
+
+/* Fluid Reservoir Model (Active Time): Soft Cyan Aura & Clock Sweep */
+.overview-card:has(.lucide-clock, .lucide-clock3):hover {
+  border-color: color-mix(in srgb, var(--accent-blue) 45%, var(--border-subtle));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-blue) 12%, transparent), inset 0 0 8px color-mix(in srgb, var(--accent-blue) 4%, transparent);
+}
+
+.overview-card:has(.lucide-clock, .lucide-clock3):hover .overview-card-icon {
+  transform: rotate(20deg);
+  color: var(--accent-blue);
+}
+
+/* Mechanical Clicker Model (Reels Count): Tactile Spring Snap & Spark Strike */
+.overview-card:has(.lucide-zap, .lucide-hash):hover {
+  transform: translateY(-1.5px);
+  border-color: color-mix(in srgb, var(--accent-amber) 45%, var(--border-subtle));
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), 0 0 14px color-mix(in srgb, var(--accent-amber) 10%, transparent);
+}
+
+.overview-card:has(.lucide-zap, .lucide-hash):hover .overview-card-icon {
+  filter: drop-shadow(0 0 6px var(--accent-amber)) brightness(1.25);
+  color: var(--accent-amber);
+}
 
 .overview-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.overview-card-header-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .overview-card-label {
@@ -27,10 +61,39 @@
   color: var(--text-secondary);
 }
 
+.overview-card-hint {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.overview-card-hint .ui-hint-btn {
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.overview-card-hint .ui-hint-btn:hover,
+.overview-card-hint .ui-hint-btn.active {
+  background: var(--bg-surface-raised);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.overview-card-hint .ui-hint-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
 .overview-card-icon {
   display: inline-flex;
   align-items: center;
   color: var(--text-secondary);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease, color 0.2s ease;
 }
 
 .overview-card-value {

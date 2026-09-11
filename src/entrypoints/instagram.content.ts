@@ -1,12 +1,21 @@
-import { DEV_DATA } from '../config/dataMode';
+// Framework & 3rd-party
 import { defineContentScript } from 'wxt/utils/define-content-script';
+
+// Configuration
+import { DEV_DATA } from '../config/dataMode';
+
+// Tracking Services
 import { startCollector } from '../tracking/content';
+
 export default defineContentScript({
   matches: ['*://www.instagram.com/*'],
   runAt: 'document_idle',
   main(context) {
-    if (DEV_DATA) return;
+    if (DEV_DATA) {
+      return;
+    }
     const stop = startCollector('instagram');
     context.onInvalidated(stop);
   },
 });
+

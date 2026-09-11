@@ -39,3 +39,47 @@ export interface RankedRecurringWindow extends RecurringWindow {
   totalActiveMs: number;
   sharePct: number | null;
 }
+
+export type Evidence =
+  | { kind: 'sessionBucket'; index: number }
+  | { kind: 'window'; window: RecurringWindow }
+  | { kind: 'day'; date: string; hour?: number }
+  | { kind: 'session'; id: string; unfiltered?: boolean }
+  | { kind: 'bucket'; index: number }
+  | { kind: 'returns'; minutes: number }
+  | { kind: 'curve' };
+
+export interface EvidenceState {
+  context: string;
+  stack: Evidence[];
+}
+
+export type EvidenceAction =
+  | { type: 'open'; context: string; evidence: Evidence }
+  | { type: 'push'; context: string; evidence: Evidence }
+  | { type: 'back' }
+  | { type: 'close' };
+
+export interface SessionReturn {
+  origin: ObservationSession;
+  next: ObservationSession;
+  gapMs: number;
+}
+
+export interface ReturnRate {
+  minutes: number;
+  eligibleCount: number;
+  returnedCount: number;
+  percentage: number | null;
+  matches: SessionReturn[];
+}
+
+export type RecordSort = 'started' | 'active' | 'elapsed';
+
+export interface RecordFilters {
+  platforms: readonly Platform[];
+  quickSkips: boolean;
+  from: string;
+  to: string;
+}
+

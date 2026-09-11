@@ -1,46 +1,73 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { ActivityReadProvider, ActivityReadNotice } from '../../components/ui/ActivityReadState';
-import { DEV_DATA } from '../../config/dataMode';
-import { useTracking } from '../../tracking/client';
-import { livePopup } from '../../utils/livePopup';
-import { hasObservationCoverage } from '../../utils/telemetryInsights';
-import { hintFacts } from '../../components/ui/hintContent';
-import { useLayoutEffect, useRef, useState } from 'react';
-import { Activity, Clock, BarChart2, Zap, ExternalLink } from 'lucide-react';
-import type { Tab, View } from '../../types/popup';
+// React & 3rd-party
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Activity, BarChart2, Clock, ExternalLink, Zap } from 'lucide-react';
+
+// Types & Models
 import type { Platform } from '../../types/models';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
-import { OverviewCard } from '../../components/ui/OverviewCard';
-import { StateRegion } from '../../components/ui/StateRegion';
-import { StatePreviewControls, useStatePreview } from '../../components/ui/StatePreview';
-import { PlatformRow } from '../../components/dashboard/PlatformRow';
-import { PlatformDetail } from '../../components/dashboard/PlatformDetail';
-import { SignalsTab } from '../../components/dashboard/SignalsTab';
-import { TrendsTab } from '../../components/dashboard/TrendsTab';
-import { Hint } from '../../components/ui/Hint';
+import type { Tab, View } from '../../types/popup';
+
+// UI Components
+import { ActivityReadNotice, ActivityReadProvider } from '../../components/ui/ActivityReadState';
 import { Donut } from '../../components/charts/Donut';
-import { platformMeta } from '../../components/platformMeta';
-import { formatTime } from '../../utils/time';
-import { avgFlickSec } from '../../utils/metrics';
-import { deltaTrend } from '../../utils/popupActivity';
+import { Hint } from '../../components/ui/Hint';
+import { OverviewCard } from '../../components/ui/OverviewCard';
+import { PlatformDetail } from '../../components/dashboard/PlatformDetail';
+import { PlatformRow } from '../../components/dashboard/PlatformRow';
+import { SignalsTab } from '../../components/dashboard/SignalsTab';
+import { StatePreviewControls, useStatePreview } from '../../components/ui/StatePreview';
+import { StateRegion } from '../../components/ui/StateRegion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/Tabs';
+import { TrendsTab } from '../../components/dashboard/TrendsTab';
+
+// Tokens & Meta
 import { chartTokens } from '../../components/tokens';
+import { hintFacts } from '../../components/ui/hintContent';
+import { platformMeta } from '../../components/platformMeta';
+
+// Utilities & Helpers
+import { avgFlickSec } from '../../utils/metrics';
+import { contentState, readyState } from '../../utils/uiState';
+import { deltaTrend } from '../../utils/popupActivity';
+import { formatTime } from '../../utils/time';
+import { hasObservationCoverage } from '../../utils/telemetryInsights';
+import { livePopup } from '../../utils/livePopup';
+
+// Services & Fixtures
+import { DEV_DATA } from '../../config/dataMode';
 import { POPUP_AS_OF_HOUR } from '../../data/popupMock';
 import { popupStateFixture } from '../../data/uiStateFixtures';
+import { useTracking } from '../../tracking/client';
+
+// Styles
 import './App.css';
 
 export default function App() {
   const { preset, reset } = useStatePreview();
   const preview = DEV_DATA;
-  const now = new Date(); const start = new Date(now); start.setHours(0,0,0,0); start.setDate(start.getDate()-1);
-  const end = new Date(now); end.setHours(24,0,0,0);
+  const [clock, setClock] = useState(() => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setClock(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - 1);
+
+  const end = new Date(now);
+  end.setHours(24, 0, 0, 0);
+
   const live = useTracking(start.getTime(), end.getTime(), !preview);
   const popupData = preview ? popupStateFixture(preset) : livePopup(live.events, now);
   const { summary, platforms, hourly } = popupData;
-  const readDistribution = () => 'readDistribution' in popupData ? popupData.readDistribution() : popupData.distribution;
-  const readInsights = () => 'readInsights' in popupData ? popupData.readInsights() : popupData.insights;
-  const throughHour = preview ? POPUP_AS_OF_HOUR : now.getHours()+1;
-  const cutoffLabel = preview ? POPUP_AS_OF_HOUR+':00' : now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  const comparisonAvailable = preview || hasObservationCoverage(live.coverage,start.getTime(),now.getTime());
+  const readDistribution = () => ('readDistribution' in popupData ? popupData.readDistribution() : popupData.distribution);
+  const readInsights = () => ('readInsights' in popupData ? popupData.readInsights() : popupData.insights);
+  const throughHour = preview ? POPUP_AS_OF_HOUR : now.getHours() + 1;
+  const comparisonAvailable = preview || hasObservationCoverage(live.coverage, start.getTime(), now.getTime());
   const [view, setView] = useState<View>({ kind: 'tabs', tab: 'today' });
   const [stackMode, setStackMode] = useState<'time' | 'count'>('time');
   const root = useRef<HTMLDivElement>(null);
@@ -51,7 +78,9 @@ export default function App() {
 
   useLayoutEffect(() => {
     const target = focusTarget.current;
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     const selector = target === 'detail' ? '.detail-back' : `button.platform-row[data-platform="${target}"]`;
     root.current?.querySelector<HTMLButtonElement>(selector)?.focus();
     focusTarget.current = null;
@@ -62,7 +91,17 @@ export default function App() {
     <div className="container popup-shell" ref={root}>
       <header className="header">
         <span className="brand">DOOMGAUGE</span>
-        <span className="preview-pill">{preview ? 'Preview' : 'Recorded'} · {cutoffLabel}</span>
+        <div className="header-telemetry">
+          <span className="preview-pill">{preview ? 'Preview' : 'Recorded'} · {clock}</span>
+          <Hint
+            label="About comparison"
+            text={hintFacts(
+              [['Previous', 'Yesterday'], ['Cutoff', `Both through ${clock}`]],
+              comparisonAvailable ? 'Equal elapsed periods. Active viewing only.' : 'Comparison unavailable: incomplete tracking coverage.'
+            )}
+            accent="blue"
+          />
+        </div>
       </header>
       <StatePreviewControls />
 
@@ -73,15 +112,18 @@ export default function App() {
       {view.kind === 'tabs' && (
         <StateRegion state={readyState} id="popup.metrics" label="Overview metrics" shape="metrics" skeletonCount={2}><div className="overview-cards">
           <OverviewCard
-            label="Active time" icon={<Clock size={13} />}
+            label="Active time"
+            icon={<Clock size={13} />}
             value={formatTime(summary.totalMs)}
             delta={comparisonAvailable ? { value: msDelta, trend: deltaTrend(msDelta), style: 'sign', formatter: formatTime } : undefined}
-            baseline={<Hint label="About comparison" text={hintFacts([['Previous', 'Yesterday'], ['Cutoff', `Both through ${cutoffLabel}`]], comparisonAvailable ? 'Equal elapsed periods. Active viewing only.' : 'Comparison unavailable: incomplete tracking coverage.')} accent="blue" />} trend={comparisonAvailable ? deltaTrend(msDelta) : 'neutral'}
+            trend={comparisonAvailable ? deltaTrend(msDelta) : 'neutral'}
           />
           <OverviewCard
-            label="Reels" icon={<Zap size={13} />} value={summary.totalCount}
+            label="Reels"
+            icon={<Zap size={13} />}
+            value={summary.totalCount}
             delta={comparisonAvailable ? { value: countDelta, trend: deltaTrend(countDelta), style: 'sign' } : undefined}
-            baseline={<Hint label="About comparison" text={hintFacts([['Previous', 'Yesterday'], ['Cutoff', `Both through ${cutoffLabel}`]], comparisonAvailable ? 'Equal elapsed periods. Active viewing only.' : 'Comparison unavailable: incomplete tracking coverage.')} accent="blue" />} trend={comparisonAvailable ? deltaTrend(countDelta) : 'neutral'}
+            trend={comparisonAvailable ? deltaTrend(countDelta) : 'neutral'}
           />
         </div></StateRegion>
       )}
@@ -121,7 +163,6 @@ export default function App() {
                   ))}
                 </div>
               </Donut></StateRegion>
-              <p className="popup-note">Select a platform to explore its viewing patterns.</p>
             </TabsContent>
             <TabsContent value="signals">
               <SignalsTab data={platforms} totalCount={summary.totalCount} totalSkips={summary.totalSkips} totalCompleted={summary.totalCompleted}

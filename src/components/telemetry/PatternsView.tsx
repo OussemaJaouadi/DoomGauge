@@ -1,14 +1,30 @@
-import { measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { useState } from 'react';
 import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+// Types & Models
 import { PLATFORMS, type Platform } from '../../types/models';
-import type { ObservationCoverage, ObservationSession, PreviewObservation, RecurringWindow, TelemetryMetric, TelemetryPage } from '../../types/telemetryPreview';
-import { mechanicsSummary, observationTotals, platformTotals, trajectoryRows } from '../../utils/telemetryPreview';
-import { formatTime } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
-import { chartTokens } from '../tokens';
+import type {
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  RecurringWindow,
+  TelemetryMetric,
+  TelemetryPage,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { AnalysisPanel, ChoiceGroup, NoObservations } from './Primitives';
 import { InterventionInsights } from './InterventionInsights';
+
+// Tokens & Meta
+import { chartTokens } from '../tokens';
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { measurementHints } from '../ui/hintContent';
+import { mechanicsSummary, observationTotals, platformTotals, trajectoryRows } from '../../utils/telemetryPreview';
 
 interface PatternsViewProps {
   events: PreviewObservation[]; previous: PreviewObservation[]; dates: string[]; previousDates: string[]; completeDates: string[]; page: TelemetryPage; sessions: ObservationSession[];

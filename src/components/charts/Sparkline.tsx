@@ -2,12 +2,16 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Types
+// Models & Constants
 import { PLATFORMS } from '../../types/models';
 
-// Styles & Tokens
-import { chartTokens } from '../tokens';
+// UI Components
 import { ChartTooltip } from '../ui/ChartTooltip';
+
+// Tokens
+import { chartTokens } from '../tokens';
+
+// Styles
 import './Sparkline.css';
 
 interface SparklineProps {

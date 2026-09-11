@@ -1,6 +1,11 @@
+// React & 3rd-party
 import React from 'react';
 import { Layers, Clock, SkipForward } from 'lucide-react';
+
+// UI Components
 import { KpiCard } from '../ui/KpiCard';
+
+// Utilities & Helpers
 import { formatTime } from '../../utils/time';
 
 export interface MacroOverviewProps {

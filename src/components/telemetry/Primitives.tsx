@@ -1,9 +1,16 @@
-import { readyState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
-import { EmptyState } from '../ui/State';
+// React & 3rd-party
 import type { ReactNode } from 'react';
-import { Hint } from '../ui/Hint';
+
+// Types & Models
 import type { HintContent } from '../ui/hintContent';
+
+// UI Components
+import { EmptyState } from '../ui/State';
+import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
+
+// Utilities & Helpers
+import { readyState } from '../../utils/uiState';
 
 export function AnalysisPanel({ title, hint, controls, children }: { title: string; hint?: HintContent; controls?: ReactNode; children: ReactNode }) {
   return <section className="analysis-panel">

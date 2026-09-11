@@ -1,12 +1,21 @@
-import { measurementHints } from '../ui/hintContent';
+// React & 3rd-party
 import { useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Types & Models
 import type { ObservationSession, PreviewObservation } from '../../types/telemetryPreview';
-import { observationTotals, clockMinute, minuteOfDay, shiftDate } from '../../utils/telemetryPreview';
-import { formatTime, localDateKey } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
-import { chartTokens } from '../tokens';
+
+// UI Components
 import { AnalysisPanel, ChoiceGroup, NoObservations } from './Primitives';
+
+// Tokens & Meta
+import { chartTokens } from '../tokens';
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { formatTime, localDateKey } from '../../utils/time';
+import { measurementHints } from '../ui/hintContent';
+import { observationTotals, clockMinute, minuteOfDay, shiftDate } from '../../utils/telemetryPreview';
 
 export function sessionDescription(session: ObservationSession) {
   const totals = observationTotals(session.events);

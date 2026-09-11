@@ -1,14 +1,29 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
+// React & 3rd-party
 import { useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+
+// Types & Models
 import type { Platform } from '../../types/models';
-import type { PreviewObservation } from '../../types/telemetryPreview';
-import { filterReelRecords, recordPage, type RecordFilters, type RecordSort } from '../../utils/reelRecords';
-import { formatTime, localDateKey } from '../../utils/time';
-import { platformMeta } from '../platformMeta';
+import type {
+  PreviewObservation,
+  RecordFilters,
+  RecordSort,
+} from '../../types/telemetryPreview';
+
+// UI Components
 import { Hint } from '../ui/Hint';
+import { StateRegion } from '../ui/StateRegion';
+
+// Tokens & Meta
+import { platformMeta } from '../platformMeta';
+
+// Utilities & Helpers
+import { filterReelRecords, recordPage } from '../../utils/reelRecords';
+import { formatTime, localDateKey } from '../../utils/time';
 import { hintFacts } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+
+// Styles
 import './ReelRecords.css';
 
 const platforms: Platform[] = ['youtube', 'instagram', 'facebook'];

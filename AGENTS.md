@@ -14,9 +14,11 @@
 - Edit existing sections with targeted patches; history belongs in Git.
 - Shared types → `src/types`; reusable helpers → `src/utils`.
 - Code: descriptive names, braced control flow, one operation per line; name complex conditions.
+- Hygiene: follow `docs/STANDARDS.md` (import order, SSOT types, human intervals).
 - Commit only after the user's manual testing and explicit approval.
 
 ## Docs
+- docs/STANDARDS.md     — code hygiene, import tree standards, SSOT & architecture
 - .spec/doom-gauge-v1/spec.md   — v1 requirements + acceptance criteria (SSOT for build)
 - .spec/doom-gauge-v1/design.md — v1 module, data & component design (SSOT for build)
 - docs/DESIGN.md        — visual system (Neuro-Spike Telemetry) & design tokens

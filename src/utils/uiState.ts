@@ -1,15 +1,8 @@
-import type { EmptyReason, StateOverride, RegionState, ActivityReadState } from '../types/uiState';
+import { EMPTY_MESSAGES } from '../types/uiState';
+import type { EmptyReason, StateOverride, RegionState, ActivityReadState, EmptyMessageSpec } from '../types/uiState';
 
-export const emptyMessages: Record<EmptyReason, { title: string; hint: string }> = {
-  completed: { title: 'No completed visits', hint: 'Quick skips need completed visits.' },
-  activity: { title: 'No activity recorded', hint: 'No recordings in this period.' },
-  filters: { title: 'No matching activity', hint: 'Try changing the selected filters.' },
-  history: { title: 'Not enough history', hint: 'Recurring windows need at least 3 completed observed days.' },
-  followup: { title: 'Not enough follow-up', hint: 'This return threshold needs a fully observed follow-up period.' },
-  unobserved: { title: 'Not observed', hint: 'No measurement coverage for this selection.' },
-  session: { title: 'Session unavailable', hint: 'Return to the date or session selection.' },
-  settings: { title: 'No example settings', hint: 'Restore the mock defaults to explore the controls.' },
-};
+export { EMPTY_MESSAGES, EMPTY_MESSAGES as emptyMessages };
+export type { EmptyMessageSpec };
 export function resolveState(whole?: StateOverride, region?: StateOverride, actual: StateOverride = { status: 'success' }): StateOverride {
   return whole && whole.status !== 'success' ? whole : region && region.status !== 'success' ? region : actual;
 }

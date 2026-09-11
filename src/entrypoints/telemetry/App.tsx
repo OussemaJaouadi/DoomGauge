@@ -1,23 +1,46 @@
-import { ActivityReadProvider, ActivityReadNotice } from '../../components/ui/ActivityReadState';
-import { DEV_DATA } from '../../config/dataMode';
-import { Hint } from '../../components/ui/Hint';
-import { useTracking } from '../../tracking/client';
-import { hasObservationCoverage } from '../../utils/telemetryInsights';
-import { hintFacts } from '../../components/ui/hintContent';
+// React & 3rd-party
 import { useMemo, useState, type CSSProperties } from 'react';
 import { Activity, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Settings } from 'lucide-react';
+
+// Types & Models
 import { PLATFORMS } from '../../types/models';
 import { DAYPARTS, type Daypart, type TimeRange } from '../../types/telemetry';
 import type { PageSelection, TelemetryPage } from '../../types/telemetryPreview';
-import { buildPreviewDataset } from '../../data/telemetryPreview';
-import { clockMinute, minuteOfDay, observationRollups, observationSessions, periodBounds, RANGE_LENGTH, scopedSessions, selectObservations, shiftDate } from '../../utils/telemetryPreview';
-import { localDateKey } from '../../utils/time';
-import { platformMeta } from '../../components/platformMeta';
+
+// UI Components
+import { ActivityReadNotice, ActivityReadProvider } from '../../components/ui/ActivityReadState';
 import { AnalysisWorkspace } from '../../components/telemetry/AnalysisWorkspace';
-import { TelemetryFilters } from '../../components/telemetry/TelemetryFilters';
 import { Clock } from '../../components/ui/Clock';
-import { StatePreviewControls, useStatePreview } from '../../components/ui/StatePreview';
+import { Hint } from '../../components/ui/Hint';
 import { SettingsPage } from '../../components/settings/SettingsPage';
+import { StatePreviewControls, useStatePreview } from '../../components/ui/StatePreview';
+import { TelemetryFilters } from '../../components/telemetry/TelemetryFilters';
+
+// Tokens & Meta
+import { hintFacts } from '../../components/ui/hintContent';
+import { platformMeta } from '../../components/platformMeta';
+
+// Utilities & Helpers
+import {
+  clockMinute,
+  minuteOfDay,
+  observationRollups,
+  observationSessions,
+  periodBounds,
+  RANGE_LENGTH,
+  scopedSessions,
+  selectObservations,
+  shiftDate,
+} from '../../utils/telemetryPreview';
+import { hasObservationCoverage } from '../../utils/telemetryInsights';
+import { localDateKey } from '../../utils/time';
+
+// Services & Fixtures
+import { DEV_DATA } from '../../config/dataMode';
+import { buildPreviewDataset } from '../../data/telemetryPreview';
+import { useTracking } from '../../tracking/client';
+
+// Styles
 import './App.css';
 
 const pages: TelemetryPage[] = ['overview', ...PLATFORMS];
@@ -29,22 +52,33 @@ export default function App() {
   const [page, setPage] = useState<TelemetryPage>('overview');
   const [destination, setDestination] = useState<'analysis' | 'settings'>('analysis');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [selections, setSelections] = useState<Record<TelemetryPage, PageSelection>>(() => Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'windows' }])) as Record<TelemetryPage, PageSelection>);
+  const [selections, setSelections] = useState<Record<TelemetryPage, PageSelection>>(() =>
+    Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'windows' }])) as Record<TelemetryPage, PageSelection>
+  );
   const [daypart, setDaypart] = useState<Daypart[]>(() => DAYPARTS.map(option => option.id));
   const { range, endDate, view } = selections[page];
   const context = `${preset}-${page}-${range}-${localDateKey(endDate)}-${daypart}-${view}`;
   const update = (patch: Partial<PageSelection>) => setSelections(value => ({ ...value, [page]: { ...value[page], ...patch } }));
   const bounds = periodBounds(endDate, range, now);
-  const dateFormatter = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric',
-    ...(bounds.start.getFullYear() !== now.getFullYear() || endDate.getFullYear() !== now.getFullYear() ? { year: 'numeric' as const } : {}) });
+  const dateFormatter = new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    ...(bounds.start.getFullYear() !== now.getFullYear() || endDate.getFullYear() !== now.getFullYear() ? { year: 'numeric' as const } : {}),
+  });
   const dateLabel = range === 'day' ? dateFormatter.format(endDate) : dateFormatter.formatRange(bounds.start, endDate);
   const historyStart = shiftDate(bounds.previousStart, -1).getTime();
   const historyEnd = bounds.cutoff.getTime();
-  const queryEnd = new Date(endDate); queryEnd.setHours(24,0,0,0);
+  const queryEnd = new Date(endDate);
+  queryEnd.setHours(24, 0, 0, 0);
   const live = useTracking(historyStart, queryEnd.getTime(), !preview);
   const dataset = preview ? buildPreviewDataset(new Date(historyStart), new Date(historyEnd)) : live;
-  const coveredDates = preview ? bounds.completeDates : bounds.completeDates.filter(date => { const start = new Date(date+'T00:00:00'); return hasObservationCoverage(dataset.coverage,start.getTime(),shiftDate(start,1).getTime()); });
-  const comparisonAvailable = preview || hasObservationCoverage(dataset.coverage,bounds.previousStart.getTime(),historyEnd);
+  const coveredDates = preview
+    ? bounds.completeDates
+    : bounds.completeDates.filter(date => {
+        const start = new Date(`${date}T00:00:00`);
+        return hasObservationCoverage(dataset.coverage, start.getTime(), shiftDate(start, 1).getTime());
+      });
+  const comparisonAvailable = preview || hasObservationCoverage(dataset.coverage, bounds.previousStart.getTime(), historyEnd);
   const observations = dataset.events;
   const fullSessions = useMemo(() => observationSessions(observations), [observations]);
   const selectedEvents = selectObservations(observations, bounds.start.getTime(), historyEnd, page, daypart);
@@ -56,7 +90,9 @@ export default function App() {
   const isToday = localDateKey(endDate) === localDateKey(now);
   const title = page === 'overview' ? 'Overview' : platformMeta[page].label;
   const exportJson = () => {
-    if (!preview && !live.hasData) return;
+    if (!preview && !live.hasData) {
+      return;
+    }
     const rollups = observationRollups(events, bounds.dates).filter(r => (page === 'overview' || r.platform === page) && r.reelCount > 0);
     const url = URL.createObjectURL(new Blob([JSON.stringify(rollups)], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -83,9 +119,26 @@ export default function App() {
         <StatePreviewControls />
         {destination === 'settings' ? <SettingsPage /> : <>
         <div className="analysis-page-head"><div className="analysis-page-identity"><h1>{title}</h1><Clock /></div>
-        <TelemetryFilters range={range} onRangeChange={(value: TimeRange) => update({ range: value })} dateLabel={dateLabel}
-          onBack={() => update({ endDate: shiftDate(endDate, -RANGE_LENGTH[range]) })} onForward={() => { const next = shiftDate(endDate, RANGE_LENGTH[range]); update({ endDate: next > now ? now : next }); }} forwardDisabled={isToday}
-          daypart={daypart} onDaypartChange={setDaypart} onExport={exportJson} exportDisabled={!preview && !live.hasData} comparisonLabel={hintFacts([['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`], ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`], ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days']])} />
+        <TelemetryFilters
+          range={range}
+          onRangeChange={(value: TimeRange) => update({ range: value })}
+          dateLabel={dateLabel}
+          onBack={() => update({ endDate: shiftDate(endDate, -RANGE_LENGTH[range]) })}
+          onForward={() => {
+            const next = shiftDate(endDate, RANGE_LENGTH[range]);
+            update({ endDate: next > now ? now : next });
+          }}
+          forwardDisabled={isToday}
+          daypart={daypart}
+          onDaypartChange={setDaypart}
+          onExport={exportJson}
+          exportDisabled={!preview && !live.hasData}
+          comparisonLabel={hintFacts([
+            ['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`],
+            ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`],
+            ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days'],
+          ])}
+        />
         </div>
         {!preview && <p className="tracking-status" role="status">{live.savingFailed ? 'Saving interrupted. Keep tracking tabs open to retry.' : 'Recorded activity · gaps in tracking remain unknown'}<Hint label="About live measurements" text="Live totals include unfinished visits. Quick skips use completed visits. Comparisons and return insights require observed coverage." /></p>}
         <ActivityReadProvider value={preview ? undefined : live}><ActivityReadNotice />

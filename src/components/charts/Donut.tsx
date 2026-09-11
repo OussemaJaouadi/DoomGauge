@@ -1,8 +1,19 @@
+// React & 3rd-party
 import React, { type ReactNode } from 'react';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
+
+// Types
 import type { ChartMode, ChartItem } from '../../types/models';
-import { formatTime } from '../../utils/time';
+
+// UI Components
 import { ChartTooltip } from '../ui/ChartTooltip';
+import { Hint } from '../ui/Hint';
+
+// Utilities & Helpers
+import { formatTime } from '../../utils/time';
+import { hintFacts } from '../ui/hintContent';
+
+// Styles
 import './Donut.css';
 
 function DonutTooltip({ active, payload, mode }: any) {
@@ -31,7 +42,17 @@ export function Donut({ items, mode, onModeChange, children }: {
   return (
     <section className="popup-share" aria-label="Platform contribution">
       <div className="popup-share-head">
-        <h2>Share of total {mode === 'time' ? 'time' : 'reels'}</h2>
+        <div className="popup-share-title-group">
+          <h2>Share of total {mode === 'time' ? 'time' : 'reels'}</h2>
+          <Hint
+            label="About platform share"
+            text={hintFacts([
+              ['Formula', 'Platform / today’s total'],
+              ['Basis', mode === 'time' ? 'Active viewing time' : 'Reels viewed'],
+            ])}
+            accent="blue"
+          />
+        </div>
         <div className="popup-share-toggle" role="group" aria-label="Share measurement">
           <button type="button" aria-pressed={mode === 'time'} onClick={() => onModeChange('time')}>Time</button>
           <button type="button" aria-pressed={mode === 'count'} onClick={() => onModeChange('count')}>Count</button>

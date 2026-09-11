@@ -1,15 +1,29 @@
-import { readyState, contentState, ratioState } from '../../utils/uiState';
-import { StateRegion } from '../ui/StateRegion';
+// React & 3rd-party
 import { useMemo, useReducer, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import type { ObservationCoverage, ObservationSession, PreviewObservation, RecurringWindow } from '../../types/telemetryPreview';
+
+// Types & Models
+import type {
+  ObservationCoverage,
+  ObservationSession,
+  PreviewObservation,
+  RecurringWindow,
+} from '../../types/telemetryPreview';
+
+// UI Components
+import { EvidenceTimeline } from './EvidenceTimeline';
+import { Hint } from '../ui/Hint';
+import { ReelRecords } from './ReelRecords';
+import { StateRegion } from '../ui/StateRegion';
+
+// Utilities & Helpers
 import { calendarEvidence, calendarSelection, initialCalendarSelection } from '../../utils/evidenceCalendar';
 import { formatTime } from '../../utils/time';
-import { sessionClockRange } from '../../utils/telemetryPreview';
-import { EvidenceTimeline } from './EvidenceTimeline';
-import { ReelRecords } from './ReelRecords';
-import { Hint } from '../ui/Hint';
 import { hintFacts } from '../ui/hintContent';
+import { readyState, contentState, ratioState } from '../../utils/uiState';
+import { sessionClockRange } from '../../utils/telemetryPreview';
+
+// Styles
 import './CalendarEvidence.css';
 
 interface Props {

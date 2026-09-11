@@ -2,14 +2,18 @@
 import React, { useState } from 'react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Types
+// Types & Models
 import type { HourItem } from '../../types/models';
 import { PLATFORMS } from '../../types/models';
 
-// Styles & Tokens
-import { chartTokens } from '../tokens';
+// UI Components
 import { ChartTooltip } from '../ui/ChartTooltip';
+
+// Tokens & Meta
+import { chartTokens } from '../tokens';
 import { platformMeta } from '../platformMeta';
+
+// Styles
 import './HourlyBars.css';
 
 function HourTooltip({ active, payload, label }: any) {
