@@ -1,6 +1,7 @@
 import { ThemeController } from '../theme/controller';
 import { resolveTheme, isThemePreference, themePalettes } from '../theme/palette';
-import { handleThemeRequest, isThemeRequest, type ThemeResponse } from '../theme/protocol';
+import { handleThemeRequest, isThemeRequest } from '../theme/protocol';
+import type { ThemeResponse } from '../types/theme';
 import { readTheme, writeTheme, openThemeDatabase } from '../theme/storage';
 declare function test(name: string, fn: () => void | Promise<void>): void;
 declare function expect(value: unknown): { toBe(value: unknown): void; toEqual(value: unknown): void };
@@ -25,12 +26,12 @@ test('System follows OS; explicit choices override it; malformed preferences rej
 });
 test('startup failure retains System; saved preference loads', async () => {
   const applied: string[]=[]; const c=new ThemeController(async()=>{throw Error();},p=>applied.push(p));
-  await c.initialize(); expect(applied).toEqual(['system']);
+  await c.initialize(); expect(applied.every(value => value === 'system')).toBe(true); expect(c.getSnapshot().error).toBe(true);
   const saved=new ThemeController(async()=>({ok:true,preference:'dark'}),p=>applied.push(p));
   await saved.initialize(); expect(saved.getSnapshot().preference).toBe('dark');
 });
 test('failed save keeps local choice; retry saves it; OS refresh preserves errors', async () => {
-  let ok=false; const c=new ThemeController(async()=>ok?{ok:true,preference:'light'}:{ok:false},()=>{});
+  let ok=false; const c=new ThemeController(async()=>ok?{ok:true,preference:'light'}:{ok:false,code:'storage-failed'},()=>{});
   await c.choose('light'); expect(c.getSnapshot()).toEqual({preference:'light',saving:false,error:true});
   c.refresh(); expect(c.getSnapshot().error).toBe(true);
   ok=true; await c.choose('light'); expect(c.getSnapshot().error).toBe(false);
@@ -42,7 +43,7 @@ test('late initialization cannot overwrite a user choice', async () => {
   expect(c.getSnapshot().preference).toBe('light');
 });
 test('rapid saves serialize and open surfaces accept committed changes', async () => {
-  const writes:string[]=[]; const c=new ThemeController(async m=>{if(m.type==='theme:set'){writes.push(m.preference);return {ok:true,preference:m.preference};}return {ok:false};},()=>{});
+  const writes:string[]=[]; const c=new ThemeController(async m=>{if(m.type==='theme:set'){writes.push(m.preference);return {ok:true,preference:m.preference};}return {ok:false,code:'storage-failed'};},()=>{});
   const first=c.choose('light'); const second=c.choose('dark'); await Promise.all([first,second]);
   expect(writes).toEqual(['light','dark']); expect(c.getSnapshot().preference).toBe('dark');
   c.receive('system'); expect(c.getSnapshot().preference).toBe('system');
@@ -57,8 +58,17 @@ test('broadcast happens after commit and never on failed storage', async () => {
   await handleThemeRequest({type:'theme:set',preference:'dark'},store,()=>events.push('notify'));
   expect(events).toEqual(['commit','notify']);
   store.write=async()=>{throw Error();};
-  expect(await handleThemeRequest({type:'theme:set',preference:'light'},store,()=>events.push('bad'))).toEqual({ok:false});
+  expect(await handleThemeRequest({type:'theme:set',preference:'light'},store,()=>events.push('bad'))).toEqual({ok:false,code:'storage-failed'});
   expect(events).toEqual(['commit','notify']);
+});
+test('notification failure does not turn a committed preference into a failed save', async () => {
+  let committed = false;
+  const response = await handleThemeRequest({type:'theme:set',preference:'dark'}, {
+    read: async () => 'system',
+    write: async () => { committed = true; },
+  }, () => { throw new Error('Receiving end does not exist'); });
+  expect(committed).toBe(true);
+  expect(response).toEqual({ok:true,preference:'dark'});
 });
 test('storage waits for transaction completion and closes on abort', async () => {
   let closed=0; let committed=false;
