@@ -1,4 +1,6 @@
-import { PLATFORMS, type HourItem, type Platform, type PlatformStats } from '../types/models';
+import { QUICK_SKIP_MS } from '../config/tracking';
+import { PLATFORMS } from '../types/models';
+import type { HourItem, Platform, PlatformStats } from '../types/models';
 import type { PopupActivitySession, PopupMockView } from '../types/popup';
 import { avgFlickSec, impatiencePct } from './metrics';
 
@@ -88,7 +90,7 @@ export function summarizePopupViews(views: readonly PopupMockView[]) {
     const count = platformViews.filter(v => v.countInScope !== false).length;
     const completedCount = platformViews.filter(v => v.completed !== false && v.countInScope !== false).length;
     const timeMs = platformViews.reduce((sum, view) => sum + view.activeMs, 0);
-    const skip = platformViews.filter(view => view.completed !== false && view.countInScope !== false && (view.skipped ?? view.activeMs < 3000)).length;
+    const skip = platformViews.filter(view => view.completed !== false && view.countInScope !== false && (view.skipped ?? view.activeMs < QUICK_SKIP_MS)).length;
     const measured = platformViews.filter(view => view.completed !== false && view.countInScope !== false && Number.isFinite(view.videoDurationMs) && view.videoDurationMs! > 0);
     const early = measured.filter(view => view.activeMs / view.videoDurationMs! < 0.5).length;
     const hourly = Array.from({ length: 24 }, () => 0);
@@ -113,7 +115,7 @@ export function deltaTrend(delta: number): 'worse' | 'better' | 'neutral' {
 /** Buckets use active viewing duration, never video length or elapsed span. */
 export function summarizeViewingDistribution(views: readonly PopupMockView[]) {
   const buckets = [
-    { label: '<3s', upperMs: 3000 },
+    { label: '<3s', upperMs: QUICK_SKIP_MS },
     { label: '3–<10s', upperMs: 10_000 },
     { label: '10–<30s', upperMs: 30_000 },
     { label: '30–<60s', upperMs: 60_000 },

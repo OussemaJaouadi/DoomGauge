@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { StateRegion } from '../ui/StateRegion';
 import { StatePreviewControls } from '../ui/StatePreview';
 import { hintFacts, measurementHints } from '../ui/hintContent';
@@ -19,7 +20,7 @@ import { CalendarEvidence } from './CalendarEvidence';
 interface DrawerProps {
   dates: string[]; coverage: ObservationCoverage[];
   evidence: Evidence; events: PreviewObservation[]; sessions: ObservationSession[];
-  fullSessions: ObservationSession[]; rates: ReturnRate[]; page: TelemetryPage;
+  fullSessions: ObservationSession[]; rates: ReturnRate[] | (() => ReturnRate[]); page: TelemetryPage;
   onClose: () => void; restoreFocus: HTMLElement | null;
 }
 function titleFor(evidence: Evidence) {
@@ -52,7 +53,9 @@ export function EvidenceDrawer({ evidence, events, sessions, fullSessions, rates
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <header className="evidence-header"><h2 id="evidence-title" ref={heading} tabIndex={-1}>{titleFor(evidence)}</h2><button type="button" onClick={onClose} aria-label="Close evidence"><X size={20} /></button></header>
     <StatePreviewControls scope="evidence." />
-    <EvidenceContent key={JSON.stringify(evidence)} evidence={evidence} events={events} sessions={sessions} fullSessions={fullSessions} rates={rates} page={page} dates={dates} coverage={coverage} />
+    <StateRegion key={JSON.stringify(evidence)} id="evidence.content" label="Selected evidence" state={readyState} shape="rows">
+      <EvidenceContent evidence={evidence} events={events} sessions={sessions} fullSessions={fullSessions} rates={rates} page={page} dates={dates} coverage={coverage} />
+    </StateRegion>
   </dialog>;
 }
 
@@ -62,31 +65,33 @@ function EvidenceContent({ evidence, events, sessions, fullSessions, rates, page
   const matchingIds = new Set(scopedSessions(sessions, selectedEvents).map(session => session.id));
   const matchingSessions = fullSessions.filter(session => matchingIds.has(session.id));
   const selectedSession = fullSessions.find(session => session.id === detail.id);
-  const rate = evidence.kind === 'returns' ? rates.find(item => item.minutes === evidence.minutes) : undefined;
+  const rate = evidence.kind === 'returns' ? (typeof rates === 'function' ? rates() : rates).find(item => item.minutes === evidence.minutes) : undefined;
   const select = (id: string, unfiltered = false) => dispatch({ type: 'select', id, unfiltered });
   if (evidence.kind === 'curve') return <div className="evidence-body"><ViewingView events={events} page={page} /></div>;
   if (dates.length > 1 && (evidence.kind === 'window' || evidence.kind === 'sessionBucket' || evidence.kind === 'bucket')) return <div className="evidence-body">
-    <EvidenceSummary events={selectedEvents} />
+    <StateRegion id="evidence.totals-calculation" label="Evidence totals" state={readyState} shape="metrics"><EvidenceSummary events={selectedEvents} /></StateRegion>
+    <StateRegion id="evidence.calendar-calculation" label="Evidence calendar" state={readyState} shape="calendar">
     <CalendarEvidence dates={dates} events={selectedEvents} sessions={matchingSessions} coverage={coverage} window={evidence.kind === 'window' ? evidence.window : undefined}
-      renderSession={(session, dayEvents, onRecords) => <SelectedSession session={session} selectedEvents={dayEvents} unfiltered={false} onRecords={onRecords} />} />
+      renderSession={(session, dayEvents, onRecords) => <StateRegion id="evidence.session-calculation" label="Selected session" state={readyState} shape="rows"><SelectedSession session={session} selectedEvents={dayEvents} unfiltered={false} onRecords={onRecords} /></StateRegion>} />
+    </StateRegion>
   </div>;
   if (detail.records && selectedSession) return <div className="evidence-body"><button type="button" className="workspace-text-button" onClick={() => dispatch({ type: 'back' })}><ArrowLeft size={16} /> Back to session</button><ReelRecords key={selectedSession.id} events={selectedSession.events} /></div>;
   return <div className="evidence-body">
     {evidence.kind === 'returns' ? <>
-      <StateRegion id="evidence.return-summary" label="Return summary" shape="metrics" reasons={["followup", "activity"]}><div className="evidence-totals"><b>{rate?.returnedCount ?? 0} returns</b><span>{rate?.eligibleCount ?? 0} eligible endings</span><Hint label="About return coverage" text={measurementHints.returnCoverage} accent="blue" /></div></StateRegion>
+      <StateRegion state={ratioState(rate?.eligibleCount ?? 0, 'followup')} id="evidence.return-summary" label="Return summary" shape="metrics" reasons={["followup", "activity"]}><div className="evidence-totals"><b>{rate?.returnedCount ?? 0} returns</b><span>{rate?.eligibleCount ?? 0} eligible endings</span><Hint label="About return coverage" text={measurementHints.returnCoverage} accent="blue" /></div></StateRegion>
       {rate?.matches.length ? <ReturnTimeline matches={rate.matches} selectedId={detail.id} onSelect={select} /> : <NoObservations>{rate?.eligibleCount ? 'No returns in this threshold.' : 'Not enough observed follow-up.'}</NoObservations>}
     </> : evidence.kind !== 'session' ? <>
-      <EvidenceSummary events={selectedEvents} />
+      <StateRegion id="evidence.totals-calculation" label="Evidence totals" state={readyState} shape="metrics"><EvidenceSummary events={selectedEvents} /></StateRegion>
       {matchingSessions.length ? <EvidenceTimeline sessions={matchingSessions} events={selectedEvents} window={evidence.kind === 'window' ? evidence.window : undefined} selectedId={detail.id} onSelect={select} /> : <NoObservations />}
     </> : null}
-    {selectedSession && <SelectedSession session={selectedSession} selectedEvents={detail.unfiltered ? selectedSession.events : selectedEvents} unfiltered={detail.unfiltered} onRecords={() => dispatch({ type: 'records' })} />}
+    {selectedSession && <StateRegion id="evidence.session-calculation" label="Selected session" state={readyState} shape="rows"><SelectedSession session={selectedSession} selectedEvents={detail.unfiltered ? selectedSession.events : selectedEvents} unfiltered={detail.unfiltered} onRecords={() => dispatch({ type: 'records' })} /></StateRegion>}
     {evidence.kind === 'session' && !selectedSession && <NoObservations>Session unavailable.</NoObservations>}
   </div>;
 }
 
 function EvidenceSummary({ events }: { events: PreviewObservation[] }) {
   const totals = observationTotals(events);
-  return <StateRegion id="evidence.summary" label="Evidence totals" shape="metrics"><div className="evidence-overview"><div className="evidence-totals"><b>{formatTime(totals.activeMs)}</b><span>{totals.reels} reels</span></div><div className="evidence-platforms">{platformTotals(events).filter(item => item.reels || item.activeMs).map(item => <div key={item.platform}><span><i style={{ background: platformMeta[item.platform].color }} />{platformMeta[item.platform].label}</span><b>{formatTime(item.activeMs)}</b></div>)}</div></div></StateRegion>;
+  return <StateRegion state={readyState} id="evidence.summary" label="Evidence totals" shape="metrics"><div className="evidence-overview"><div className="evidence-totals"><b>{formatTime(totals.activeMs)}</b><span>{totals.reels} reels</span></div><div className="evidence-platforms">{platformTotals(events).filter(item => item.reels || item.activeMs).map(item => <div key={item.platform}><span><i style={{ background: platformMeta[item.platform].color }} />{platformMeta[item.platform].label}</span><b>{formatTime(item.activeMs)}</b></div>)}</div></div></StateRegion>;
 }
 
 function SelectedSession({ session, selectedEvents, unfiltered, onRecords }: { session: ObservationSession; selectedEvents: PreviewObservation[]; unfiltered: boolean; onRecords: () => void }) {
@@ -96,12 +101,12 @@ function SelectedSession({ session, selectedEvents, unfiltered, onRecords }: { s
   const span = Math.max(1, session.endTs - session.startTs);
   const clock = sessionClockRange(session.startTs, session.endTs);
   const mechanics = mechanicsSummary(matching);
-  return <StateRegion id="evidence.session" label="Selected session" shape="rows" reasons={["session", "activity", "unobserved"]}><section className="selected-session">
+  return <StateRegion state={readyState} id="evidence.session" label="Selected session" shape="rows" reasons={["session", "activity", "unobserved"]}><section className="selected-session">
     <div className="evidence-visual-heading"><h3>{clock.dateLabel} · {clock.clockLabel}</h3><Hint label="About selected session" text={hintFacts([['Active / reels', unfiltered ? 'Full return session' : 'Selected evidence only'], ['Elapsed', 'Full original session'], ['Muted', 'Outside selection']], 'View spans include internal pauses.')} accent="blue" /></div>
     {unfiltered && <span className="evidence-note">Unfiltered return</span>}
     <div className="selected-session-metrics"><div><span>Selected active</span><b>{formatTime(totals.activeMs)}</b></div><div><span>Full elapsed</span><b>{formatTime(session.endTs - session.startTs)}</b></div><div><span>Reels</span><b>{totals.reels}</b></div><div><span>Quick skips</span><b>{totals.skips}</b></div></div>
     <div className="session-sequence" role="img" aria-label="Chronological view spans; muted spans fall outside the selected evidence">{session.events.map(event => <span key={event.id} title={`${platformMeta[event.platform].label}: ${formatTime(event.durationMs)} active`} style={{ left: `${(event.ts - session.startTs) / span * 100}%`, width: `${(event.endedTs - event.ts) / span * 100}%`, background: platformMeta[event.platform].color, opacity: ids.has(event.id) ? 1 : .25 }} />)}</div>
-    <StateRegion id="evidence.mechanics" label="Measured mechanics" reasons={["unobserved"]}><div className="selected-mechanics">
+    <StateRegion state={ratioState(mechanics.entryMeasured + mechanics.replayMeasured + mechanics.commentMeasured, 'unobserved')} id="evidence.mechanics" label="Measured mechanics" reasons={["unobserved"]}><div className="selected-mechanics">
       {mechanics.entryMeasured > 0 && <span>Entry routes <b>{mechanics.entries.filter(item => item.count).map(item => `${item.route} ${item.count}`).join(' · ')}</b></span>}
       {mechanics.replayCount !== null && <span>Replays <b>{mechanics.replayCount}</b></span>}
       {mechanics.commentMs !== null && <span>Comments open <b>{formatTime(mechanics.commentMs)}</b></span>}

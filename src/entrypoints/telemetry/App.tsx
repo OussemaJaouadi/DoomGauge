@@ -1,6 +1,7 @@
+import { ActivityReadProvider, ActivityReadNotice } from '../../components/ui/ActivityReadState';
+import { DEV_DATA } from '../../config/dataMode';
 import { Hint } from '../../components/ui/Hint';
 import { useTracking } from '../../tracking/client';
-import { StateRegion } from '../../components/ui/StateRegion';
 import { hasObservationCoverage } from '../../utils/telemetryInsights';
 import { hintFacts } from '../../components/ui/hintContent';
 import { useMemo, useState, type CSSProperties } from 'react';
@@ -24,7 +25,7 @@ const pages: TelemetryPage[] = ['overview', ...PLATFORMS];
 export default function App() {
   const { preset } = useStatePreview();
   const now = new Date();
-  const preview = Boolean(import.meta.env.DEV && (new URLSearchParams(location.search).get('data') === 'mock' || preset !== 'normal'));
+  const preview = DEV_DATA;
   const [page, setPage] = useState<TelemetryPage>('overview');
   const [destination, setDestination] = useState<'analysis' | 'settings'>('analysis');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -55,6 +56,7 @@ export default function App() {
   const isToday = localDateKey(endDate) === localDateKey(now);
   const title = page === 'overview' ? 'Overview' : platformMeta[page].label;
   const exportJson = () => {
+    if (!preview && !live.hasData) return;
     const rollups = observationRollups(events, bounds.dates).filter(r => (page === 'overview' || r.platform === page) && r.reelCount > 0);
     const url = URL.createObjectURL(new Blob([JSON.stringify(rollups)], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -83,12 +85,12 @@ export default function App() {
         <div className="analysis-page-head"><div className="analysis-page-identity"><h1>{title}</h1><Clock /></div>
         <TelemetryFilters range={range} onRangeChange={(value: TimeRange) => update({ range: value })} dateLabel={dateLabel}
           onBack={() => update({ endDate: shiftDate(endDate, -RANGE_LENGTH[range]) })} onForward={() => { const next = shiftDate(endDate, RANGE_LENGTH[range]); update({ endDate: next > now ? now : next }); }} forwardDisabled={isToday}
-          daypart={daypart} onDaypartChange={setDaypart} onExport={exportJson} comparisonLabel={hintFacts([['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`], ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`], ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days']])} />
+          daypart={daypart} onDaypartChange={setDaypart} onExport={exportJson} exportDisabled={!preview && !live.hasData} comparisonLabel={hintFacts([['Selected', range === 'day' ? bounds.dates[0]! : `${bounds.dates[0]} → ${bounds.dates[bounds.dates.length - 1]}`], ['Previous', range === 'day' ? previousDates[0]! : `${previousDates[0]} → ${previousDates[previousDates.length - 1]}`], ['Cutoff', isToday ? `Both through ${clockMinute(minuteOfDay(now.getTime()))}` : 'Complete days']])} />
         </div>
         {!preview && <p className="tracking-status" role="status">{live.savingFailed ? 'Saving interrupted. Keep tracking tabs open to retry.' : 'Recorded activity · gaps in tracking remain unknown'}<Hint label="About live measurements" text="Live totals include unfinished visits. Quick skips use completed visits. Comparisons and return insights require observed coverage." /></p>}
-        <StateRegion id="telemetry.live" label="Recorded activity" shape="chart" onRetry={live.retry} actual={preview ? undefined : live.status === 'success' && !dataset.events.length ? {status:'empty',reason:'unobserved'} : {status:live.status}}>
+        <ActivityReadProvider value={preview ? undefined : live}><ActivityReadNotice />
         <AnalysisWorkspace comparisonAvailable={comparisonAvailable} key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={preset === 'insufficient' ? [] : dataset.coverage} dates={bounds.dates} previousDates={previousDates} completeDates={preset === 'insufficient' ? coveredDates.slice(-1) : coveredDates} page={page} throughHour={isToday ? now.getHours() : 23} filterEmpty={!events.length && daypart.length < DAYPARTS.length} onClearFilters={() => setDaypart(DAYPARTS.map(option => option.id))} />
-        </StateRegion>
+        </ActivityReadProvider>
         </>}
       </div>
     </main>

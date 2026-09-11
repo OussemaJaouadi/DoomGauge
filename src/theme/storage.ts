@@ -1,24 +1,11 @@
-import { isThemePreference, type ThemePreference } from './palette';
+import { openLocalDatabase } from '../utils/database';
+import { isThemePreference } from './palette';
+import type { ThemePreference } from '../types/theme';
 
-/** Add the preferences store without replacing any existing activity stores. */
-export async function openThemeDatabase(factory: IDBFactory = indexedDB): Promise<IDBDatabase> {
-  const open = (version?: number) => new Promise<IDBDatabase>((resolve, reject) => {
-    let settled = false;
-    const request = factory.open('doomgauge-v1', version);
-    request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains('preferences')) request.result.createObjectStore('preferences'); };
-    request.onblocked = () => { settled = true; reject(new Error('Preferences upgrade blocked')); };
-    request.onerror = () => { settled = true; reject(request.error ?? new Error('Preferences unavailable')); };
-    request.onsuccess = () => {
-      const db = request.result;
-      db.onversionchange = () => db.close();
-      if (settled) db.close(); else { settled = true; resolve(db); }
-    };
-  });
-  const db = await open();
-  if (db.objectStoreNames.contains('preferences')) return db;
-  const version = db.version + 1;
-  db.close();
-  return open(version);
+export function openThemeDatabase(factory: IDBFactory = indexedDB) {
+  return openLocalDatabase(['preferences'], database => {
+    if (!database.objectStoreNames.contains('preferences')) database.createObjectStore('preferences');
+  }, factory);
 }
 
 export async function readTheme(open = openThemeDatabase): Promise<ThemePreference> {

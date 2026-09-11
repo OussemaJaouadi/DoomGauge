@@ -1,5 +1,5 @@
 import { type Platform, type PlatformStats } from '../types/models';
-import type { DataPreset } from '../components/ui/stateModel';
+import type { DataPreset } from '../types/uiState';
 import { POPUP_VIEWS, POPUP_YESTERDAY_VIEWS, POPUP_AS_OF_HOUR } from './popupMock';
 import { buildHourlyItems, deriveTemporalInsights, groupActivitySessions, summarizePopupViews, summarizeViewingDistribution } from '../utils/popupActivity';
 
@@ -9,5 +9,5 @@ export function popupStateFixture(preset: DataPreset) {
   const today = summarizePopupViews(views), previous = summarizePopupViews(previousViews);
   const platforms = { youtube: today.platforms.find(item => item.platform === 'youtube')!, instagram: today.platforms.find(item => item.platform === 'instagram')!, facebook: today.platforms.find(item => item.platform === 'facebook')! } satisfies Record<Platform, PlatformStats>;
   const hourly = buildHourlyItems(platforms, POPUP_AS_OF_HOUR);
-  return { mock: { ...today, yesterdayMs: previous.totalMs, yesterdayCount: previous.totalCount }, platforms, hourly, insights: deriveTemporalInsights(groupActivitySessions(views), hourly), distribution: summarizeViewingDistribution(views) };
+  return { summary: { ...today, yesterdayMs: previous.totalMs, yesterdayCount: previous.totalCount }, platforms, hourly, insights: deriveTemporalInsights(groupActivitySessions(views), hourly), distribution: summarizeViewingDistribution(views) };
 }

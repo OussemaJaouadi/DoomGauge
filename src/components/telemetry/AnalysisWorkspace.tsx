@@ -1,4 +1,6 @@
 import { useReducer, useRef } from 'react';
+import { StateRegion } from '../ui/StateRegion';
+import { readyState } from '../../utils/uiState';
 import type { ObservationCoverage, ObservationSession, PreviewObservation, TelemetryPage, WorkspaceView } from '../../types/telemetryPreview';
 import { rankedRecurringWindows, sessionReturnRates } from '../../utils/telemetryInsights';
 import { activeEvidence, evidenceReducer, type Evidence } from '../../utils/telemetryWorkspace';
@@ -22,19 +24,20 @@ export function AnalysisWorkspace(props: WorkspaceProps) {
   const [state, dispatch] = useReducer(evidenceReducer, { context, stack: [] });
   const opener = useRef<HTMLElement | null>(null);
   const selected = activeEvidence(state, context);
-  const windows = rankedRecurringWindows(events, completeDates);
-  const rates = sessionReturnRates(fullSessions, sessions, coverage, page);
+  const readRates = () => sessionReturnRates(fullSessions, sessions, coverage, page);
   const inspect = (evidence: Evidence) => {
     if (!selected) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dispatch({ type: 'open', context, evidence });
   };
   const close = () => dispatch({ type: 'close' });
   return <div className="analysis-workspace">
-    <TelemetryOverview comparisonAvailable={props.comparisonAvailable} totals={observationTotals(events)} previous={observationTotals(props.previous)} rates={rates} selected={selected} onInspect={inspect} />
+    <TelemetryOverview comparisonAvailable={props.comparisonAvailable} totals={() => observationTotals(events)} previous={() => observationTotals(props.previous)} rates={readRates} selected={selected} onInspect={inspect} />
     <div className="workspace-view-buttons"><ChoiceGroup label="Analysis view" value={view} onChange={props.onViewChange} choices={[{ value: 'windows', label: 'Time windows' }, { value: 'trends', label: 'Trends' }, { value: 'sessions', label: 'Sessions' }, { value: 'viewing', label: 'Viewing' }]} /></div>
     <div className="workspace-main">
-      <WorkspaceCanvas {...props} windows={windows} selected={selected} onInspect={inspect} />
+      <StateRegion id="telemetry.chart" label="Analysis chart" state={readyState} shape="chart">{() =>
+        <WorkspaceCanvas {...props} windows={view === 'windows' ? rankedRecurringWindows(events, completeDates) : []} selected={selected} onInspect={inspect} />
+      }</StateRegion>
     </div>
-    {selected && <EvidenceDrawer evidence={selected} events={events} sessions={sessions} fullSessions={fullSessions} rates={rates} page={page} dates={props.dates} coverage={coverage} restoreFocus={opener.current} onClose={close} />}
+    {selected && <EvidenceDrawer evidence={selected} events={events} sessions={sessions} fullSessions={fullSessions} rates={readRates} page={page} dates={props.dates} coverage={coverage} restoreFocus={opener.current} onClose={close} />}
   </div>;
 }

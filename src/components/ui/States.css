@@ -9,12 +9,12 @@
 .state-skeleton { min-height: inherit; padding: 12px 0; }
 .state-skeleton > div { display: grid; gap: 12px; }
 .state-skeleton span:not(.state-sr-only) { display: block; background: var(--bg-surface-raised); border-radius: var(--radius-sm); height: 24px; }
-.skeleton-metrics > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.skeleton-metrics > div { grid-template-columns: repeat(var(--skeleton-columns, 3), minmax(0, 1fr)); }
 .skeleton-metrics span:not(.state-sr-only) { height: 84px; }
 .skeleton-chart > div { height: 200px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface); }
 .skeleton-chart span:not(.state-sr-only) { height: 1px; background: var(--border-subtle); }
 .skeleton-donut > div { grid-template-columns: 140px minmax(0, 1fr); align-items: center; }
-.skeleton-donut span:first-child { grid-row: span 3; width: 140px; height: 140px; border-radius: 50%; background: transparent; border: 20px solid var(--bg-surface-raised); }
+.skeleton-donut > div > span:first-child { grid-row: span 3; width: 140px; height: 140px; border-radius: 50%; background: transparent; border: 20px solid var(--bg-surface-raised); }
 .skeleton-calendar > div { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
 .skeleton-calendar span:not(.state-sr-only) { height: 52px; border-radius: 0; }
 .skeleton-table > div { gap: 8px; }
@@ -37,8 +37,14 @@
 .skeleton-week span:not(.state-sr-only) { height: 110px; border-radius: 0; }
 .state-region-week { min-height: 170px; }
 .telemetry-overview > .state-region > .overview-card { height: 100%; }
-.popup-shell > .state-region { flex-shrink: 0; }
-.popup-shell .skeleton-metrics > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .donut-unavailable { width: 108px; height: 108px; display: grid; place-items: center; color: var(--text-secondary); border: 1px solid var(--border-subtle); border-radius: 50%; }
 .state-preview-controls { position: relative; z-index: 3; }
 .state-region-table .state-skeleton { max-height: 440px; overflow: hidden; }
+.state-unavailable { min-height: inherit; display: grid; place-items: center; color: var(--text-muted); }
+.activity-read-notice { color: var(--text-secondary); font-size: 12px; margin: 8px 0; }
+.activity-read-notice button { color: var(--text-primary); background: var(--bg-surface-raised); border: 1px solid var(--border-control); border-radius: var(--radius-sm); padding: 6px 10px; font: inherit; cursor: pointer; }
+.telemetry-return-values .ui-state { padding: 8px; min-height: 0; gap: 4px; }
+.telemetry-return-values .ui-state-icon { display: none; }
+.telemetry-return-values .ui-state-title { font-size: 12px; }
+.telemetry-return-values .ui-state-hint { display: none; }
+.telemetry-return-values button { width: 100%; }

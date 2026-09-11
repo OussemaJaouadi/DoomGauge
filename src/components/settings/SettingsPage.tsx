@@ -1,3 +1,4 @@
+import { readyState } from '../../utils/uiState';
 import { ThemeControl } from '../../theme/ThemeControl';
 import { StateRegion } from '../ui/StateRegion';
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export function SettingsPage() {
   return <section className="settings-page" aria-labelledby="settings-title">
     <div className="analysis-page-head"><div className="analysis-page-identity"><h1 id="settings-title">Settings</h1></div></div>
 <ThemeControl />
-<StateRegion id="settings.configuration" label="Settings" shape="settings" reasons={["settings"]} onRetry={() => { setPeriod("day"); setPlatforms([...PLATFORMS]); setReels("100"); setMinutes("30"); setCountEnabled(true); setTimeEnabled(true); setPreview(false); }}>    <div className="settings-stop-loss">
+<StateRegion state={readyState} id="settings.configuration" label="Settings" shape="settings" reasons={["settings"]} onRetry={() => { setPeriod("day"); setPlatforms([...PLATFORMS]); setReels("100"); setMinutes("30"); setCountEnabled(true); setTimeEnabled(true); setPreview(false); }}>    <div className="settings-stop-loss">
       <div className="settings-section-heading"><h2>Stop loss</h2><span className="settings-mock-label">Mock · not saved or enforced</span><Hint label="About stop loss" text={hintFacts([['Trigger', 'Either enabled limit is reached'], ['Scope', 'Selected platforms combined'], ['Daily reset', 'Local midnight']], 'Preview values are examples, not recommendations.')} /></div>
       <div className="settings-rule-layout"><div className="settings-rule-editor">
       <div className="settings-rule-scope">

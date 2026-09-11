@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { StateRegion } from '../ui/StateRegion';
 import { measurementHints } from '../ui/hintContent';
 import { useEffect, useMemo, useState } from 'react';
@@ -28,7 +29,7 @@ export function ViewingView({ events, page }: { events: PreviewObservation[]; pa
   const plot = { left: 50, top: 16, width: Math.max(1, width - 80), height: 220 };
   const x = (seconds: number) => plot.left + seconds / maxSeconds * plot.width;
   const y = (percent: number) => plot.top + (100 - percent) / 100 * plot.height;
-  return <StateRegion id="evidence.curve" label="Duration curve" shape="chart"><AnalysisPanel title="How long each reel holds your viewing" hint={measurementHints.curve}>
+  return <StateRegion state={contentState(events.length)} id="evidence.curve" label="Duration curve" shape="chart"><AnalysisPanel title="How long each reel holds your viewing" hint={measurementHints.curve}>
     {!events.length ? <NoObservations /> : <>
       <svg ref={setSvg} className="viewing-curve" viewBox={`0 0 ${width} 275`} role="img" aria-label="Percentage of views watched at least X active seconds, by platform"
         onPointerMove={event => { const rect = event.currentTarget.getBoundingClientRect(); const position = event.clientX - rect.left; setThreshold(Math.round(Math.max(0, Math.min(maxSeconds, (position - plot.left) / plot.width * maxSeconds)) * 10) / 10); }}>

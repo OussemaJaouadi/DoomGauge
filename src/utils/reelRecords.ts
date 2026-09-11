@@ -1,3 +1,4 @@
+import { QUICK_SKIP_MS } from '../config/tracking';
 import type { Platform } from '../types/models';
 import type { PreviewObservation } from '../types/telemetryPreview';
 import { localDateKey } from './time';
@@ -12,7 +13,7 @@ export interface RecordFilters {
 export function filterReelRecords(events: readonly PreviewObservation[], filters: RecordFilters, sort: RecordSort, descending: boolean) {
   const value = (event: PreviewObservation) => sort === 'started' ? event.ts : sort === 'active' ? event.durationMs : event.endedTs - event.ts;
   return events.filter(event => {
-    if (!filters.platforms.includes(event.platform) || (filters.quickSkips && (event.status ? !event.skipped : event.durationMs >= 3000))) return false;
+    if (!filters.platforms.includes(event.platform) || (filters.quickSkips && (event.status ? !event.skipped : event.durationMs >= QUICK_SKIP_MS))) return false;
     const date = localDateKey(new Date(event.ts));
     return (!filters.from || date >= filters.from) && (!filters.to || date <= filters.to);
   }).sort((a, b) => (value(a) - value(b)) * (descending ? -1 : 1) || a.ts - b.ts || a.id.localeCompare(b.id));

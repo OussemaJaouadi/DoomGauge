@@ -1,11 +1,19 @@
 import { ThemeController } from './controller';
-import { resolveTheme, themePalettes } from './palette';
-import type { ThemeRequest, ThemeResponse } from './protocol';
+import { resolveTheme, themePalettes, isThemePreference } from './palette';
+import { isFailure, TrackingError } from '../utils/errors';
+import type { ThemeRequest, ThemeResponse } from '../types/theme';
 
 function request(message: ThemeRequest): Promise<ThemeResponse> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Theme request timed out')), 1500);
-    Promise.resolve().then(() => chrome.runtime.sendMessage(message)).then(value => { clearTimeout(timer); resolve(value ?? { ok: false }); }, error => { clearTimeout(timer); reject(error); });
+    const timer = setTimeout(() => reject(new TrackingError('timeout')), 1500);
+    Promise.resolve().then(() => chrome.runtime.sendMessage(message)).then(value => {
+      clearTimeout(timer);
+      if (value && typeof value === 'object' && (isFailure(value) || (value.ok === true && isThemePreference(value.preference)))) resolve(value);
+      else reject(new TrackingError('invalid-response'));
+    }, cause => {
+      clearTimeout(timer);
+      reject(new TrackingError('background-unavailable', cause));
+    });
   });
 }
 const system = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : undefined;

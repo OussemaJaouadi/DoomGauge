@@ -15,10 +15,11 @@ interface TelemetryFiltersProps {
   daypart: Daypart[];
   onDaypartChange: (daypart: Daypart[]) => void;
   onExport: () => void;
+  exportDisabled?: boolean;
   comparisonLabel: HintContent;
 }
 
-export function TelemetryFilters({ range, onRangeChange, dateLabel, onBack, onForward, forwardDisabled, daypart, onDaypartChange, onExport, comparisonLabel }: TelemetryFiltersProps) {
+export function TelemetryFilters({ range, onRangeChange, dateLabel, onBack, onForward, forwardDisabled, daypart, onDaypartChange, onExport, exportDisabled = false, comparisonLabel }: TelemetryFiltersProps) {
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -55,7 +56,7 @@ export function TelemetryFilters({ range, onRangeChange, dateLabel, onBack, onFo
           <button type="button" className="daypart-done" onClick={close}>Done</button>
         </div>}
       </div>
-      <button type="button" className="analysis-export" onClick={onExport} aria-label="Export selected simulated rollups" title="Export selected simulated rollups"><Download size={16} /></button>
+      <button type="button" className="analysis-export" onClick={onExport} disabled={exportDisabled} aria-label="Export selected rollups" title={exportDisabled ? 'Load activity before exporting' : 'Export selected rollups'}><Download size={16} /></button>
     </div>
 
   </div>;

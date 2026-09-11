@@ -1,11 +1,12 @@
-import { clipObservations } from '../tracking/measurements';
+import { QUICK_SKIP_MS } from '../config/tracking';
+import { clipObservations } from './trackingMeasurements';
 import type { ObservationSession, PreviewObservation, RecurringWindow } from '../types/telemetryPreview';
 import { localDateKey } from './time';
 import { minuteOfDay, shiftDate, startOfDay } from './telemetryPreview';
 
 export const DURATION_BUCKETS = [
-  { label: '<3s', lower: 0, upper: 3000 },
-  { label: '3–<10s', lower: 3000, upper: 10000 },
+  { label: '<3s', lower: 0, upper: QUICK_SKIP_MS },
+  { label: '3–<10s', lower: QUICK_SKIP_MS, upper: 10000 },
   { label: '10–<30s', lower: 10000, upper: 30000 },
   { label: '30–<60s', lower: 30000, upper: 60000 },
   { label: '≥60s', lower: 60000, upper: Infinity },

@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { StateRegion } from '../ui/StateRegion';
 import { measurementHints } from '../ui/hintContent';
 import { PLATFORMS, type Platform, type PlatformStats } from '../../types/models';
@@ -15,13 +16,13 @@ interface SignalsTabProps {
   totalSkips: number;
   quickSkipPct: number;
   averageSeconds: number;
-  distribution: Distribution;
+  distribution: Distribution | (() => Distribution);
 }
 
 export function SignalsTab({ data, totalCount, totalSkips, quickSkipPct, averageSeconds, distribution, totalCompleted = totalCount }: SignalsTabProps) {
   return (
     <div className="popup-signals">
-      <StateRegion id="popup.skips" label="Quick skips"><section className="popup-signal" aria-labelledby="quick-skips-heading">
+      <StateRegion state={ratioState(totalCompleted, 'completed')} id="popup.skips" label="Quick skips"><section className="popup-signal" aria-labelledby="quick-skips-heading">
         <div className="popup-signal-heading">
           <h2 id="quick-skips-heading">Quick skips <span>(&lt;3s)</span></h2>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -56,9 +57,11 @@ export function SignalsTab({ data, totalCount, totalSkips, quickSkipPct, average
         </div>
       </section></StateRegion>
 
-      <StateRegion id="popup.distribution" label="Viewing duration" shape="chart"><ViewingDistribution data={distribution} /></StateRegion>
+      <StateRegion state={contentState(totalCount)} id="popup.distribution" label="Viewing duration" shape="chart">{() => <ViewingDistribution data={typeof distribution === 'function' ? distribution() : distribution} />}</StateRegion>
 
-      <StateRegion id="popup.average" label="Time per reel" shape="metrics"><section className="popup-signal" aria-labelledby="average-watch-heading">
+      <StateRegion state={ratioState(totalCount, 'activity')} id="popup.average" label="Time per reel" shape="metrics">{() => {
+        const { medianMs } = typeof distribution === 'function' ? distribution() : distribution;
+        return <section className="popup-signal" aria-labelledby="average-watch-heading">
         <div className="popup-signal-heading">
           <h2 id="average-watch-heading">Time per reel</h2>
           <Hint
@@ -69,9 +72,10 @@ export function SignalsTab({ data, totalCount, totalSkips, quickSkipPct, average
         </div>
         <div className="popup-watch-summary">
           <p className="popup-signal-value">{totalCount ? `${averageSeconds.toFixed(1)}s` : '—'} <span>average</span></p>
-          <p className="popup-signal-value">{distribution.medianMs === null ? '—' : `${(distribution.medianMs / 1000).toFixed(1)}s`} <span>median</span></p>
+          <p className="popup-signal-value">{medianMs === null ? '—' : `${(medianMs / 1000).toFixed(1)}s`} <span>median</span></p>
         </div>
-      </section></StateRegion>
+      </section>;
+      }}</StateRegion>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { StateRegion } from '../ui/StateRegion';
 import { useMemo, useReducer, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
@@ -30,7 +31,7 @@ export function CalendarEvidence({ dates, events, sessions, coverage, window, re
   const offset = days[0] ? (new Date(`${days[0].date}T12:00:00`).getDay() + 6) % 7 : 0;
   if (selection.records && session) return <><button type="button" className="workspace-text-button" onClick={() => dispatch({ type: 'back' })}><ArrowLeft size={16} /> Back to session</button><ReelRecords key={session.id} events={session.events} /></>;
   return <div className={`calendar-evidence ${week ? 'calendar-evidence-week' : 'calendar-evidence-month'}`}>
-    <StateRegion id="evidence.calendar" label="Evidence dates" shape={week ? "week" : "calendar"} skeletonCount={week ? days.length : Math.ceil((offset + days.length) / 7) * 7}><section className="evidence-calendar" aria-label="Evidence dates">
+    <StateRegion state={contentState(days.length)} id="evidence.calendar" label="Evidence dates" shape={week ? "week" : "calendar"} skeletonCount={week ? days.length : Math.ceil((offset + days.length) / 7) * 7}><section className="evidence-calendar" aria-label="Evidence dates">
       <div className="evidence-visual-heading"><h3>{week ? 'Week' : 'Session calendar'}</h3><Hint label="About evidence dates" text={calendarHint} /></div>
       <p className="calendar-range">{rangeLabel}</p>
       <div className="calendar-grid-scroll" role="region" aria-label="Calendar dates" tabIndex={0}><div className="evidence-calendar-grid">
@@ -50,7 +51,7 @@ export function CalendarEvidence({ dates, events, sessions, coverage, window, re
       </div></div>
       {days.some(item => item.status === 'partial') && <p className="calendar-qualification">* Partial coverage</p>}
     </section></StateRegion>
-    <StateRegion id="evidence.day" label="Selected day" shape="rows"><section className="calendar-inspector" aria-label="Selected day">
+    <StateRegion state={day ? (day.status === 'unobserved' ? { status: 'unavailable', reason: 'unobserved' } : contentState(day.sessions.length)) : { status: 'unavailable', reason: 'session' }} id="evidence.day" label="Selected day" shape="rows"><section className="calendar-inspector" aria-label="Selected day">
       {day && <><div className="calendar-day-heading" role="status"><h3>{new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' })}</h3><span>{day.status === 'unobserved' ? 'Unobserved' : `${formatTime(day.activeMs)} active · ${day.reels} reels`}</span></div>
         {day.status === 'partial' && <span className="evidence-note">Partial coverage</span>}
         {day.sessions.length ? <><EvidenceTimeline sessions={day.sessions} events={day.events} date={day.date} window={window ? { ...window, matchingDates: [day.date] } : undefined} selectedId={selection.id} onSelect={id => dispatch({ type: 'session', id })} />

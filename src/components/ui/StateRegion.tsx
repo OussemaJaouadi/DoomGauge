@@ -1,34 +1,111 @@
-import { Component, useEffect, useState, type ReactNode, type ErrorInfo } from 'react';
+import { Component, useEffect, type CSSProperties, type ErrorInfo, type ReactNode } from 'react';
+import { useActivityReadState } from './ActivityReadState';
 import { EmptyState, ErrorState } from './State';
 import { useStatePreview } from './StatePreview';
-import { emptyMessages, resolveState, type EmptyReason, type SkeletonShape, type StateOverride } from './stateModel';
+import { emptyMessages, previewRegionState, resolveRegionState } from '../../utils/uiState';
+import type { RegionBoundaryProps, SkeletonProps, StateRegionProps, SkeletonShape } from '../../types/uiState';
 import './States.css';
 
-export function Skeleton({ shape, label, count: requestedCount }: { shape: SkeletonShape; label: string; count?: number }) {
-  const count = requestedCount ?? (shape === 'metric' ? 1 : shape === 'calendar' ? 35 : shape === 'week' ? 7 : shape === 'table' ? 10 : shape === 'metrics' ? 3 : shape === 'settings' ? 2 : 4);
-  return <div className={`state-skeleton skeleton-${shape}`} role="status" aria-label={`Loading ${label}`}><span className="state-sr-only">Loading {label}</span><div aria-hidden="true">{Array.from({ length: count }, (_, index) => <span key={index} />)}</div></div>;
+const skeletonCounts: Record<SkeletonShape, number> = {
+  metric: 1, metrics: 3, donut: 4, chart: 4, calendar: 35,
+  week: 7, rows: 4, table: 10, settings: 2,
+};
+
+export function Skeleton({ shape, label, count }: SkeletonProps) {
+  const itemCount = count ?? skeletonCounts[shape];
+  const style = shape === 'metrics' ? { '--skeleton-columns': itemCount } as CSSProperties : undefined;
+  return <div className={`state-skeleton skeleton-${shape}`} style={style} role="status" aria-label={`Loading ${label}`}>
+    <span className="state-sr-only">Loading {label}</span>
+    <div aria-hidden="true">{Array.from({ length: itemCount }, (_, index) => <span key={index} />)}</div>
+  </div>;
 }
-export class RegionErrorBoundary extends Component<{ children: ReactNode; fallback: (retry: () => void) => ReactNode; onRetry?: () => void }, { failed: boolean }> {
+
+export class RegionErrorBoundary extends Component<RegionBoundaryProps, { failed: boolean }> {
   override state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  override componentDidCatch(error: Error, info: ErrorInfo) { console.error('UI region failed', error, info.componentStack); }
-  override render() { return this.state.failed ? this.props.fallback(() => { this.setState({ failed: false }); this.props.onRetry?.(); }) : this.props.children; }
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  override componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('UI region failed', error, info.componentStack);
+  }
+
+  private retry = () => {
+    this.setState({ failed: false });
+    this.props.onRetry?.();
+  };
+
+  override render() {
+    if (this.state.failed) {
+      return this.props.fallback(this.retry);
+    }
+    return this.props.children;
+  }
 }
-interface Props {
-  id: string; label: string; shape?: SkeletonShape; children: ReactNode; actual?: StateOverride;
-  reasons?: readonly EmptyReason[]; onClearFilters?: () => void; onRetry?: () => void; className?: string; skeletonCount?: number;
+
+// Render callbacks run below the boundary, so calculation errors stay local.
+function RegionContent({ children }: { children: StateRegionProps['children'] }) {
+  return typeof children === 'function' ? children() : children;
 }
-const defaultReasons: readonly EmptyReason[] = ['activity', 'filters', 'unobserved'];
-export function StateRegion({ id, label, shape = 'rows', children, actual, reasons = defaultReasons, onClearFilters, onRetry, className = '', skeletonCount }: Props) {
+
+export function StateRegion(props: StateRegionProps) {
+  const { retry } = useStatePreview();
+  const recover = () => {
+    retry(props.id);
+    props.onRetry?.();
+  };
+  return <RegionErrorBoundary onRetry={recover} fallback={action =>
+    <ErrorState title={`${props.label} failed`} hint="This section could not be calculated." action={{ label: 'Retry section', onClick: action }} />}>
+    <RegionView {...props} />
+  </RegionErrorBoundary>;
+}
+
+function RegionView(props: StateRegionProps) {
+  const { id, label, shape = 'rows', children, state: localState, onRetry,
+    onClearFilters, className = '', skeletonCount } = props;
+  const reasons = props.reasons ?? ['activity', 'filters', 'unobserved'];
   const { register, overrides, retry } = useStatePreview();
-  const [revision, setRevision] = useState(0);
+  const read = useActivityReadState();
+  // Do not calculate local availability until the shared data has loaded.
+  const local = read && !read.hasData ? { status: 'loading' as const }
+    : typeof localState === 'function' ? localState() : localState;
+  const state = previewRegionState(resolveRegionState(local, read), overrides.page, overrides[id]);
   const reasonKey = reasons.join(',');
-  useEffect(() => register(id, { label, reasons: reasonKey.split(',') as EmptyReason[] }), [register, id, label, reasonKey]);
-  const state = resolveState(overrides.page, overrides[id], actual);
-  const recover = () => { retry(id); setRevision(value => value + 1); onRetry?.(); };
-  const reason = state.reason && reasons.includes(state.reason) ? state.reason : reasons[0] ?? 'activity';
-  const error = (action: () => void) => <ErrorState title={`${label} unavailable`} hint="Try loading this section again." action={{ label: 'Retry', onClick: action }} />;
-  return <div className={`state-region ${state.status !== 'success' ? `state-region-${shape}` : ''} ${className}`} aria-busy={state.status === 'loading'}>
-    {state.status === 'loading' ? <Skeleton shape={shape} label={label} count={skeletonCount} /> : state.status === 'error' ? error(recover) : state.status === 'empty' ? <EmptyState {...emptyMessages[reason]} action={reason === 'filters' && onClearFilters ? { label: 'Clear filters', onClick: () => { onClearFilters(); recover(); } } : reason === 'settings' ? { label: 'Restore mock defaults', onClick: recover } : undefined} /> : <RegionErrorBoundary key={revision} fallback={error} onRetry={recover}>{children}</RegionErrorBoundary>}
+
+  useEffect(() => register(id, { label, reasons: [...reasons] }), [register, id, label, reasonKey]);
+
+  const recover = () => {
+    retry(id);
+    onRetry?.();
+  };
+  const errorFallback = (action: () => void) =>
+    <ErrorState title={`${label} failed`} hint="This section could not be calculated." action={{ label: 'Retry section', onClick: action }} />;
+
+  let content: ReactNode;
+  switch (state.status) {
+    case 'loading':
+      content = <Skeleton shape={shape} label={label} count={skeletonCount} />;
+      break;
+    case 'error':
+      content = state.source === 'read'
+        ? <div className="state-unavailable" role="status">{label}: activity unavailable</div>
+        : errorFallback(recover);
+      break;
+    case 'empty':
+    case 'unavailable': {
+      const action = state.reason === 'filters' && onClearFilters
+        ? { label: 'Clear filters', onClick: () => { onClearFilters(); recover(); } }
+        : state.reason === 'settings' ? { label: 'Restore mock defaults', onClick: recover } : undefined;
+      content = <EmptyState {...emptyMessages[state.reason]} action={action} />;
+      break;
+    }
+    case 'ready':
+      content = <RegionContent>{children}</RegionContent>;
+      break;
+  }
+
+  return <div className={`state-region ${state.status !== 'ready' ? `state-region-${shape}` : ''} ${className}`} aria-busy={state.status === 'loading'}>
+    {content}
   </div>;
 }

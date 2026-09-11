@@ -1,6 +1,8 @@
+import { DEV_DATA } from '../../config/dataMode';
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 import type { UIState } from '../../types/popup';
-import { emptyMessages, retryOverrides, type DataPreset, type EmptyReason, type StateOverride } from './stateModel';
+import type { DataPreset, EmptyReason, StateOverride } from '../../types/uiState';
+import { emptyMessages, retryOverrides } from '../../utils/uiState';
 import './States.css';
 
 interface Region { label: string; reasons: readonly EmptyReason[] }
@@ -14,26 +16,27 @@ interface PreviewContext {
   reset: () => void;
 }
 const noop = () => {};
-const Context = createContext<PreviewContext>({ overrides: {}, preset: 'normal', register: () => noop, retry: noop, regions: {}, setOverride: noop, setPreset: noop, reset: noop });
+const inactivePreview: PreviewContext = { overrides: {}, preset: 'normal', register: () => noop, retry: noop, regions: {}, setOverride: noop, setPreset: noop, reset: noop };
+const Context = createContext<PreviewContext>(inactivePreview);
 export const useStatePreview = () => useContext(Context);
 export function StatePreviewProvider({ children }: { children: ReactNode }) {
   const [overrides, setOverrides] = useState<Record<string, StateOverride>>({});
   const [preset, setPreset] = useState<DataPreset>('normal');
   const [regions, setRegions] = useState<Record<string, Region>>({});
   const register = useCallback((id: string, region: Region) => {
-    if (!import.meta.env?.DEV) return noop;
+    if (!DEV_DATA) return noop;
     setRegions(current => ({ ...current, [id]: region }));
     return () => setRegions(current => { const next = { ...current }; delete next[id]; return next; });
   }, []);
   const retry = useCallback((id: string) => setOverrides(current => retryOverrides(current, id)), []);
   const setOverride = useCallback((id: string, state: StateOverride) => setOverrides(current => ({ ...current, [id]: state })), []);
-  return <Context.Provider value={{ overrides, preset, regions, register, retry, setOverride, setPreset, reset: () => { setOverrides({}); setPreset('normal'); } }}>{children}</Context.Provider>;
+  return <Context.Provider value={DEV_DATA ? { overrides, preset, regions, register, retry, setOverride, setPreset, reset: () => { setOverrides({}); setPreset('normal'); } } : inactivePreview}>{children}</Context.Provider>;
 }
 
 export function StatePreviewControls({ scope }: { scope?: string }) {
   const preview = useStatePreview();
   const [requestedTarget, setTarget] = useState('page');
-  if (!import.meta.env?.DEV) return null;
+  if (!DEV_DATA) return null;
   const regions = Object.entries(preview.regions).filter(([id]) => !scope || id.startsWith(scope));
   const target = regions.some(([id]) => id === requestedTarget) ? requestedTarget : 'page';
   const state = preview.overrides[target] ?? { status: 'success' };

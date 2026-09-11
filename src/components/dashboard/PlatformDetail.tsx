@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { useStatePreview } from '../ui/StatePreview';
 import { StateRegion } from '../ui/StateRegion';
 import { measurementHints } from '../ui/hintContent';
@@ -78,12 +79,12 @@ export function PlatformDetail({
         <span className="detail-sub">{overrides.page && overrides.page.status !== "success" ? "" : d.count ? `${d.share}% of total active time` : "Share unavailable"}</span>
       </div>
 
-      <StateRegion id="popup.platform-metrics" label="Platform metrics" shape="metrics"><div className="detail-hero">
+      <StateRegion state={readyState} id="popup.platform-metrics" label="Platform metrics" shape="metrics"><div className="detail-hero">
         <KpiCard icon={<Clock size={14} />} label="Active Time" value={formatTime(d.timeMs)} accent={accent} />
         <KpiCard icon={<Hash size={14} />} label="Reel Count" value={d.count} accent={accent} />
       </div></StateRegion>
 
-      <StateRegion id="popup.platform-signals" label="Platform signals" shape="metrics"><div className="detail-grid3">
+      <StateRegion state={ratioState(d.count, 'activity')} id="popup.platform-signals" label="Platform signals" shape="metrics"><div className="detail-grid3">
         <KpiCard
           icon={<Zap size={13} />}
           label="Impatience"
@@ -107,7 +108,7 @@ export function PlatformDetail({
         />
       </div></StateRegion>
 
-<StateRegion id="popup.abandonment" label="Abandonment">      <div className="detail-section">
+<StateRegion state={ratioState(d.completedCount ?? d.count, 'completed')} id="popup.abandonment" label="Abandonment">      <div className="detail-section">
         <div className="detail-section-header">
           <span className="detail-section-title">Abandonment telemetry</span>
           <Hint
@@ -140,7 +141,7 @@ export function PlatformDetail({
         </div>
       </div>
 
-</StateRegion><StateRegion id="popup.platform-hourly" label="Platform hourly activity" shape="chart">      <div className="detail-section">
+</StateRegion><StateRegion state={contentState(d.count)} id="popup.platform-hourly" label="Platform hourly activity" shape="chart">      <div className="detail-section">
         <div className="detail-section-title">Today by hour · reels</div>
         <div className="detail-chart">
           <ResponsiveContainer width="100%" height={120}>

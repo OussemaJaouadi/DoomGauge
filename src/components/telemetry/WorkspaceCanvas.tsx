@@ -1,3 +1,4 @@
+import { readyState, contentState, ratioState } from '../../utils/uiState';
 import { hasObservationCoverage } from '../../utils/telemetryInsights';
 import { StateRegion } from '../ui/StateRegion';
 import { useStatePreview } from '../ui/StatePreview';
@@ -39,6 +40,11 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
   const { preset, setPreset } = useStatePreview();
   const [measurement, setMeasurement] = useState<'count' | 'time'>('count');
   const daily = dates.length === 1;
+  const hasVisibleData = events.length > 0 || (view === 'trends' && previous.length > 0);
+  const insufficientHistory = view === 'windows' && !daily && completeDates.length < 3;
+  const canvasState = !hasVisibleData
+    ? contentState(0, filterEmpty || preset === 'filtered')
+    : insufficientHistory ? ratioState(0, 'history') : readyState;
   const sessionBuckets = sessionDistribution(sessions);
   const maxSessions = Math.max(1, ...sessionBuckets.map(bucket => bucket.sessions.length));
   const buckets = DURATION_BUCKETS.map((bucket, index) => {
@@ -52,7 +58,7 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
       <span>{view === 'windows' ? daily ? 'Session intervals · local time' : 'Active time · completed days' : view === 'sessions' ? `${sessions.length} sessions · count by active duration` : view === 'trends' ? 'Active minutes' : 'Active viewing duration'}</span>
       {view !== 'trends' && view !== 'sessions' && <div className="workspace-legend">{(page === 'overview' ? PLATFORMS : [page]).map(platform => <span key={platform}><i style={{ background: platformMeta[platform].color }} />{platformMeta[platform].label}</span>)}</div>}
     </div>
-    <StateRegion id={`telemetry.canvas.${view}`} label={titles[view]} shape="chart" reasons={view === 'windows' ? ['history', 'activity', 'filters', 'unobserved'] : ['activity', 'filters', 'unobserved']} onClearFilters={() => { onClearFilters?.(); setPreset("normal"); }} actual={filterEmpty || preset === 'filtered' ? { status: 'empty', reason: 'filters' } : !events.length && !(view === 'trends' && previous.length) ? { status: 'empty', reason: 'activity' } : view === 'windows' && !daily && completeDates.length < 3 ? { status: 'empty', reason: 'history' } : undefined}>
+    <StateRegion state={canvasState} id={`telemetry.canvas.${view}`} label={titles[view]} shape="chart" reasons={view === 'windows' ? ['history', 'activity', 'filters', 'unobserved'] : ['activity', 'filters', 'unobserved']} onClearFilters={() => { onClearFilters?.(); setPreset("normal"); }}>
     {view === 'windows' && (daily ? <>
       <TimelinePlot sessions={sessions} dates={dates} selectedId={selected?.kind === 'session' ? selected.id : null} onSelect={id => onInspect({ kind: 'session', id })} />
       <div className="workspace-session-index">{sessions.map(session => <button type="button" key={session.id} onClick={() => onInspect({ kind: 'session', id: session.id })} aria-pressed={selected?.kind === 'session' && selected.id === session.id}>{clockMinute(minuteOfDay(session.startTs))}<strong>{formatTime(observationTotals(session.events).activeMs)}</strong></button>)}</div>

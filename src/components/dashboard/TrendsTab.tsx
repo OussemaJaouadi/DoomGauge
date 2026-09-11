@@ -1,3 +1,4 @@
+import { readyState, contentState } from '../../utils/uiState';
 import { StateRegion } from '../ui/StateRegion';
 import React from 'react';
 import HourlyBars from '../charts/HourlyBars';
@@ -9,7 +10,7 @@ import { HOURLY_MOCK, POPUP_INSIGHTS } from '../../data/popupMock';
 import './TrendsTab.css';
 
 interface TrendsTabProps {
-  insights?: TemporalInsights;
+  insights?: TemporalInsights | (() => TemporalInsights);
   hourlyData?: HourItem[];
 }
 
@@ -17,11 +18,12 @@ export function TrendsTab({
   insights = POPUP_INSIGHTS,
   hourlyData = HOURLY_MOCK,
 }: TrendsTabProps) {
-  const { worstVortex, daySummary } = insights;
 
   return (
     <div className="trends-tab">
-      <StateRegion id="popup.hourly-summary" label="Session summary" shape="metrics"><SessionCard
+      <StateRegion state={readyState} id="popup.hourly-summary" label="Session summary" shape="metrics">{() => {
+        const { worstVortex, daySummary } = typeof insights === 'function' ? insights() : insights;
+        return <StateRegion state={contentState(daySummary.sessionCount)} id="popup.session-data" label="Sessions" shape="metrics"><SessionCard
         label="Worst Vortex"
         timeRange={worstVortex ? `${worstVortex.startTime} – ${worstVortex.endTime}` : null}
         elapsedMs={worstVortex?.elapsedMs ?? 0}
@@ -41,7 +43,8 @@ export function TrendsTab({
         </span>
       </div>
 
-      </StateRegion><StateRegion id="popup.hourly-chart" label="Hourly activity" shape="chart"><HourlyBars data={hourlyData} /></StateRegion>
+      </StateRegion>;
+      }}</StateRegion><StateRegion state={contentState(hourlyData.reduce((sum, hour) => sum + hour.total, 0))} id="popup.hourly-chart" label="Hourly activity" shape="chart"><HourlyBars data={hourlyData} /></StateRegion>
     </div>
   );
 }
