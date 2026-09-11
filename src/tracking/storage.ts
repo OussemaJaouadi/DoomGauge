@@ -1,57 +1,151 @@
-import { acceptRevision, intervalMs, type StoredVisit, type Coverage } from './model';
+import { acceptRevision, intervalMs, isQuickSkip } from '../utils/tracking';
+import type { StoredVisit, Coverage } from '../types/tracking';
 import { localDateKey } from '../utils/time';
 import { PLATFORMS } from '../types/models';
-const stores=['visits','trackingCoverage','trackingMeta','rollups'];
-export async function openTrackingDatabase(factory:IDBFactory=indexedDB):Promise<IDBDatabase> {
-  const open=(version?:number)=>new Promise<IDBDatabase>((resolve,reject)=>{
-    const r=factory.open('doomgauge-v1',version);let failed=false;
-    r.onupgradeneeded=()=>{const db=r.result;
-      if(!db.objectStoreNames.contains('preferences'))db.createObjectStore('preferences');
-      if(!db.objectStoreNames.contains('visits')){const s=db.createObjectStore('visits',{keyPath:'id'});s.createIndex('by_end','observedAt');s.createIndex('by_status','status');}
-      if(!db.objectStoreNames.contains('trackingCoverage')){const s=db.createObjectStore('trackingCoverage',{keyPath:'id'});s.createIndex('by_end','endTs');}
-      if(!db.objectStoreNames.contains('trackingMeta'))db.createObjectStore('trackingMeta');
-      if(!db.objectStoreNames.contains('rollups'))db.createObjectStore('rollups',{keyPath:['date','platform']});
-    };
-    r.onerror=r.onblocked=()=>{failed=true;reject(r.error??Error('Tracking storage unavailable'));};
-    r.onsuccess=()=>{r.result.onversionchange=()=>r.result.close();if(failed)r.result.close();else resolve(r.result);};
+import { openLocalDatabase } from '../utils/database';
+import { TrackingError } from '../utils/errors';
+
+const stores = ['preferences', 'visits', 'trackingCoverage', 'trackingMeta', 'rollups'];
+const RECOVERY_GRACE_MS = 10000;
+
+export function openTrackingDatabase(factory: IDBFactory = indexedDB) {
+  return openLocalDatabase(stores, database => {
+    if (!database.objectStoreNames.contains('preferences')) database.createObjectStore('preferences');
+    if (!database.objectStoreNames.contains('visits')) {
+      const visits = database.createObjectStore('visits', { keyPath: 'id' });
+      visits.createIndex('by_end', 'observedAt');
+      visits.createIndex('by_status', 'status');
+    }
+    if (!database.objectStoreNames.contains('trackingCoverage')) {
+      const coverage = database.createObjectStore('trackingCoverage', { keyPath: 'id' });
+      coverage.createIndex('by_end', 'endTs');
+    }
+    if (!database.objectStoreNames.contains('trackingMeta')) database.createObjectStore('trackingMeta');
+    if (!database.objectStoreNames.contains('rollups')) {
+      database.createObjectStore('rollups', { keyPath: ['date', 'platform'] });
+    }
+  }, factory);
+}
+
+function requestResult<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
-  const db=await open();if(stores.every(s=>db.objectStoreNames.contains(s)))return db;
-  const version=db.version+1;db.close();return open(version);
 }
-const result=<T>(r:IDBRequest<T>)=>new Promise<T>((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
-async function transaction<T>(names:string[],mode:IDBTransactionMode,run:(tx:IDBTransaction)=>Promise<T>):Promise<T>{
-  const db=await openTrackingDatabase();
-  try {const tx=db.transaction(names,mode,mode==='readwrite'?{durability:'strict'}:undefined);
-    const done=new Promise<void>((resolve,reject)=>{tx.oncomplete=()=>resolve();tx.onabort=tx.onerror=()=>reject(tx.error??Error('Tracking transaction failed'));});
-    // Attach a rejection handler immediately even if an individual request also fails.
-    void done.catch(()=>{});
-    try{const value=await run(tx);await done;return value;}catch(error){try{tx.abort();}catch{}throw error;}
-  }finally{db.close();}
-}
-function datesFor(v:StoredVisit){const dates=new Set([localDateKey(new Date(v.startedAt))]);for(const i of v.intervals){const d=new Date(i.start);d.setHours(0,0,0,0);while(d.getTime()<i.end){dates.add(localDateKey(d));d.setDate(d.getDate()+1);}}return dates;}
-export async function saveVisit(visit:StoredVisit){return transaction(['visits','trackingMeta'],'readwrite',async tx=>{
-  const s=tx.objectStore('visits');const old=await result(s.get(visit.id)) as StoredVisit|undefined;
-  if(!acceptRevision(old,visit))return;
-  s.put(visit);for(const date of datesFor(visit))tx.objectStore('trackingMeta').put(true,`dirty:${date}`);
-});}
-export async function saveCoverage(coverage:Coverage){return transaction(['trackingCoverage'],'readwrite',async tx=>{tx.objectStore('trackingCoverage').put(coverage);});}
-export async function readTracking(start:number,end:number){return transaction(['visits','trackingCoverage'],'readonly',async tx=>{
-  const vr=tx.objectStore('visits').index('by_end').getAll(IDBKeyRange.lowerBound(start));
-  const cr=tx.objectStore('trackingCoverage').index('by_end').getAll(IDBKeyRange.lowerBound(start));
-  const [visits,coverage]=await Promise.all([result(vr),result(cr)]);
-  return {visits:(visits as StoredVisit[]).filter(v=>v.startedAt<end),coverage:(coverage as Coverage[]).filter(c=>c.startTs<end)};
-});}
-export async function recoverVisits(alive:ReadonlySet<string>,now=Date.now()) {return transaction(['visits'],'readwrite',async tx=>{
-  const s=tx.objectStore('visits');const open=await result(s.index('by_status').getAll('open')) as StoredVisit[];
-  for(const v of open)if(now-v.receivedAt>10000&&!alive.has(v.id))s.put({...v,status:'interrupted'});
-});}
-export async function rebuildRollups(){return transaction(['visits','trackingMeta','rollups'],'readwrite',async tx=>{
-  const meta=tx.objectStore('trackingMeta');const keys=await result(meta.getAllKeys());
-  for(const key of keys){if(typeof key!=='string'||!key.startsWith('dirty:'))continue;
-    const date=key.slice(6),start=new Date(`${date}T00:00:00`),end=new Date(start);end.setDate(end.getDate()+1);
-    const visits=await result(tx.objectStore('visits').index('by_end').getAll(IDBKeyRange.lowerBound(start.getTime()))) as StoredVisit[];
-    for(const platform of PLATFORMS){const relevant=visits.filter(v=>v.platform===platform&&v.startedAt<end.getTime());const started=relevant.filter(v=>v.startedAt>=start.getTime());
-      tx.objectStore('rollups').put({date,platform,reelCount:started.length,skipCount:started.filter(v=>v.status==='completed'&&v.activeMs<3000).length,totalActiveMs:relevant.reduce((sum,v)=>sum+intervalMs(v.intervals,start.getTime(),end.getTime()),0)});
-    }meta.delete(key);
+
+async function transaction<T>(
+  names: string[], mode: IDBTransactionMode, run: (transaction: IDBTransaction) => Promise<T>,
+): Promise<T> {
+  let database: IDBDatabase | undefined;
+  try {
+    database = await openTrackingDatabase();
+    const transaction = database.transaction(names, mode, mode === 'readwrite' ? { durability: 'strict' } : undefined);
+    // Capture completion immediately, including when a request also fails.
+    const completion = new Promise<{ error?: Error | DOMException }>(resolve => {
+      transaction.oncomplete = () => resolve({});
+      transaction.onabort = transaction.onerror = () =>
+        resolve({ error: transaction.error ?? new Error('Tracking transaction failed') });
+    });
+    try {
+      const value = await run(transaction);
+      const outcome = await completion;
+      if (outcome.error) throw outcome.error;
+      return value;
+    } catch (cause) {
+      try {
+        transaction.abort();
+      } catch (abortError) {
+        // An already completed/aborted transaction cannot be aborted again.
+        if (!(abortError instanceof DOMException && abortError.name === 'InvalidStateError')) {
+          console.error('[DoomGauge] Abort tracking transaction', abortError);
+        }
+      }
+      throw cause;
+    }
+  } catch (cause) {
+    throw new TrackingError('storage-failed', cause);
+  } finally {
+    database?.close();
   }
-});}
+}
+
+function affectedDates(visit: StoredVisit) {
+  const dates = new Set([localDateKey(new Date(visit.startedAt))]);
+  for (const interval of visit.intervals) {
+    const date = new Date(interval.start);
+    date.setHours(0, 0, 0, 0);
+    while (date.getTime() < interval.end) {
+      dates.add(localDateKey(date));
+      date.setDate(date.getDate() + 1);
+    }
+  }
+  return dates;
+}
+
+export function saveVisit(visit: StoredVisit) {
+  return transaction(['visits', 'trackingMeta'], 'readwrite', async transaction => {
+    const visits = transaction.objectStore('visits');
+    const previous = await requestResult(visits.get(visit.id)) as StoredVisit | undefined;
+    if (!acceptRevision(previous, visit)) return;
+    visits.put(visit);
+    const metadata = transaction.objectStore('trackingMeta');
+    for (const date of affectedDates(visit)) metadata.put(true, `dirty:${date}`);
+  });
+}
+
+export function saveCoverage(coverage: Coverage) {
+  return transaction(['trackingCoverage'], 'readwrite', async transaction => {
+    transaction.objectStore('trackingCoverage').put(coverage);
+  });
+}
+
+export function readTracking(start: number, end: number) {
+  return transaction(['visits', 'trackingCoverage'], 'readonly', async transaction => {
+    const visitsRequest = transaction.objectStore('visits').index('by_end').getAll(IDBKeyRange.lowerBound(start));
+    const coverageRequest = transaction.objectStore('trackingCoverage').index('by_end').getAll(IDBKeyRange.lowerBound(start));
+    const [visits, coverage] = await Promise.all([requestResult(visitsRequest), requestResult(coverageRequest)]);
+    return {
+      visits: (visits as StoredVisit[]).filter(visit => visit.startedAt < end),
+      coverage: (coverage as Coverage[]).filter(interval => interval.startTs < end),
+    };
+  });
+}
+
+export function recoverVisits(alive: ReadonlySet<string>, now = Date.now()) {
+  return transaction(['visits'], 'readwrite', async transaction => {
+    const visits = transaction.objectStore('visits');
+    const open = await requestResult(visits.index('by_status').getAll('open')) as StoredVisit[];
+    for (const visit of open) {
+      if (now - visit.receivedAt > RECOVERY_GRACE_MS && !alive.has(visit.id)) {
+        visits.put({ ...visit, status: 'interrupted' });
+      }
+    }
+  });
+}
+
+export function rebuildRollups() {
+  return transaction(['visits', 'trackingMeta', 'rollups'], 'readwrite', async transaction => {
+    const metadata = transaction.objectStore('trackingMeta');
+    const keys = await requestResult(metadata.getAllKeys());
+    for (const key of keys) {
+      if (typeof key !== 'string' || !key.startsWith('dirty:')) continue;
+      const date = key.slice(6);
+      const start = new Date(`${date}T00:00:00`);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      const visits = await requestResult(transaction.objectStore('visits').index('by_end')
+        .getAll(IDBKeyRange.lowerBound(start.getTime()))) as StoredVisit[];
+      for (const platform of PLATFORMS) {
+        const relevant = visits.filter(visit => visit.platform === platform && visit.startedAt < end.getTime());
+        const started = relevant.filter(visit => visit.startedAt >= start.getTime());
+        transaction.objectStore('rollups').put({
+          date, platform, reelCount: started.length,
+          skipCount: started.filter(isQuickSkip).length,
+          totalActiveMs: relevant.reduce((sum, visit) => sum + intervalMs(visit.intervals, start.getTime(), end.getTime()), 0),
+        });
+      }
+      metadata.delete(key);
+    }
+  });
+}
