@@ -9,20 +9,23 @@
 | --- | --- |
 | `src/config/dataMode.ts` | Env-selected source |
 | `src/entrypoints/*.content.ts` | Platform entrypoints; dev guard |
-| `src/utils/reelDetection.ts` | Route/video/viewport detection |
+| `src/tracking/detection.ts` | DOM video selection; pure route/viewport helpers in utils |
 | `src/tracking/engine.ts` | Visits, clocks and active intervals |
 | `src/tracking/outbox.ts` | Latest pending snapshot; retry |
-| `src/tracking/background.ts` | Validated messages, focus and recovery |
-| `src/tracking/storage.ts` | Transactions and additive upgrades |
+| `src/tracking/background.ts` + `service.ts` | Message/event wiring; ingestion, focus and recovery |
+| `src/storage/` | Shared database lifecycle; activity and preference repositories |
 | `src/tracking/query.ts` + `client.ts` | One read owner per range |
 | `src/tracking/messages.ts` | Request transport and response validation |
 | `src/types/` | Tracking, messages, query state, failures and themes |
-| `src/utils/` | Database opening, errors, validation, selection and measurements |
-| `src/theme/` | Palette and preference persistence |
+| `src/utils/` | Pure validation, selection and measurements |
+| `src/runtime/` | Message transport and failure reporting |
+| `src/theme/` | Theme controller, subscriptions and save/broadcast service |
+| `src/components/tokens.ts` | Palette and semantic visual tokens |
 
 ## Storage
 
 - Database: **doomgauge-v1**; preserve preferences and legacy stores.
+- One shared lazy connection; version changes close/invalidate it. Failed opens can be retried.
 
 | Store | Key | Contents |
 | --- | --- | --- |

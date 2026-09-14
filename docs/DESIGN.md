@@ -12,7 +12,7 @@
 
 ## Color
 
-- Palette: [theme/palette.ts](../src/theme/palette.ts); shared with charts.
+- Palette: [tokens.ts](../src/components/tokens.ts); shared with charts.
 
 | Role | Meaning |
 | --- | --- |

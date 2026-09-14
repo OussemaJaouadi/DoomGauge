@@ -6,11 +6,11 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { StatePreviewProvider } from '../../components/ui/StatePreview';
 
-// Theme & Initialization
+// Utilities & Helpers
 import { initializeTheme } from '../../theme/client';
 
 
-await initializeTheme();
+void initializeTheme();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

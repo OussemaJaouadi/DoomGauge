@@ -1,6 +1,6 @@
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { parseDataMode } from '../config/dataMode';
+import { parseDataMode } from '../utils/dataMode';
 import { TrackingQuery } from '../tracking/query';
 import type { TrackingData } from '../types/tracking';
 import { ActivityReadProvider, ActivityReadNotice } from '../components/ui/ActivityReadState';

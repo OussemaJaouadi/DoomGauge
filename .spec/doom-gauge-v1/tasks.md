@@ -17,11 +17,13 @@
 - [x] Test scoped retry, retained data and regional skeletons.
 - [x] Refactor tracking; test typed failures, pending retries and export gating.
 - [x] Condense docs, check links and review Mermaid sources.
+- [x] R12: repositories/services, shared connection, nonblocking theme and lifecycle recovery; 180 tests, typecheck, both builds.
 
 ## Acceptance still required
 
 - [ ] Logged-in feeds: navigation, rapid scrolling, loops, buffering on all platforms.
 - [ ] Focus changes, browser close/reopen and forced worker restart.
+- [ ] WXT reload: receiver availability, startup speed and theme read/save Retry.
 - [ ] Real-history coverage/insight eligibility; popup latency target.
 - [ ] Manual visual/accessibility checks in both themes.
 - [ ] All-history rollup export.

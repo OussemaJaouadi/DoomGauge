@@ -1,8 +1,8 @@
 import { ThemeController } from '../theme/controller';
-import { resolveTheme, isThemePreference, themePalettes } from '../theme/palette';
-import { handleThemeRequest, isThemeRequest } from '../theme/protocol';
+import { resolveTheme, isThemePreference, isThemeRequest } from '../utils/theme';
+import { themePalettes } from '../components/tokens';
+import { handleThemeRequest } from '../theme/service';
 import type { ThemeResponse } from '../types/theme';
-import { readTheme, writeTheme, openThemeDatabase } from '../theme/storage';
 declare function test(name: string, fn: () => void | Promise<void>): void;
 declare function expect(value: unknown): { toBe(value: unknown): void; toEqual(value: unknown): void };
 const luminance = (hex: string) => hex.slice(1).match(/../g)!.map(v => parseInt(v,16)/255).map(v => v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i]!,0);
@@ -32,7 +32,7 @@ test('startup failure retains System; saved preference loads', async () => {
 });
 test('failed save keeps local choice; retry saves it; OS refresh preserves errors', async () => {
   let ok=false; const c=new ThemeController(async()=>ok?{ok:true,preference:'light'}:{ok:false,code:'storage-failed'},()=>{});
-  await c.choose('light'); expect(c.getSnapshot()).toEqual({preference:'light',saving:false,error:true});
+  await c.choose('light'); expect(c.getSnapshot()).toEqual({preference:'light',saving:false,error:true,failedOperation:'save'});
   c.refresh(); expect(c.getSnapshot().error).toBe(true);
   ok=true; await c.choose('light'); expect(c.getSnapshot().error).toBe(false);
 });
@@ -69,22 +69,4 @@ test('notification failure does not turn a committed preference into a failed sa
   }, () => { throw new Error('Receiving end does not exist'); });
   expect(committed).toBe(true);
   expect(response).toEqual({ok:true,preference:'dark'});
-});
-test('storage waits for transaction completion and closes on abort', async () => {
-  let closed=0; let committed=false;
-  const tx={oncomplete:null as null|(()=>void),onabort:null as null|(()=>void),onerror:null,error:null,objectStore:()=>({put:()=>{},get:()=>({result:'unknown'})})};
-  const open=async()=>({transaction:()=>tx,close:()=>closed++}) as unknown as IDBDatabase;
-  const write=writeTheme('dark',open).then(()=>{committed=true;}); await Promise.resolve();
-  expect(committed).toBe(false); tx.oncomplete!(); await write; expect(closed).toBe(1);
-  const read=readTheme(open); await Promise.resolve(); tx.oncomplete!(); expect(await read).toBe('system');
-  const failed=writeTheme('light',open).then(()=>false,()=>true); await Promise.resolve(); tx.onabort!();
-  expect(await failed).toBe(true); expect(closed).toBe(3);
-});
-test('additive migration preserves existing stores and closes stale connections', async () => {
-  const stores=new Set(['events','rollups']); const versions:(number|undefined)[]=[]; let closes=0;
-  const db={version:4,objectStoreNames:{contains:(s:string)=>stores.has(s)},createObjectStore:(s:string)=>stores.add(s),close:()=>closes++,onversionchange:null as null|(()=>void)};
-  const factory={open:(_name:string,version?:number)=>{versions.push(version); const req={result:db,onupgradeneeded:null as null|(()=>void),onsuccess:null as null|(()=>void)};queueMicrotask(()=>{if(version)req.onupgradeneeded!();req.onsuccess!();});return req;}};
-  await openThemeDatabase(factory as unknown as IDBFactory);
-  expect(versions).toEqual([undefined,5]); expect([...stores]).toEqual(['events','rollups','preferences']);
-  db.onversionchange!(); expect(closes).toBe(2);
 });

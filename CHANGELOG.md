@@ -2,6 +2,16 @@
 
 > Append-only. One entry per iteration: date + commit subject + what changed.
 
+## 2026-09-14 — ♻️ refactor: separate runtime services and repositories; unblock theme startup
+
+- Thin entrypoints; concrete tracking/theme services and activity/preference repositories.
+- One shared IndexedDB connection and schema; preserve history and atomic checkpoint acknowledgments.
+- Coalesce reads and maintenance; clean up subscriptions and collector instances.
+- Render immediately with System appearance; load saved theme asynchronously.
+- Separate theme read/save retries; retain local choices and reject stale responses.
+- Centralize types, pure helpers, constants and palette; apply coding standards in the refactored modules.
+- Verified: 180 tests, typecheck, dev/actual builds. Browser startup/reload validation remains manual; large shared bundle warning remains.
+
 ## 2026-09-11 — 💡 feat: popup telemetry interactions, bucket contracts SSOT, and domain types
 
 ### Code Behavior & Architecture Changes:

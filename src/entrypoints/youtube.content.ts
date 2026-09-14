@@ -1,10 +1,10 @@
-// Framework & 3rd-party
+// React & 3rd-party
 import { defineContentScript } from 'wxt/utils/define-content-script';
 
-// Configuration
+// Tokens & Meta
 import { DEV_DATA } from '../config/dataMode';
 
-// Tracking Services
+// Utilities & Helpers
 import { startCollector } from '../tracking/content';
 
 export default defineContentScript({
@@ -18,4 +18,3 @@ export default defineContentScript({
     context.onInvalidated(stop);
   },
 });
-

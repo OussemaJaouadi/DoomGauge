@@ -92,7 +92,8 @@
 ## R10 · Appearance/settings
 
 - Save shared **System / Light / Dark**; System follows OS changes.
-- Resolve theme before content; bounded failures → System.
+- Apply System synchronously; render without waiting for the saved theme.
+- Read failure retains the current theme; first-load fallback is System. Retry reads, never saves fallback.
 - Failed save: retain local choice; offer Retry.
 - Semantic colors; text ≥4.5:1 and essential control/focus contrast ≥3:1.
 - Stop-loss editor remains an unsaved, unenforced mock.
@@ -123,5 +124,15 @@
 - Zero totals remain valid; missing denominators and follow-up remain unavailable per metric.
 - Calculation failures stay inside regional boundaries; retry only the failed computation.
 - Shared read errors use one Retry; region labels distinguish failure from missing observations.
+
+## R12 · Runtime structure/startup
+
+- Entrypoints wire handlers/services; repositories own transactions; utils contain pure helpers only.
+- Shared contracts/constants follow [Standards](../../docs/STANDARDS.md); no generic repository or DI container.
+- One database schema/opening promise/connection per background lifetime; additive upgrades preserve history.
+- Register message handlers before maintenance; coalesce maintenance runs.
+- Retry unavailable reads once after 200ms; never automatically replay writes.
+- Theme initialization coalesces; teardown removes subscriptions; stale reads cannot replace newer choices.
+- Verify immediate rendering, concurrent opens, failure causes and existing tracking invariants.
 
 [Design](design.md) · [Validation](tasks.md)

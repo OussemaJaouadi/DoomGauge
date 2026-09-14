@@ -1,6 +1,10 @@
+// Types & Models
 import type { Platform } from './models';
 
-export interface ActiveInterval { start: number; end: number }
+export interface ActiveInterval {
+  start: number;
+  end: number;
+}
 export interface Visit {
   id: string;
   collectorId: string;
@@ -19,7 +23,12 @@ export interface StoredVisit extends Visit {
   documentId: string;
   receivedAt: number;
 }
-export interface Coverage { id: string; startTs: number; endTs: number; tabId: number }
+export interface Coverage {
+  id: string;
+  startTs: number;
+  endTs: number;
+  tabId: number;
+}
 
 export interface PlaybackState {
   focused: boolean;

@@ -1,5 +1,8 @@
+// Types & Models
 import type { TrackingData, QuerySnapshot } from '../types/tracking';
-import { reportFailure } from '../utils/errors';
+
+// Utilities & Helpers
+import { reportFailure } from '../runtime/errors';
 
 const emptyData = (): TrackingData => ({ visits: [], coverage: [], savingFailed: false });
 

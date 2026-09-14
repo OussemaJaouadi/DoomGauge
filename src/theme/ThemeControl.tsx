@@ -2,10 +2,10 @@
 import { useSyncExternalStore } from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 
-// Types
+// Types & Models
 import type { ThemePreference } from '../types/theme';
 
-// Controllers & Services
+// Utilities & Helpers
 import { themeController } from './client';
 
 export function ThemeControl() {
@@ -47,9 +47,9 @@ export function ThemeControl() {
           'Saving…'
         ) : state.error ? (
           <>
-            Theme preference unavailable. Using {state.preference}.{' '}
-            <button type="button" onClick={() => void themeController.choose(state.preference)}>
-              Save this choice
+            {state.failedOperation === 'save' ? 'Theme not saved.' : `Using ${state.preference}. Saved theme unavailable.`}{' '}
+            <button type="button" onClick={() => void themeController.retry()}>
+              Retry
             </button>
           </>
         ) : (
@@ -59,4 +59,3 @@ export function ThemeControl() {
     </section>
   );
 }
-

@@ -1,3 +1,4 @@
+// Types & Models
 import type { Failure } from './errors';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -8,4 +9,9 @@ export interface ThemeSnapshot {
   preference: ThemePreference;
   saving: boolean;
   error: boolean;
+  failedOperation: 'read' | 'save' | null;
+}
+
+export interface ThemeService {
+  handle: (message: ThemeRequest) => Promise<ThemeResponse>;
 }

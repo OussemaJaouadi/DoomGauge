@@ -3,15 +3,18 @@ import { VisitTracker } from '../tracking/engine';
 import { Outbox } from '../tracking/outbox';
 import { validVisit, acceptRevision, canAccumulate } from '../utils/tracking';
 import type { Visit, StoredVisit } from '../types/tracking';
-import { saveVisit, readTracking, recoverVisits, rebuildRollups, openTrackingDatabase, saveCoverage } from '../tracking/storage';
-import { readTheme, writeTheme } from '../theme/storage';
+import { saveVisit, readTracking, recoverVisits, rebuildRollups, saveCoverage } from '../storage/activityRepository';
+import { openLocalDatabase as openTrackingDatabase, closeLocalDatabase } from '../storage/database';
+import { TrackingService } from '../tracking/service';
+import { readTheme, writeTheme } from '../storage/preferenceRepository';
 import { clipObservations, toObservation } from '../utils/trackingMeasurements';
 import { observationTotals, observationRollups, trajectoryRows, selectObservations } from '../utils/telemetryPreview';
 import { livePopup } from '../utils/livePopup';
 import { calendarEvidence } from '../utils/evidenceCalendar';
 import { evidenceEvents } from '../utils/telemetryWorkspace';
 import { filterReelRecords } from '../utils/reelRecords';
-import { platformForUrl, reelIdentity, visibleFraction, findReel } from '../utils/reelDetection';
+import { platformForUrl, reelIdentity, visibleFraction } from '../utils/reelDetection';
+import { findReel } from '../tracking/detection';
 import { hasObservationCoverage } from '../utils/telemetryInsights';
 declare function test(name:string,fn:()=>void|Promise<void>):void;
 declare function expect(value:unknown):{toBe(v:unknown):void;toEqual(v:unknown):void;toThrow():void};
@@ -59,7 +62,7 @@ test('concurrent upserts retain highest revision and isolate other tabs',async()
 test('migration preserves preferences and legacy event stores',async()=>{
   fresh();await writeTheme('dark');const old=await new Promise<IDBDatabase>((resolve,reject)=>{const r=indexedDB.open('doomgauge-v1',2);r.onupgradeneeded=()=>r.result.createObjectStore('events');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   const tx=old.transaction('events','readwrite');tx.objectStore('events').put({old:true},'legacy');await new Promise<void>(r=>{tx.oncomplete=()=>r();});old.close();
-  const db=await openTrackingDatabase();expect(await get(db.transaction('events').objectStore('events').get('legacy'))).toEqual({old:true});db.close();expect(await readTheme()).toBe('dark');
+  const db=await openTrackingDatabase();expect(await get(db.transaction('events').objectStore('events').get('legacy'))).toEqual({old:true});await closeLocalDatabase();expect(await readTheme()).toBe('dark');
 });
 test('recovery retains saved measurements, spares surviving visits and accepts delayed final save',async()=>{
   fresh();await saveVisit(record());await saveVisit(record({id:'alive'}));await recoverVisits(new Set(['alive']),20000);
@@ -76,7 +79,7 @@ test('midnight time splits without duplicating counts; popup, chart, calendar an
   const v=record({startedAt:start,observedAt:end,intervals:[{start,end}],activeMs:2000,status:'completed'});await saveVisit(v);await rebuildRollups();
   const events=[toObservation(v)];const rolls=observationRollups(events,['2026-09-08','2026-09-09']);
   expect(rolls.filter(r=>r.platform==='youtube').map(r=>[r.reelCount,r.totalActiveMs])).toEqual([[1,1000],[0,1000]]);
-  const db=await openTrackingDatabase();const persisted=await get(db.transaction('rollups').objectStore('rollups').get(['2026-09-09','youtube']));db.close();expect(persisted.totalActiveMs).toBe(1000);expect(persisted.reelCount).toBe(0);
+  const db=await openTrackingDatabase();const persisted=await get(db.transaction('rollups').objectStore('rollups').get(['2026-09-09','youtube']));await closeLocalDatabase();expect(persisted.totalActiveMs).toBe(1000);expect(persisted.reelCount).toBe(0);
   const popup=livePopup(events,new Date(end+1));expect(popup.summary.totalMs).toBe(1000);expect(popup.summary.totalCount).toBe(0);
   const selected=selectObservations(events,midnight,end+1,'overview','all');expect(observationTotals(selected).activeMs).toBe(1000);
   const chart=trajectoryRows(selected,[],['2026-09-09'],['2026-09-08'],true,'time');expect(chart[0]!.youtube*60000).toBe(1000);
@@ -109,14 +112,14 @@ test('platform adapters select visible reel videos and reject ordinary feed vide
 
 test('transaction abort rejects saving and leaves the previous committed snapshot intact',async()=>{
   fresh();await saveVisit(record());const db=await openTrackingDatabase();const tx=db.transaction('visits','readwrite');
-  tx.objectStore('visits').put(record({revision:9,activeMs:0,intervals:[]}));tx.abort();db.close();
+  tx.objectStore('visits').put(record({revision:9,activeMs:0,intervals:[]}));tx.abort();await closeLocalDatabase();
   const data=await readTracking(0,4000);expect(data.visits[0]!.revision).toBe(1);expect(data.visits[0]!.activeMs).toBe(1000);
   const rejected=await saveVisit(record({revision:2,tabId:99})).then(()=>false,()=>true);expect(rejected).toBe(true);
   expect((await readTracking(0,4000)).visits[0]!.revision).toBe(1);
 });
 test('dirty rollups are rebuilt after repeated checkpoints and completed quick skips update once',async()=>{
   fresh();await saveVisit(record());await rebuildRollups();await saveVisit(record({revision:2,status:'completed'}));await saveVisit(record({revision:2,status:'completed'}));await rebuildRollups();
-  const db=await openTrackingDatabase();const rolls=await get(db.transaction('rollups').objectStore('rollups').getAll());db.close();
+  const db=await openTrackingDatabase();const rolls=await get(db.transaction('rollups').objectStore('rollups').getAll());await closeLocalDatabase();
   const yt=rolls.find(r=>r.platform==='youtube');expect(yt.reelCount).toBe(1);expect(yt.totalActiveMs).toBe(1000);expect(yt.skipCount).toBe(1);
 });
 
@@ -134,7 +137,9 @@ test('background admits only matching main-frame collectors and extension-page q
   fresh();const original=globalThis.chrome;
   Object.assign(globalThis,{chrome:{runtime:{id:'extension',getURL:()=> 'chrome-extension://extension/'}}});
   try{
-    const {handleTrackingMessage}=await import('../tracking/background');
+    const {handleTrackingMessage: handle}=await import('../tracking/background');
+    const service = new TrackingService();
+    const handleTrackingMessage = (message: unknown, sender: chrome.runtime.MessageSender) => handle(message, sender, service);
     const sender={id:'extension',url:'https://www.youtube.com/shorts/a',frameId:0,documentId:'document',tab:{id:1}} as chrome.runtime.MessageSender;
     expect(await handleTrackingMessage({type:'tracking:visit',visit:record()},sender)).toEqual({ok:true});
     for(const invalid of [{...sender,frameId:1},{...sender,id:'other'},{...sender,url:'https://www.facebook.com/reel/a'}])expect(await handleTrackingMessage({type:'tracking:visit',visit:record()},invalid).then(()=>false,()=>true)).toBe(true);

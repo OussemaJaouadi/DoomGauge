@@ -1,5 +1,8 @@
-import { MAX_SAMPLE_GAP_MS, CLOCK_TOLERANCE_MS } from '../config/tracking';
+// Types & Models
 import type { Visit } from '../types/tracking';
+
+// Tokens & Meta
+import { MAX_SAMPLE_GAP_MS, CLOCK_TOLERANCE_MS } from '../config/tracking';
 
 /** DOM adapters provide eligibility; injectable clocks keep timing testable. */
 export class VisitTracker {
@@ -14,7 +17,9 @@ export class VisitTracker {
     private id: () => string = () => crypto.randomUUID(),
   ) {}
 
-  get current() { return this.value; }
+  get current(): Visit | undefined {
+    return this.value;
+  }
 
   begin(platform: Visit['platform'], reelId: string | undefined, wall: number, mono: number) {
     this.finish(wall, mono);
@@ -31,7 +36,9 @@ export class VisitTracker {
 
   sample(eligible: boolean, wall: number, mono: number, videoDurationMs?: number) {
     const visit = this.value;
-    if (!visit) return;
+    if (!visit) {
+      return;
+    }
     const elapsed = mono - this.lastMono;
     const wallElapsed = wall - this.lastWall;
     const continuous = elapsed > 0 && elapsed <= MAX_SAMPLE_GAP_MS
@@ -40,25 +47,34 @@ export class VisitTracker {
       const end = Math.max(visit.observedAt, wall);
       const start = Math.max(visit.observedAt, end - elapsed);
       const previous = visit.intervals.at(-1);
-      if (previous && Math.abs(previous.end - start) < 1) previous.end = end;
-      else visit.intervals.push({ start, end });
+      if (previous && Math.abs(previous.end - start) < 1) {
+        previous.end = end;
+      } else {
+        visit.intervals.push({ start, end });
+      }
       visit.activeMs += end - start;
     }
     visit.observedAt = Math.max(visit.observedAt, wall);
-    if (videoDurationMs && Number.isFinite(videoDurationMs)) visit.videoDurationMs = videoDurationMs;
+    if (videoDurationMs && Number.isFinite(videoDurationMs)) {
+      visit.videoDurationMs = videoDurationMs;
+    }
     this.lastMono = mono;
     this.lastWall = wall;
     this.active = eligible;
   }
 
   checkpoint() {
-    if (!this.value) return;
+    if (!this.value) {
+      return;
+    }
     this.value.revision++;
     this.emit(structuredClone(this.value));
   }
 
   finish(wall: number, mono: number, status: Visit['status'] = 'completed') {
-    if (!this.value) return;
+    if (!this.value) {
+      return;
+    }
     this.sample(false, wall, mono);
     this.value.status = status;
     this.checkpoint();

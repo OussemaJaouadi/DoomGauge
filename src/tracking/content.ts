@@ -1,18 +1,26 @@
+// Types & Models
 import type { Platform } from '../types/models';
+import type { ReelCandidate } from '../types/tracking';
+
+// Tokens & Meta
+import { CHECKPOINT_MS, MAX_SAMPLE_GAP_MS, CLOCK_TOLERANCE_MS, SAMPLE_MS, FOCUS_LEASE_MS } from '../config/tracking';
+
+// Utilities & Helpers
 import { VisitTracker } from './engine';
 import { Outbox } from './outbox';
-import { findReel } from '../utils/reelDetection';
-import type { ReelCandidate } from '../types/tracking';
+import { findReel } from './detection';
 import { sendTracking } from './messages';
-import { reportFailure } from '../utils/errors';
-import { CHECKPOINT_MS, MAX_SAMPLE_GAP_MS, CLOCK_TOLERANCE_MS } from '../config/tracking';
+import { reportFailure } from '../runtime/errors';
 import { canAccumulate } from '../utils/tracking';
 
-const SAMPLE_MS = 500;
-const FOCUS_LEASE_MS = 4000;
 const MEDIA_EVENTS = ['play', 'playing', 'pause', 'waiting', 'stalled', 'seeking', 'seeked', 'ended'];
+const collectors = new Map<Platform, () => void>();
 
-export function startCollector(platform: Platform) {
+export function startCollector(platform: Platform): () => void {
+  const existing = collectors.get(platform);
+  if (existing) {
+    return existing;
+  }
   const collectorId = crypto.randomUUID();
   let candidate: ReelCandidate | undefined;
   let focused = false;
@@ -24,7 +32,9 @@ export function startCollector(platform: Platform) {
   let heartbeatBusy = false;
   const buffering = new WeakSet<HTMLVideoElement>();
   const outbox = new Outbox(
-    async visit => { await sendTracking({ type: 'tracking:visit', visit }); },
+    async visit => {
+      await sendTracking({ type: 'tracking:visit', visit });
+    },
     failed => {
       void sendTracking({ type: 'tracking:health', failed })
         .catch(cause => reportFailure('Report collector health', cause));
@@ -35,7 +45,9 @@ export function startCollector(platform: Platform) {
   const isFocused = () => focused && Date.now() < leaseUntil && pageVisible();
 
   async function heartbeat() {
-    if (heartbeatBusy || stopped) return;
+    if (heartbeatBusy || stopped) {
+      return;
+    }
     if (!pageVisible()) {
       focused = false;
       return;
@@ -45,6 +57,9 @@ export function startCollector(platform: Platform) {
       const response = await sendTracking({
         type: 'tracking:heartbeat', collectorId, observing: Boolean(findReel(platform)),
       });
+      if (stopped) {
+        return;
+      }
       focused = response.focused;
       leaseUntil = Date.now() + FOCUS_LEASE_MS;
     } catch (cause) {
@@ -56,7 +71,8 @@ export function startCollector(platform: Platform) {
   }
 
   function sampleCandidate(next: ReelCandidate | undefined, wall: number, mono: number) {
-    if (candidate && (!next || next.key !== candidate.key || next.video !== candidate.video)) {
+    const candidateChanged = candidate && (!next || next.key !== candidate.key || next.video !== candidate.video);
+    if (candidateChanged) {
       tracker.finish(wall, mono);
       candidate = undefined;
     }
@@ -64,7 +80,9 @@ export function startCollector(platform: Platform) {
       tracker.begin(platform, next.reelId, wall, mono);
       candidate = next;
     }
-    if (!candidate) return;
+    if (!candidate) {
+      return;
+    }
     const video = candidate.video;
     const eligible = canAccumulate({
       focused: isFocused(), visible: document.visibilityState === 'visible',
@@ -81,11 +99,14 @@ export function startCollector(platform: Platform) {
   }
 
   function tick() {
-    if (stopped) return;
+    if (stopped) {
+      return;
+    }
     const wall = Date.now();
     const mono = performance.now();
     const clockDrift = Math.abs((wall - lastWall) - (mono - lastTick));
-    if (mono - lastTick > MAX_SAMPLE_GAP_MS || clockDrift > CLOCK_TOLERANCE_MS) {
+    const interrupted = mono - lastTick > MAX_SAMPLE_GAP_MS || clockDrift > CLOCK_TOLERANCE_MS;
+    if (interrupted) {
       tracker.finish(lastWall, lastTick, 'interrupted');
       candidate = undefined;
     }
@@ -99,9 +120,13 @@ export function startCollector(platform: Platform) {
     }
     sampleCandidate(findReel(platform), wall, mono);
     if (wall - lastCheckpoint >= CHECKPOINT_MS) {
-      if (tracker.current && isFocused()) tracker.checkpoint();
+      if (tracker.current && isFocused()) {
+        tracker.checkpoint();
+      }
       lastCheckpoint = wall;
-      if (outbox.size) void outbox.flush();
+      if (outbox.size) {
+        void outbox.flush();
+      }
       void heartbeat();
     }
     rememberSample(wall, mono);
@@ -109,8 +134,12 @@ export function startCollector(platform: Platform) {
 
   function stateChange(event?: Event) {
     if (event?.target instanceof HTMLVideoElement) {
-      if (event.type === 'waiting' || event.type === 'stalled') buffering.add(event.target);
-      if (event.type === 'playing' || event.type === 'seeked') buffering.delete(event.target);
+      if (event.type === 'waiting' || event.type === 'stalled') {
+        buffering.add(event.target);
+      }
+      if (event.type === 'playing' || event.type === 'seeked') {
+        buffering.delete(event.target);
+      }
     }
     tick();
     tracker.checkpoint();
@@ -128,7 +157,9 @@ export function startCollector(platform: Platform) {
   }
 
   function onMessage(message: unknown, _sender: chrome.runtime.MessageSender, reply: (value: unknown) => void) {
-    if (!message || typeof message !== 'object' || !('type' in message)) return false;
+    if (!message || typeof message !== 'object' || !('type' in message)) {
+      return false;
+    }
     if (message.type === 'tracking:probe') {
       reply({ collectorId, visitId: tracker.current?.id });
       void heartbeat();
@@ -160,11 +191,15 @@ export function startCollector(platform: Platform) {
   // Observers handle transitions; the timer remains a measurement/route fallback.
   let scheduled = false;
   const schedule = () => {
-    if (scheduled || stopped) return;
+    if (scheduled || stopped) {
+      return;
+    }
     scheduled = true;
     queueMicrotask(() => {
       scheduled = false;
-      if (!stopped) tick();
+      if (!stopped) {
+        tick();
+      }
     });
   };
   const observed = new Set<HTMLVideoElement>();
@@ -190,9 +225,13 @@ export function startCollector(platform: Platform) {
   const timer = setInterval(tick, SAMPLE_MS);
   void heartbeat().then(tick).catch(cause => reportFailure('Start collector sampling', cause));
 
-  return function stopCollector() {
-    tracker.finish(Date.now(), performance.now(), 'interrupted');
+  function stopCollector() {
+    if (stopped) {
+      return;
+    }
     stopped = true;
+    collectors.delete(platform);
+    tracker.finish(Date.now(), performance.now(), 'interrupted');
     clearInterval(timer);
     mutations.disconnect();
     intersections.disconnect();
@@ -201,5 +240,7 @@ export function startCollector(platform: Platform) {
     for (const [target, event, listener, capture] of subscriptions) {
       target.removeEventListener(event, listener, capture);
     }
-  };
+  }
+  collectors.set(platform, stopCollector);
+  return stopCollector;
 }

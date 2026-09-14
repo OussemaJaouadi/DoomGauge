@@ -21,6 +21,7 @@ bun run dev
 
 - Env changed? Restart WXT.
 - Extension reloaded? Refresh platform tabs.
+- WXT dev reloads matching YouTube/Instagram/Facebook tabs when content scripts are reloaded.
 - Unset mode → actual.
 - Actual build: `bun run build:actual`; load `.output/chrome-mv3`.
 - Checks: `bun run test` · `bun run typecheck`.

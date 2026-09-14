@@ -9,13 +9,16 @@ flowchart LR
   UI -->|"actual: read range"| BG
   BG -->|"visits and coverage"| UI
   UI -->|"theme: both modes"| BG
-  BG <--> DB[("IndexedDB: doomgauge-v1")]
+  BG --> Services["Tracking / theme services"]
+  Services --> Repositories["Activity / preference repositories"]
+  Repositories <--> DB[("IndexedDB: doomgauge-v1")]
 ```
 
 - Collectors: detect reels; measure focused playback.
 - Background: sole database owner.
-- Shared database opener; typed messages; failure causes stay in local diagnostics.
+- One lazy database connection; typed messages; failure causes stay in local diagnostics.
 - UI: calculate charts from observations.
+- Startup: apply System, render immediately, then load saved theme; handlers precede maintenance.
 - Dev: fixtures only; no tracking or activity writes.
 
 ## Save and recover

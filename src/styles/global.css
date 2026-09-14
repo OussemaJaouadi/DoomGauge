@@ -1,5 +1,5 @@
 :root {
-  /* Palette values are applied by theme/client from theme/palette.ts. */
+  /* Theme startup applies the canonical palette from components/tokens.ts. */
   color-scheme: light dark;
   --accent-green: var(--usage-decreased);
   --accent-amber: var(--usage-increased);

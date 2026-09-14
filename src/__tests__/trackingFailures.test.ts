@@ -1,8 +1,9 @@
 import { sendTracking } from '../tracking/messages';
-import { TrackingError, reportDeliveryFailure } from '../utils/errors';
+import { TrackingError, reportDeliveryFailure } from '../runtime/errors';
 import { TrackingQuery } from '../tracking/query';
 import { handleTrackingMessage } from '../tracking/background';
-import { readTracking } from '../tracking/storage';
+import { TrackingService } from '../tracking/service';
+import { readTracking } from '../storage/activityRepository';
 import { Outbox } from '../tracking/outbox';
 import type { Visit } from '../types/tracking';
 import { createElement } from 'react';
@@ -74,8 +75,9 @@ test('malformed requests reject before storage work', async () => {
   const original = globalThis.chrome;
   Object.assign(globalThis, { chrome: { runtime: { id: 'extension' } } });
   try {
-    expect(await failureCode(handleTrackingMessage(null, { id: 'extension' }))).toBe('invalid-request');
-    expect(await failureCode(handleTrackingMessage({ type: 'tracking:health' }, { id: 'extension' }))).toBe('invalid-request');
+    const service = new TrackingService();
+    expect(await failureCode(handleTrackingMessage(null, { id: 'extension' }, service))).toBe('invalid-request');
+    expect(await failureCode(handleTrackingMessage({ type: 'tracking:health' }, { id: 'extension' }, service))).toBe('invalid-request');
   } finally { Object.assign(globalThis, { chrome: original }); }
 });
 
