@@ -1,56 +1,26 @@
 // Types & Models
 import type { OpenDatabase } from '../types/storage';
 
+// Tokens & Meta
+import { DATABASE_NAME, SCHEMA_VERSION, SCHEMA_VERSION_KEY } from '../config/storage';
+
 // Utilities & Helpers
 import { TrackingError } from '../runtime/errors';
+import { migrateDatabase } from './migrations';
 
 const connections = new WeakMap<IDBFactory, Promise<IDBDatabase>>();
-const storeNames = ['preferences', 'visits', 'trackingCoverage', 'trackingMeta', 'rollups'];
 
-function upgradeDatabase(database: IDBDatabase, transaction: IDBTransaction): void {
-  for (const name of storeNames) {
-    if (database.objectStoreNames.contains(name)) {
-      continue;
-    }
-    if (name === 'visits' || name === 'trackingCoverage') {
-      database.createObjectStore(name, { keyPath: 'id' });
-    } else if (name === 'rollups') {
-      database.createObjectStore(name, { keyPath: ['date', 'platform'] });
-    } else {
-      database.createObjectStore(name);
-    }
-  }
-  const visits = transaction.objectStore('visits');
-  if (!visits.indexNames.contains('by_end')) {
-    visits.createIndex('by_end', 'observedAt');
-  }
-  if (!visits.indexNames.contains('by_status')) {
-    visits.createIndex('by_status', 'status');
-  }
-  const coverage = transaction.objectStore('trackingCoverage');
-  if (!coverage.indexNames.contains('by_end')) {
-    coverage.createIndex('by_end', 'endTs');
-  }
-}
-
-function hasCurrentSchema(database: IDBDatabase): boolean {
-  if (!storeNames.every(name => database.objectStoreNames.contains(name))) {
-    return false;
-  }
-  const transaction = database.transaction(['visits', 'trackingCoverage'], 'readonly');
-  const visits = transaction.objectStore('visits');
-  const coverage = transaction.objectStore('trackingCoverage');
-  return visits.indexNames.contains('by_end')
-    && visits.indexNames.contains('by_status')
-    && coverage.indexNames.contains('by_end');
-}
-
-function openVersion(factory: IDBFactory, version?: number): Promise<IDBDatabase> {
+function openVersion(factory: IDBFactory, version?: number, fromVersion = 0): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = factory.open('doomgauge-v1', version);
+    const request = factory.open(DATABASE_NAME, version);
     let failed = false;
     request.onupgradeneeded = () => {
-      upgradeDatabase(request.result, request.transaction!);
+      const transaction = request.transaction!;
+      void migrateDatabase(request.result, transaction, fromVersion).catch(cause => {
+        failed = true;
+        reject(cause);
+        abortTransaction(transaction);
+      });
     };
     request.onerror = () => {
       failed = true;
@@ -70,6 +40,21 @@ function openVersion(factory: IDBFactory, version?: number): Promise<IDBDatabase
   });
 }
 
+async function readSchemaVersion(database: IDBDatabase): Promise<number> {
+  if (!database.objectStoreNames.contains('trackingMeta')) {
+    return 0;
+  }
+  const transaction = database.transaction('trackingMeta', 'readonly');
+  const version = await requestResult(transaction.objectStore('trackingMeta').get(SCHEMA_VERSION_KEY));
+  if (version === undefined) {
+    return 0;
+  }
+  if (!Number.isInteger(version) || version < 0 || version > SCHEMA_VERSION) {
+    throw new Error('Unsupported local database schema. Use a compatible extension version.');
+  }
+  return version;
+}
+
 /** Shared only within this background lifetime; rejected opens never poison later retries. */
 export function openLocalDatabase(factory: IDBFactory = indexedDB): Promise<IDBDatabase> {
   const existing = connections.get(factory);
@@ -78,10 +63,16 @@ export function openLocalDatabase(factory: IDBFactory = indexedDB): Promise<IDBD
   }
   const pending = Promise.resolve().then(async () => {
     let database = await openVersion(factory);
-    if (!hasCurrentSchema(database)) {
-      const version = database.version + 1;
+    try {
+      const schemaVersion = await readSchemaVersion(database);
+      if (schemaVersion < SCHEMA_VERSION) {
+        const version = database.version + 1;
+        database.close();
+        database = await openVersion(factory, version, schemaVersion);
+      }
+    } catch (cause) {
       database.close();
-      database = await openVersion(factory, version);
+      throw cause;
     }
     const invalidate = () => {
       if (connections.get(factory) === pending) {
@@ -120,6 +111,17 @@ export function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   });
 }
 
+function abortTransaction(transaction: IDBTransaction): void {
+  try {
+    transaction.abort();
+  } catch (cause) {
+    const alreadyFinished = cause instanceof DOMException && cause.name === 'InvalidStateError';
+    if (!alreadyFinished) {
+      console.error('[DoomGauge] Abort transaction', cause);
+    }
+  }
+}
+
 /** Acknowledgment means transaction commit, not just request success. */
 export async function runTransaction<T>(
   names: string[],
@@ -145,14 +147,7 @@ export async function runTransaction<T>(
       }
       return result;
     } catch (cause) {
-      try {
-        transaction.abort();
-      } catch (abortError) {
-        const alreadyFinished = abortError instanceof DOMException && abortError.name === 'InvalidStateError';
-        if (!alreadyFinished) {
-          console.error('[DoomGauge] Abort transaction', abortError);
-        }
-      }
+      abortTransaction(transaction);
       throw cause;
     }
   } catch (cause) {

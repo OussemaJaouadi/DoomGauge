@@ -13,3 +13,11 @@ export interface ThemeStore {
   read: () => Promise<ThemePreference>;
   write: (preference: ThemePreference) => Promise<void>;
 }
+
+export type DayKey = number | 'spanning';
+export interface IndexedVisit extends StoredVisit {
+  rangeDays: DayKey[];
+}
+export interface IndexedCoverage extends Coverage {
+  rangeDays: DayKey[];
+}

@@ -81,7 +81,7 @@ test('a late failed read cannot replace a newer theme choice or its state', asyn
   expect(controller.getSnapshot().error).toBe(false);
 });
 
-test('unavailable reads retry once; writes and structured storage failures never replay', async () => {
+test('unavailable reads recover; writes and structured storage failures never replay', async () => {
   const original = globalThis.chrome;
   let attempts = 0;
   const cause = new Error('Could not establish connection. Receiving end does not exist.');
@@ -112,6 +112,51 @@ test('unavailable reads retry once; writes and structured storage failures never
       await sendTracking({ type: 'tracking:query', start: 0, end: 1 });
     } catch (error) {
       expect(error instanceof TrackingError && error.code).toBe('storage-failed');
+    }
+    expect(attempts).toBe(1);
+  } finally {
+    Object.assign(globalThis, { chrome: original });
+  }
+});
+
+test('reads can reconnect after a longer worker restart and stop after bounded retries', async () => {
+  const original = globalThis.chrome;
+  let attempts = 0;
+  let unavailable = true;
+  Object.assign(globalThis, { chrome: { runtime: { sendMessage: async () => {
+    attempts += 1;
+    if (unavailable || attempts < 3) {
+      throw new Error('Receiving end does not exist');
+    }
+    return { ok: true, preference: 'dark' };
+  } } } });
+  try {
+    const failed = await sendRequest({ type: 'theme:get' }, isThemeResponse, { retryUnavailable: true }).then(() => false, () => true);
+    expect(failed).toBe(true);
+    expect(attempts).toBe(4);
+    attempts = 0;
+    unavailable = false;
+    const result = await sendRequest({ type: 'theme:get' }, isThemeResponse, { retryUnavailable: true });
+    expect(result.preference).toBe('dark');
+    expect(attempts).toBe(3);
+  } finally {
+    Object.assign(globalThis, { chrome: original });
+  }
+});
+
+test('stale extension contexts receive an actionable error without automatic retries', async () => {
+  const original = globalThis.chrome;
+  let attempts = 0;
+  Object.assign(globalThis, { chrome: { runtime: { sendMessage: () => {
+    attempts += 1;
+    throw new Error('Extension context invalidated.');
+  } } } });
+  try {
+    try {
+      await sendRequest({ type: 'theme:get' }, isThemeResponse, { retryUnavailable: true });
+      throw new Error('Expected a stale-context error');
+    } catch (cause) {
+      expect(cause instanceof TrackingError && cause.code).toBe('extension-reloaded');
     }
     expect(attempts).toBe(1);
   } finally {

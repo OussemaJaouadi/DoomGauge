@@ -13,6 +13,7 @@ export class TrackingQuery {
   };
   private listeners = new Set<() => void>();
   private pending: Promise<void> | undefined;
+  private invalidated = false;
   constructor(private request: () => Promise<TrackingData>) {}
 
   getSnapshot = () => this.snapshot;
@@ -45,8 +46,34 @@ export class TrackingQuery {
       this.update({ status: 'error', refreshing: false, error });
     } finally {
       this.pending = undefined;
+      if (this.invalidated) {
+        this.invalidated = false;
+        void this.refresh();
+      }
     }
   }
+
+  invalidate = (): void => {
+    if (this.pending) {
+      this.invalidated = true;
+    } else {
+      void this.refresh();
+    }
+  };
+
+  clearInvalidation = (): void => {
+    this.invalidated = false;
+  };
+
+  reconnect = async (): Promise<void> => {
+    if (this.pending) {
+      await this.pending;
+      if (this.snapshot.status !== 'error') {
+        return;
+      }
+    }
+    await this.refresh();
+  };
 
   refresh = (): Promise<void> => {
     if (this.pending) {

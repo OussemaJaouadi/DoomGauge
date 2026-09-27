@@ -31,13 +31,21 @@
 | --- | --- | --- |
 | visits | Visit ID | Collector/platform, timestamps, intervals, revision, status, optional reel/length; authenticated tab/document |
 | trackingCoverage | Interval ID | Verified foreground span |
-| trackingMeta | Dirty date | Summary invalidation |
+| trackingMeta | Dirty date / schema-version | Summary invalidation and completed migration version |
 | rollups | Date + platform | Count, completed skips, active ms |
 | preferences | Name | Theme |
 
-- Indexes: visits → end/status; coverage → end.
+- Indexes: visits → end/status/day; coverage → end/day. UTC day keys bound reads; long spans use one fallback key.
 - Range queries: overlapping records.
 - UI clipping: preserve visit identity.
+
+| Schema | Migration, in the same database |
+| --- | --- |
+| 1 | Original stores and indexes; adopt unversioned legacy data |
+| 2 | Day indexes; backfill keys on existing visits/coverage |
+
+- Native IndexedDB version increments only to run an upgrade; schema-version records the numbered migration.
+- Upgrade failure rolls back all changes; unsupported newer schema remains untouched.
 
 ## Visit lifecycle
 
@@ -66,6 +74,8 @@ stateDiagram-v2
 | tracking:probe / tracking:focus | Background → collector recovery/focus check |
 | theme:get / theme:set | Extension page → preference read/save |
 | theme:changed | Background → shared preference update |
+| background:ready | Background → retry failed reads after receiver registration |
+| tracking:changed | Background → invalidate overlapping visible ranges after commit |
 
 ## UI reads
 
@@ -75,7 +85,7 @@ stateDiagram-v2
   Loading --> Ready: Success, including empty
   Loading --> Error: Read failed
   Error --> Loading: Retry
-  Ready --> Refreshing: Poll or retry
+  Ready --> Refreshing: Saved change / return / retry
   Refreshing --> Ready: New snapshot
   Refreshing --> Stale: Read failed
   Stale --> Refreshing: Retry with retained data

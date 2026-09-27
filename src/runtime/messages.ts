@@ -2,7 +2,7 @@
 import type { MessageOptions } from '../types/runtime';
 
 // Tokens & Meta
-import { MESSAGE_TIMEOUT_MS, READ_RETRY_DELAY_MS } from '../config/runtime';
+import { MESSAGE_TIMEOUT_MS, READ_RETRY_DELAYS_MS } from '../config/runtime';
 
 // Utilities & Helpers
 import { TrackingError } from './errors';
@@ -17,7 +17,8 @@ function deliver(message: unknown, timeout: number): Promise<unknown> {
       resolve(response);
     }, cause => {
       clearTimeout(timer);
-      reject(new TrackingError('background-unavailable', cause));
+      const staleContext = cause instanceof Error && cause.message.includes('Extension context invalidated');
+      reject(new TrackingError(staleContext ? 'extension-reloaded' : 'background-unavailable', cause));
     });
   });
 }
@@ -29,16 +30,19 @@ export async function sendRequest<T>(
 ): Promise<T> {
   const timeout = options.timeout ?? MESSAGE_TIMEOUT_MS;
   let response: unknown;
-  try {
-    response = await deliver(message, timeout);
-  } catch (cause) {
-    const retryRead = options.retryUnavailable
-      && cause instanceof TrackingError && cause.code === 'background-unavailable';
-    if (!retryRead) {
-      throw cause;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      response = await deliver(message, timeout);
+      break;
+    } catch (cause) {
+      const delay = READ_RETRY_DELAYS_MS[attempt];
+      const retryRead = options.retryUnavailable && delay !== undefined
+        && cause instanceof TrackingError && cause.code === 'background-unavailable';
+      if (!retryRead) {
+        throw cause;
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-    await new Promise(resolve => setTimeout(resolve, READ_RETRY_DELAY_MS));
-    response = await deliver(message, timeout);
   }
   if (response && typeof response === 'object') {
     const result = response as Record<string, unknown>;

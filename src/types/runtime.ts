@@ -3,4 +3,13 @@ export interface MessageOptions {
   retryUnavailable?: boolean;
 }
 
-export type SupportedTab = chrome.tabs.Tab & { id: number };
+export type CollectorProbe =
+  | { status: 'responded'; visitId?: string }
+  | { status: 'absent' | 'unknown' };
+
+export interface TrackingChange {
+  type: 'tracking:changed';
+  start?: number;
+  end?: number;
+}
+export type BackgroundNotice = { type: 'background:ready' } | TrackingChange;

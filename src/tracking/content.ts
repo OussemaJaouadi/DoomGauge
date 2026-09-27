@@ -29,6 +29,7 @@ export function startCollector(platform: Platform): () => void {
   let lastCheckpoint = 0;
   let lastTick = performance.now();
   let lastWall = Date.now();
+  let reportedObserving = false;
   let heartbeatBusy = false;
   const buffering = new WeakSet<HTMLVideoElement>();
   const outbox = new Outbox(
@@ -52,15 +53,21 @@ export function startCollector(platform: Platform): () => void {
       focused = false;
       return;
     }
+    const observing = Boolean(findReel(platform));
+    if (!observing && !reportedObserving) {
+      focused = false;
+      return;
+    }
     heartbeatBusy = true;
     try {
       const response = await sendTracking({
-        type: 'tracking:heartbeat', collectorId, observing: Boolean(findReel(platform)),
+        type: 'tracking:heartbeat', collectorId, observing,
       });
       if (stopped) {
         return;
       }
       focused = response.focused;
+      reportedObserving = observing;
       leaseUntil = Date.now() + FOCUS_LEASE_MS;
     } catch (cause) {
       focused = false;

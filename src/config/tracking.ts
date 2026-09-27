@@ -15,4 +15,3 @@ export const MAX_VISIT_INTERVALS = 20_000;
 export const MAX_TIMESTAMP_MS = 8_640_000_000_000_000;
 export const MAINTENANCE_ALARM = 'tracking-maintenance';
 export const MAINTENANCE_MINUTES = 1;
-export const QUERY_REFRESH_MS = 2000;

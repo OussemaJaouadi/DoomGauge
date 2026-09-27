@@ -18,6 +18,7 @@ flowchart LR
 - Background: sole database owner.
 - One lazy database connection; typed messages; failure causes stay in local diagnostics.
 - UI: calculate charts from observations.
+- Reads: open/return, relevant saved changes, or reconnect; no UI polling.
 - Startup: apply System, render immediately, then load saved theme; handlers precede maintenance.
 - Dev: fixtures only; no tracking or activity writes.
 
@@ -33,14 +34,14 @@ sequenceDiagram
   D-->>B: Transaction committed
   B-->>C: Acknowledge
   Note over C,B: Retry unacknowledged snapshots with the same ID
-  B->>C: Probe on startup or maintenance
+  B->>C: Probe only unfinished saved visits
   C-->>B: Surviving visit ID, when available
   B->>D: Mark abandoned visits interrupted
 ```
 
 - Save: start, state changes, ~2s checkpoints.
 - Recovery: keep saved time; exclude downtime.
-- Summaries: maintenance rebuilds; queries only read.
+- Summaries: one changed day per transaction; queries only read.
 - Forced closure: unsaved tails can be lost.
 
 [Contracts](../.spec/doom-gauge-v1/design.md) · [Acceptance criteria](../.spec/doom-gauge-v1/spec.md)

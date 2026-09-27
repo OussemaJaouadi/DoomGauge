@@ -2,6 +2,15 @@
 
 > Append-only. One entry per iteration: date + commit subject + what changed.
 
+## 2026-09-14 — 🐛 fix: make tracking quiet and upgrade local data safely
+
+- Replace activity polling with updates after relevant saves, page return and background reconnect.
+- Skip idle-page heartbeats; probe only unfinished saved visits. Unanswered probes preserve data without false errors.
+- Add numbered, atomic migrations in the same database; preserve legacy data and reject unsupported newer schemas.
+- Index date ranges without duplicating history; rebuild one dirty summary day per transaction.
+- Bound read retries; identify stale extension pages; never replay writes automatically.
+- Verified: 195 tests plus focused lifecycle checks, typecheck, dev/actual builds. Live browser reconnect remains a manual check.
+
 ## 2026-09-14 — ♻️ refactor: separate runtime services and repositories; unblock theme startup
 
 - Thin entrypoints; concrete tracking/theme services and activity/preference repositories.

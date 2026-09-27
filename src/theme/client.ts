@@ -10,6 +10,7 @@ import { ThemeController } from './controller';
 import { resolveTheme, isThemeResponse } from '../utils/theme';
 import { sendRequest } from '../runtime/messages';
 import { reportFailure } from '../runtime/errors';
+import { isBackgroundNotice } from '../utils/backgroundNotice';
 
 function request(message: ThemeRequest): Promise<ThemeResponse> {
   return sendRequest(message, isThemeResponse, {
@@ -41,13 +42,21 @@ function onSystemChange(): void {
   }
 }
 
-function onThemeMessage(message: unknown, sender: chrome.runtime.MessageSender): void {
+function onThemeMessage(message: unknown, sender: chrome.runtime.MessageSender, reply?: (value: unknown) => void): void {
+  if (isBackgroundNotice(message, sender, chrome.runtime.id)) {
+    reply?.({ ok: true });
+    if (message.type === 'background:ready') {
+      void themeController.reconnect();
+    }
+    return;
+  }
   const trustedSender = sender.id === chrome.runtime.id;
   if (!trustedSender || !message || typeof message !== 'object') {
     return;
   }
   if ('type' in message && message.type === 'theme:changed' && 'preference' in message) {
     themeController.receive(message.preference);
+    reply?.({ ok: true });
   }
 }
 

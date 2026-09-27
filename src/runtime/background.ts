@@ -12,6 +12,7 @@ import { readTheme, writeTheme } from '../storage/preferenceRepository';
 import { closeLocalDatabase } from '../storage/database';
 import { isThemeRequest } from '../utils/theme';
 import { reportFailure, reportDeliveryFailure, TrackingError } from './errors';
+import { broadcastNotice } from './notices';
 
 let installed: (() => void) | undefined;
 
@@ -25,7 +26,7 @@ export function startBackground(devData: boolean): () => void {
     return installed;
   }
   const theme = createThemeService({ read: readTheme, write: writeTheme }, broadcastTheme);
-  const tracking = devData ? undefined : new TrackingService();
+  const tracking = devData ? undefined : new TrackingService(broadcastNotice);
 
   const onMessage = (message: unknown, sender: chrome.runtime.MessageSender, reply: (value: unknown) => void) => {
     if (!message || typeof message !== 'object' || !('type' in message)) {
@@ -46,8 +47,9 @@ export function startBackground(devData: boolean): () => void {
         reply({ ok: false, code: 'invalid-request' });
         return false;
       }
+      const operation = String(message.type);
       void handleTrackingMessage(message, sender, tracking)
-        .then(reply, cause => reply(reportFailure('Handle tracking request', cause)));
+        .then(reply, cause => reply(reportFailure(operation, cause)));
       return true;
     }
     return false;
@@ -68,6 +70,8 @@ export function startBackground(devData: boolean): () => void {
     installed = undefined;
     void closeLocalDatabase().catch(cause => reportFailure('Close local database', cause));
   };
+
+  broadcastNotice({ type: 'background:ready' });
 
   const maintain = async () => {
     if (stopped) {

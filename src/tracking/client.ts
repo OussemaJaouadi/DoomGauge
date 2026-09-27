@@ -2,13 +2,13 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 
 // Tokens & Meta
-import { QUERY_REFRESH_MS } from '../config/tracking';
 import { QUERY_TIMEOUT_MS } from '../config/runtime';
 
 // Utilities & Helpers
 import { sendTracking } from './messages';
 import { toObservation } from '../utils/trackingMeasurements';
 import { TrackingQuery } from './query';
+import { watchTracking } from './subscription';
 
 export function useTracking(start: number, end: number, enabled = true) {
   const query = useMemo(() => new TrackingQuery(() =>
@@ -18,20 +18,8 @@ export function useTracking(start: number, end: number, enabled = true) {
     if (!enabled) {
       return;
     }
-    void query.refresh();
-    const read = () => {
-      const canRefresh = document.visibilityState === 'visible' && query.getSnapshot().status !== 'error';
-      if (canRefresh) {
-        void query.refresh();
-      }
-    };
-    const timer = setInterval(read, QUERY_REFRESH_MS);
-    document.addEventListener('visibilitychange', read);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', read);
-    };
-  }, [query, enabled]);
+    return watchTracking(query, start, end);
+  }, [query, enabled, start, end]);
   const events = useMemo(() => snapshot.data.visits.map(toObservation), [snapshot.data.visits]);
   return {
     ...snapshot.data, events, status: snapshot.status, hasData: snapshot.hasData,

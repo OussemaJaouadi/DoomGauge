@@ -18,6 +18,7 @@
 - [x] Refactor tracking; test typed failures, pending retries and export gating.
 - [x] Condense docs, check links and review Mermaid sources.
 - [x] R12: repositories/services, shared connection, nonblocking theme and lifecycle recovery; 180 tests, typecheck, both builds.
+- [x] R13: quiet operation, indexed reads, migration rollback/newer-version protection and reconnect handling; 195 tests, typecheck, both builds.
 
 ## Retained files — future purpose (do NOT delete, do NOT flag as dead)
 

@@ -34,7 +34,9 @@
 - Stable IDs, cumulative intervals and increasing revisions make retries idempotent.
 - Acknowledge only committed transactions; reject historical interval rewrites.
 - Retain pending snapshots while the collector survives; expose saving failures.
-- Probe surviving collectors at startup/maintenance.
+- Probe only tabs owning unfinished saved visits after recovery grace; no visits means no probes.
+- An unanswered probe means unknown status, not a storage error; preserve that visit for later recovery.
+- Ordinary pages send no heartbeats; leaving a reel sends one observing=false update.
 - After recovery grace: mark abandoned visits interrupted at their last observation.
 - Additive upgrades preserve stores. Never count browser downtime.
 - Forced closure may lose unsaved tails.
@@ -131,8 +133,19 @@
 - Shared contracts/constants follow [Standards](../../docs/STANDARDS.md); no generic repository or DI container.
 - One database schema/opening promise/connection per background lifetime; additive upgrades preserve history.
 - Register message handlers before maintenance; coalesce maintenance runs.
-- Retry unavailable reads once after 200ms; never automatically replay writes.
+- Retry unavailable reads after 200/500/1000ms, then surface failure; never replay writes or retry stale extension contexts.
 - Theme initialization coalesces; teardown removes subscriptions; stale reads cannot replace newer choices.
 - Verify immediate rendering, concurrent opens, failure causes and existing tracking invariants.
+
+## R13 · Quiet operation and upgrades
+
+- Same database; numbered schema migrations stored in trackingMeta. Each upgrade commits completely or rolls back.
+- Fresh installs create stores/indexes and show successful empty activity with System theme.
+- Preserve legacy records; reject newer unsupported schemas without modifying them.
+- Index overlapping UTC days; cap per-record day keys with a long-span fallback. Never duplicate history.
+- Read on opening, returning to the page, relevant committed changes, or background-ready; no periodic UI reads.
+- Changes arriving during a read trigger one follow-up read; hidden pages wait until visible.
+- Rebuild at most one dirty day per write transaction; idle maintenance does not open write transactions.
+- Announce receiver readiness before maintenance; retry connection failures without replaying writes. Distinguish tab, background and database failures.
 
 [Design](design.md) · [Validation](tasks.md)

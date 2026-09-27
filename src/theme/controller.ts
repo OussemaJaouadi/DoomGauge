@@ -77,6 +77,13 @@ export class ThemeController {
     return this.initialize();
   };
 
+  reconnect = async (): Promise<void> => {
+    await this.reading;
+    if (this.snapshot.failedOperation === 'read') {
+      await this.initialize();
+    }
+  };
+
   choose = (preference: ThemePreference) => {
     const generation = ++this.generation;
     this.pending = undefined;

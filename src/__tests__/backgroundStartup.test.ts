@@ -36,7 +36,7 @@ test('both modes register one receiver before maintenance; teardown removes subs
         indexedDB: factory,
         IDBKeyRange,
         chrome: {
-          runtime: { id: 'extension', getURL: () => 'chrome-extension://extension/', onMessage: messages },
+          runtime: { id: 'extension', getURL: () => 'chrome-extension://extension/', onMessage: messages, sendMessage: async () => {} },
           tabs: { onActivated: tabs, onRemoved: removed, query: async () => [] },
           windows: { onFocusChanged: windows },
           alarms: {
@@ -103,10 +103,10 @@ test('worker service coalesces concurrent range reads and maintenance', async ()
     const maintenance = service.runMaintenance();
     expect(service.runMaintenance()).toBe(maintenance);
     await maintenance;
-    expect(probes).toBe(1);
+    expect(probes).toBe(0);
     service.stop();
     await service.runMaintenance();
-    expect(probes).toBe(1);
+    expect(probes).toBe(0);
   } finally {
     await closeLocalDatabase(factory);
     Object.assign(globalThis, { chrome: originalChrome, indexedDB: originalDatabase, IDBKeyRange: originalKeys });
