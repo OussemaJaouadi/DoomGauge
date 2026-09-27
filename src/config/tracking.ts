@@ -4,6 +4,7 @@ export const CLOCK_TOLERANCE_MS = 250;
 export const QUICK_SKIP_MS = 3000;
 export const SESSION_BREAK_MS = 60_000;
 export const SAMPLE_MS = 500;
+export const PLAYER_BOUNDS_TOLERANCE_PX = 2;
 export const FOCUS_LEASE_MS = 4000;
 export const RECOVERY_GRACE_MS = 10_000;
 export const COVERAGE_GAP_MS = 5000;

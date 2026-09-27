@@ -19,6 +19,8 @@
 - [x] Condense docs, check links and review Mermaid sources.
 - [x] R12: repositories/services, shared connection, nonblocking theme and lifecycle recovery; 180 tests, typecheck, both builds.
 - [x] R13: quiet operation, indexed reads, migration rollback/newer-version protection and reconnect handling; 195 tests, typecheck, both builds.
+- [x] R1–R3: dedicated-viewer detection, qualifying playback and separate repeat visits; automated collector/detection regressions.
+- [x] Player controls: SVG/transparent overlays and seven-video regression fixture; 199 tests, typecheck and actual build pass.
 
 ## Retained files — future purpose (do NOT delete, do NOT flag as dead)
 
@@ -37,6 +39,7 @@ Resolved: the old positioned `ChartTooltip` export in `ui/Tooltip.tsx` was remov
 ## Acceptance still required
 
 - [ ] Logged-in feeds: navigation, rapid scrolling, loops, buffering on all platforms.
+- [ ] Verify messages/home feeds count zero; A → B → A counts three; confirm real viewer hit-testing on all platforms.
 - [ ] Focus changes, browser close/reopen and forced worker restart.
 - [ ] WXT reload: receiver availability, startup speed and theme read/save Retry.
 - [ ] Real-history coverage/insight eligibility; popup latency target.

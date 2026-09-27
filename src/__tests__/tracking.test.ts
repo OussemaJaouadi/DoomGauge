@@ -106,7 +106,7 @@ test('all platform identities reject unrelated routes and strip query data',()=>
 test('platform adapters select visible reel videos and reject ordinary feed videos',()=>{
   Object.assign(globalThis,{innerWidth:100,innerHeight:100});
   const video={currentSrc:'blob:video',closest:()=>null,parentElement:{querySelector:()=>null},getBoundingClientRect:()=>({left:0,right:100,top:0,bottom:100,width:100,height:100})};
-  for(const [platform,url] of [['youtube','https://www.youtube.com/shorts/a'],['instagram','https://www.instagram.com/reels/a/'],['facebook','https://www.facebook.com/reel/1/']] as const){const doc={location:new URL(url),querySelectorAll:()=>[video]};expect(findReel(platform,doc as unknown as Document)?.video).toBe(video);}
+  for(const [platform,url] of [['youtube','https://www.youtube.com/shorts/a'],['instagram','https://www.instagram.com/reels/a/'],['facebook','https://www.facebook.com/reel/1/']] as const){const doc={location:new URL(url),querySelectorAll:()=>[video],elementFromPoint:()=>video};expect(findReel(platform,doc as unknown as Document)?.video).toBe(video);}
   const doc={location:new URL('https://www.facebook.com/'),querySelectorAll:()=>[video]};expect(findReel('facebook',doc as unknown as Document)).toBe(undefined);
 });
 

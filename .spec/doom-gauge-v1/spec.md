@@ -6,15 +6,20 @@
 
 | ID | Platform | Scope |
 | --- | --- | --- |
-| R1 | YouTube | Shorts routes and identified Shorts videos |
-| R2 | Instagram | Reel routes and identified reel containers |
-| R3 | Facebook | Reel routes and identified reel containers |
+| R1 | YouTube | Identified Shorts in dedicated viewers |
+| R2 | Instagram | Identified reels in dedicated viewers |
+| R3 | Facebook | Identified reels in dedicated viewers |
 
 ### Shared acceptance criteria
 
 - Detect SPA navigation, video replacement and visibility changes without reload.
-- One ID per viewing visit; loops retain identity, leave/return starts another.
-- Count focused visible encounters, including zero-time impressions.
+- Exclude home feeds, messages and previews; nearby reel links never qualify a video.
+- Require a supported host, exact reel route and one unambiguous visible player; uncertain identity adds no count.
+- Center hit-testing accepts the video or its own controls, including SVG/transparent layers; unrelated overlays remain excluded.
+- A controls container must contain only that video and match its bounds within 2px; page wrappers never qualify.
+- One ID per viewing visit; switching reels or leaving/reopening the viewer starts another, even for the same reel ID.
+- Loops, pause/resume, temporary tab switches and same-reel player replacement retain visit identity.
+- Start visits only on qualifying playback; no records for paused or buffering impressions.
 - Active time requires **all** conditions:
 
 | Gate | Required |

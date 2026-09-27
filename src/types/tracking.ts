@@ -71,8 +71,7 @@ export type TrackingRequest = TrackingRequests[keyof TrackingRequests];
 
 export interface ReelCandidate {
   video: HTMLVideoElement;
-  key: string;
-  reelId?: string;
+  reelId: string;
 }
 
 export interface CollectorHealth {

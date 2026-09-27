@@ -3,7 +3,7 @@ import type { Platform } from '../types/models';
 import type { ReelCandidate } from '../types/tracking';
 
 // Tokens & Meta
-import { CHECKPOINT_MS, MAX_SAMPLE_GAP_MS, CLOCK_TOLERANCE_MS, SAMPLE_MS, FOCUS_LEASE_MS } from '../config/tracking';
+import { CHECKPOINT_MS, SAMPLE_MS, FOCUS_LEASE_MS } from '../config/tracking';
 
 // Utilities & Helpers
 import { VisitTracker } from './engine';
@@ -12,6 +12,7 @@ import { findReel } from './detection';
 import { sendTracking } from './messages';
 import { reportFailure } from '../runtime/errors';
 import { canAccumulate } from '../utils/tracking';
+import { reelIdentity } from '../utils/reelDetection';
 
 const MEDIA_EVENTS = ['play', 'playing', 'pause', 'waiting', 'stalled', 'seeking', 'seeked', 'ended'];
 const collectors = new Map<Platform, () => void>();
@@ -27,10 +28,8 @@ export function startCollector(platform: Platform): () => void {
   let leaseUntil = 0;
   let stopped = false;
   let lastCheckpoint = 0;
-  let lastTick = performance.now();
-  let lastWall = Date.now();
-  let reportedObserving = false;
   let heartbeatBusy = false;
+  let reportedObserving = false;
   const buffering = new WeakSet<HTMLVideoElement>();
   const outbox = new Outbox(
     async visit => {
@@ -78,31 +77,30 @@ export function startCollector(platform: Platform): () => void {
   }
 
   function sampleCandidate(next: ReelCandidate | undefined, wall: number, mono: number) {
-    const candidateChanged = candidate && (!next || next.key !== candidate.key || next.video !== candidate.video);
+    const routeId = reelIdentity(platform, document.location.href);
+    const candidateChanged = candidate && routeId !== candidate.reelId;
     if (candidateChanged) {
       tracker.finish(wall, mono);
       candidate = undefined;
     }
-    if (next && isFocused() && !tracker.current) {
-      tracker.begin(platform, next.reelId, wall, mono);
-      candidate = next;
-    }
-    if (!candidate) {
+    if (!next) {
+      tracker.sample(false, wall, mono);
       return;
     }
-    const video = candidate.video;
+    const video = next.video;
     const eligible = canAccumulate({
       focused: isFocused(), visible: document.visibilityState === 'visible',
-      intersecting: Boolean(next), paused: video.paused, ended: video.ended,
+      intersecting: true, paused: video.paused, ended: video.ended,
       seeking: video.seeking, readyState: video.readyState, buffering: buffering.has(video),
     });
+    if (!tracker.current && eligible) {
+      tracker.begin(platform, next.reelId, wall, mono);
+    }
+    if (tracker.current) {
+      candidate = next;
+    }
     const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration * 1000 : undefined;
     tracker.sample(eligible, wall, mono, duration);
-  }
-
-  function rememberSample(wall: number, mono: number) {
-    lastTick = mono;
-    lastWall = wall;
   }
 
   function tick() {
@@ -111,18 +109,11 @@ export function startCollector(platform: Platform): () => void {
     }
     const wall = Date.now();
     const mono = performance.now();
-    const clockDrift = Math.abs((wall - lastWall) - (mono - lastTick));
-    const interrupted = mono - lastTick > MAX_SAMPLE_GAP_MS || clockDrift > CLOCK_TOLERANCE_MS;
-    if (interrupted) {
-      tracker.finish(lastWall, lastTick, 'interrupted');
-      candidate = undefined;
-    }
     if (!tracker.current && !pageVisible()) {
       if (outbox.size && wall - lastCheckpoint >= CHECKPOINT_MS) {
         void outbox.flush();
         lastCheckpoint = wall;
       }
-      rememberSample(wall, mono);
       return;
     }
     sampleCandidate(findReel(platform), wall, mono);
@@ -136,7 +127,6 @@ export function startCollector(platform: Platform): () => void {
       }
       void heartbeat();
     }
-    rememberSample(wall, mono);
   }
 
   function stateChange(event?: Event) {

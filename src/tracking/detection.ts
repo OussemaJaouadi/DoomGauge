@@ -2,35 +2,74 @@
 import type { Platform } from '../types/models';
 import type { ReelCandidate } from '../types/tracking';
 
+// Tokens & Meta
+import { PLAYER_BOUNDS_TOLERANCE_PX } from '../config/tracking';
+
 // Utilities & Helpers
 import { reelIdentity, visibleFraction } from '../utils/reelDetection';
 
-const reelLinks = 'a[href*="/reel/"], a[href*="/reels/"]';
+function isPlayerSurface(video: HTMLVideoElement, hit: Element | null, rect: DOMRect): boolean {
+  if (hit === video) {
+    return true;
+  }
+  if (!hit) {
+    return false;
+  }
+  let container = video.parentElement;
+  while (container && !container.contains(hit)) {
+    container = container.parentElement;
+  }
+  if (!container || container.matches('body, html, main, [role="main"]')) {
+    return false;
+  }
+  const dialog = hit.closest('dialog, [role="dialog"]');
+  if (dialog && !dialog.contains(video)) {
+    return false;
+  }
+  const bounds = container.getBoundingClientRect();
+  const matchesPlayerBounds = Math.abs(bounds.left - rect.left) <= PLAYER_BOUNDS_TOLERANCE_PX
+    && Math.abs(bounds.right - rect.right) <= PLAYER_BOUNDS_TOLERANCE_PX
+    && Math.abs(bounds.top - rect.top) <= PLAYER_BOUNDS_TOLERANCE_PX
+    && Math.abs(bounds.bottom - rect.bottom) <= PLAYER_BOUNDS_TOLERANCE_PX;
+  if (!matchesPlayerBounds) {
+    return false;
+  }
+  const videos = container.querySelectorAll('video');
+  return videos.length === 1 && videos[0] === video;
+}
 
 export function findReel(platform: Platform, doc: Document = document): ReelCandidate | undefined {
   const routeId = reelIdentity(platform, doc.location.href);
-  const feedRoute = platform === 'youtube'
-    ? doc.location.pathname.startsWith('/shorts')
-    : /^\/reels?(\/|$)/.test(doc.location.pathname);
-  const selector = platform === 'youtube' ? 'a[href*="/shorts/"]' : reelLinks;
-  let best: ReelCandidate | undefined;
-  let bestFraction = 0;
+  if (!routeId) {
+    return undefined;
+  }
+  let candidate: ReelCandidate | undefined;
 
   for (const video of doc.querySelectorAll('video')) {
-    const container = video.closest('ytd-reel-video-renderer, ytd-shorts, [role="article"], article')
-      ?? video.parentElement;
-    const link = container?.querySelector<HTMLAnchorElement>(selector);
-    const id = (link ? reelIdentity(platform, link.href) : undefined) ?? routeId;
-    const supported = feedRoute || Boolean(link && id);
-    if (!supported) {
+    const rect = video.getBoundingClientRect();
+    const fraction = visibleFraction(rect, innerWidth, innerHeight);
+    if (fraction < 0.5) {
       continue;
     }
-    const fraction = visibleFraction(video.getBoundingClientRect(), innerWidth, innerHeight);
-    const moreVisible = fraction >= 0.5 && fraction > bestFraction;
-    if (moreVisible) {
-      best = { video, reelId: id, key: id ?? video.currentSrc ?? '' };
-      bestFraction = fraction;
+    // Player controls can cover the video; unrelated overlays cannot qualify it.
+    const centerX = (Math.max(0, rect.left) + Math.min(innerWidth, rect.right)) / 2;
+    const centerY = (Math.max(0, rect.top) + Math.min(innerHeight, rect.bottom)) / 2;
+    const hit = doc.elementFromPoint(centerX, centerY);
+    if (!isPlayerSurface(video, hit, rect)) {
+      continue;
     }
+    if (platform === 'youtube') {
+      const renderer = video.closest('ytd-reel-video-renderer');
+      const playerId = renderer?.getAttribute('video-id');
+      if (playerId && playerId !== routeId) {
+        continue;
+      }
+    }
+    // A route identifies content only when exactly one player qualifies.
+    if (candidate) {
+      return undefined;
+    }
+    candidate = { video, reelId: routeId };
   }
-  return best?.key ? best : undefined;
+  return candidate;
 }

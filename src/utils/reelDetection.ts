@@ -4,7 +4,7 @@ import type { Platform } from '../types/models';
 // Tokens & Meta
 import { PLATFORM_HOSTS } from '../config/platforms';
 
-const reelRoute = /^\/reels?\/([^/]+)/;
+const reelRoute = /^\/reels?\/([\w-]+)\/?$/;
 
 export function platformForUrl(url: string): Platform | undefined {
   try {
@@ -17,8 +17,11 @@ export function platformForUrl(url: string): Platform | undefined {
 }
 
 export function reelIdentity(platform: Platform, url: string): string | undefined {
+  if (platformForUrl(url) !== platform) {
+    return undefined;
+  }
   try {
-    const pattern = platform === 'youtube' ? /^\/shorts\/([^/]+)/ : reelRoute;
+    const pattern = platform === 'youtube' ? /^\/shorts\/([\w-]+)\/?$/ : reelRoute;
     const id = new URL(url).pathname.match(pattern)?.[1];
     return id && /^[\w-]+$/.test(id) ? id : undefined;
   } catch {

@@ -2,6 +2,19 @@
 
 > Append-only. One entry per iteration: date + commit subject + what changed.
 
+## 2026-09-15 — 🐛 fix: accept controls covering the reel player
+
+- Accept SVG and transparent controls inside a bounded, single-video player; reject page wrappers and unrelated overlays.
+- Test one visible video among seven and repeat visits through covered players.
+- Verified: 199 tests, typecheck and actual build. Instagram manual playback check remains pending.
+
+## 2026-09-15 — 🐛 fix: restrict reel detection and preserve viewing encounters
+
+- Require an identified dedicated viewer and one uncovered player; remove nearby-link and source-URL guesses.
+- Begin visits on qualifying playback; preserve identity across pauses, loops, tab switches and same-reel player replacement.
+- Switching reels or leaving/reopening the viewer creates a separate visit, including repeat reel IDs.
+- Existing records remain untouched. 198 tests, typecheck and actual build pass; live platform acceptance remains pending.
+
 ## 2026-09-14 — 🐛 fix: make tracking quiet and upgrade local data safely
 
 - Replace activity polling with updates after relevant saves, page return and background reconnect.
