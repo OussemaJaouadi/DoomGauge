@@ -19,6 +19,20 @@
 - [x] Condense docs, check links and review Mermaid sources.
 - [x] R12: repositories/services, shared connection, nonblocking theme and lifecycle recovery; 180 tests, typecheck, both builds.
 
+## Retained files — future purpose (do NOT delete, do NOT flag as dead)
+
+| File | Future use |
+|------|-----------|
+| `dashboard/MacroOverview.tsx` | Donor: KPI trio layout → canvas header/debt summary |
+| `dashboard/PlatformAttribution.tsx` | Donor: per-platform cards → benchmark grid at real-data phase |
+| `charts/Sparkline.tsx` | 7d trend candidate |
+| `charts/StackedBar.tsx` | Share-visual alternative if Donut toggle outgrows |
+| `ui/Tooltip.tsx` (hover) | Rack/legend explanatory hovers |
+| `ui/Card.tsx` | Generic panel if a lens needs it |
+
+Gone, not retained: `DopamineVelocity.tsx`, `DoomScore.tsx` (deleted in `c669e1c`).
+Resolved: the old positioned `ChartTooltip` export in `ui/Tooltip.tsx` was removed as superseded by `ui/ChartTooltip.tsx`.
+
 ## Acceptance still required
 
 - [ ] Logged-in feeds: navigation, rapid scrolling, loops, buffering on all platforms.
