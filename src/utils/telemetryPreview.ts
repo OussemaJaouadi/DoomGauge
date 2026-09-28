@@ -1,8 +1,11 @@
-import { clipObservations } from './trackingMeasurements';
+// Types & Models
 import { PLATFORMS } from '../types/models';
 import type { Platform } from '../types/models';
 import type { TimeRange, DayRollup } from '../types/telemetry';
 import type { DaypartFilter, ObservationSession, PreviewObservation, RecurringWindow, TelemetryPage } from '../types/telemetryPreview';
+
+// Utilities & Helpers
+import { clipObservations } from './trackingMeasurements';
 import { daypartOfHour, quantile } from './telemetry';
 import { localDateKey } from './time';
 
@@ -34,6 +37,13 @@ export function periodBounds(endDate: Date, range: TimeRange, now: Date) {
 export function selectObservations(events: readonly PreviewObservation[], start: number, cutoff: number, page: TelemetryPage, daypart: DaypartFilter) {
   return clipObservations(events.filter(e=>e.activeIntervals || e.endedTs<=cutoff), start, cutoff, daypart).filter(e => page === 'overview' || e.platform === page);
 }
+
+export function recordedActivityDates(events: readonly PreviewObservation[], dates: readonly string[]): string[] {
+  const recorded = new Set(events.filter(event => event.countInScope !== false)
+    .map(event => localDateKey(new Date(event.ts))));
+  return dates.filter(date => recorded.has(date));
+}
+
 export function observationTotals(events: readonly PreviewObservation[]) {
   const activeMs = events.reduce((sum, e) => sum + e.durationMs, 0);
   const skips = events.filter(e => e.skipped).length;
@@ -64,8 +74,14 @@ export function observationSessions(events: readonly PreviewObservation[]): Obse
   return sessions;
 }
 export function scopedSessions(sessions: readonly ObservationSession[], events: readonly PreviewObservation[]) {
-  const ids = new Set(events.map(e => e.id));
-  return sessions.map(session => ({ ...session, events: session.events.filter(e => ids.has(e.id)).map(e => events.find(selected => selected.id === e.id)!) })).filter(s => s.events.length > 0);
+  const selected = new Map(events.map(event => [event.id, event]));
+  return sessions.map(session => ({
+    ...session,
+    events: session.events.flatMap(event => {
+      const match = selected.get(event.id);
+      return match ? [match] : [];
+    }),
+  })).filter(session => session.events.length > 0);
 }
 export function minuteOfDay(ts: number) {
   const d = new Date(ts);
@@ -95,9 +111,9 @@ export function sessionsMatchingWindow(sessions: readonly ObservationSession[], 
     dates.has(localDateKey(new Date(e.ts))) && minuteOfDay(e.ts) >= window.startMinute && minuteOfDay(e.ts) < window.endMinute));
 }
 
-/** Frequency is counted once per eligible day; quiet observed days stay in the denominator. */
-export function recurringWindows(events: readonly PreviewObservation[], completeDates: readonly string[]): RecurringWindow[] {
-  const eligible = new Set(completeDates);
+/** Frequency is counted once per day with recorded activity in the selected scope. */
+export function recurringWindows(events: readonly PreviewObservation[], activityDates: readonly string[]): RecurringWindow[] {
+  const eligible = new Set(activityDates);
   const completed = events.filter(e => eligible.has(localDateKey(new Date(e.ts))));
   const bins = Array.from({ length: 48 }, (_, i) => new Set(completed
     .filter(e => Math.floor(minuteOfDay(e.ts) / 30) === i).map(e => localDateKey(new Date(e.ts)))));

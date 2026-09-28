@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { TelemetryOverview } from '../components/telemetry/TelemetryOverview';
+import { ReturnsControl } from '../components/telemetry/ReturnsControl';
 import { ReelRecords } from '../components/telemetry/ReelRecords';
 import { WorkspaceCanvas } from '../components/telemetry/WorkspaceCanvas';
 import { observationTotals } from '../utils/telemetryPreview';
@@ -21,6 +22,26 @@ test('records expose in-progress and interrupted status without changing top pag
   expect(html.indexOf('Reel record pages')<html.indexOf('<table>')).toBe(true);
 });
 test('unknown empty trend buckets are unavailable rather than zero',()=>{
-  const html=plain(renderToStaticMarkup(createElement(WorkspaceCanvas,{view:'trends',events,previous:[],sessions:[],windows:[],dates:['2026-09-09'],previousDates:['2026-09-08'],completeDates:[],page:'overview',throughHour:1,onInspect:()=>{},coverage:[]})));
+  const html=plain(renderToStaticMarkup(createElement(WorkspaceCanvas,{view:'trends',events,previous:[],sessions:[],windows:[],dates:['2026-09-09'],previousDates:['2026-09-08'],activityDates:[],page:'overview',throughHour:1,onInspect:()=>{},coverage:[]})));
   expect(html.includes('00:00—')).toBe(true);expect(html.includes('01:003s')).toBe(true);
+});
+
+test('observed returns remain readable when coverage cannot support a percentage',()=>{
+  const rate={minutes:5,observedCount:1,observedMatches:[],eligibleCount:0,returnedCount:0,percentage:null,matches:[]};
+  const html=plain(renderToStaticMarkup(createElement(ReturnsControl,{rates:[rate],onInspect:()=>{}})));
+  expect(html.includes('Observed returns')).toBe(true);
+  expect(html.includes('1')).toBe(true);
+  expect(html.includes('NaN%')).toBe(false);
+});
+
+test('records open directly in the selected telemetry view',()=>{
+  const html=plain(renderToStaticMarkup(createElement(WorkspaceCanvas,{view:'records',events,previous:[],sessions:[],windows:[],dates:['2026-09-09'],previousDates:['2026-09-08'],activityDates:[],page:'overview',throughHour:1,onInspect:()=>{},coverage:[]})));
+  expect(html.includes('Reel records')).toBe(true);
+  expect(html.includes('3 in selection')).toBe(true);
+});
+
+test('the trend omits a previous period when tracking coverage cannot support comparison',()=>{
+  const html=plain(renderToStaticMarkup(createElement(WorkspaceCanvas,{view:'trends',events,previous:events,sessions:[],windows:[],dates:['2026-09-09'],previousDates:['2026-09-08'],activityDates:[],page:'overview',throughHour:1,onInspect:()=>{},coverage:[],comparisonAvailable:false})));
+  expect(html.includes('Selected period')).toBe(true);
+  expect(html.includes('Previous period')).toBe(false);
 });

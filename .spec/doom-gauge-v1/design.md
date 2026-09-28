@@ -61,11 +61,14 @@ stateDiagram-v2
 ```
 
 - Dedicated content routes only; one player with ≥50% viewport area. Center hits may land on the video or its bounded controls container. Reject conflicting YouTube renderer IDs.
-- Controls: nearest shared ancestor of video/hit, exactly one video, edges within 2px of the video; exclude body, HTML, main and unrelated dialogs.
+- Controls: nearest shared ancestor of video/hit, exactly one video, video occupies ≥50% of its area; exclude body, HTML, main and unrelated dialogs.
 - No nearby-link or video-source identity fallback. Missing/covered players pause time; confirmed route exit ends the visit.
 - Temporary tab switches and sampling gaps preserve the visit; unobserved time is never added.
 - Recovery grace **10s**; startup and **1-minute** maintenance.
 - Coverage joins verified heartbeats less than **5s** apart; gaps remain unknown.
+- Return counts use observed session pairs. Percentages need full follow-up coverage and stay out of the v1 overview.
+- Recurring windows use days with recorded activity in the selected platform/filter scope; quiet days remain unknown.
+- The observation adapter retains reel IDs for known repeat visits; the Records view opens directly for the selected range.
 
 ## Messages
 

@@ -43,7 +43,7 @@ import { detailReducer, evidenceEvents, sessionDistribution } from '../../utils/
 interface DrawerProps {
   dates: string[]; coverage: ObservationCoverage[];
   evidence: Evidence; events: PreviewObservation[]; sessions: ObservationSession[];
-  fullSessions: ObservationSession[]; rates: ReturnRate[] | (() => ReturnRate[]); page: TelemetryPage;
+  fullSessions: ObservationSession[]; rates: ReturnRate[]; page: TelemetryPage;
   onClose: () => void; restoreFocus: HTMLElement | null;
 }
 function titleFor(evidence: Evidence) {
@@ -88,7 +88,7 @@ function EvidenceContent({ evidence, events, sessions, fullSessions, rates, page
   const matchingIds = new Set(scopedSessions(sessions, selectedEvents).map(session => session.id));
   const matchingSessions = fullSessions.filter(session => matchingIds.has(session.id));
   const selectedSession = fullSessions.find(session => session.id === detail.id);
-  const rate = evidence.kind === 'returns' ? (typeof rates === 'function' ? rates() : rates).find(item => item.minutes === evidence.minutes) : undefined;
+  const rate = evidence.kind === 'returns' ? rates.find(item => item.minutes === evidence.minutes) : undefined;
   const select = (id: string, unfiltered = false) => dispatch({ type: 'select', id, unfiltered });
   if (evidence.kind === 'curve') return <div className="evidence-body"><ViewingView events={events} page={page} /></div>;
   if (dates.length > 1 && (evidence.kind === 'window' || evidence.kind === 'sessionBucket' || evidence.kind === 'bucket')) return <div className="evidence-body">
@@ -101,8 +101,8 @@ function EvidenceContent({ evidence, events, sessions, fullSessions, rates, page
   if (detail.records && selectedSession) return <div className="evidence-body"><button type="button" className="workspace-text-button" onClick={() => dispatch({ type: 'back' })}><ArrowLeft size={16} /> Back to session</button><ReelRecords key={selectedSession.id} events={selectedSession.events} /></div>;
   return <div className="evidence-body">
     {evidence.kind === 'returns' ? <>
-      <StateRegion state={ratioState(rate?.eligibleCount ?? 0, 'followup')} id="evidence.return-summary" label="Return summary" shape="metrics" reasons={["followup", "activity"]}><div className="evidence-totals"><b>{rate?.returnedCount ?? 0} returns</b><span>{rate?.eligibleCount ?? 0} eligible endings</span><Hint label="About return coverage" text={measurementHints.returnCoverage} accent="blue" /></div></StateRegion>
-      {rate?.matches.length ? <ReturnTimeline matches={rate.matches} selectedId={detail.id} onSelect={select} /> : <NoObservations>{rate?.eligibleCount ? 'No returns in this threshold.' : 'Not enough observed follow-up.'}</NoObservations>}
+      <StateRegion state={readyState} id="evidence.return-summary" label="Return summary" shape="metrics"><div className="evidence-totals"><b>{rate?.observedCount ?? 0} recorded returns</b><Hint label="About observed returns" text="Recorded next sessions only. Unobserved quiet time cannot establish a return rate." accent="blue" /></div></StateRegion>
+      {rate?.observedMatches.length ? <ReturnTimeline matches={rate.observedMatches} selectedId={detail.id} onSelect={select} /> : <NoObservations>No recorded returns within this threshold.</NoObservations>}
     </> : evidence.kind !== 'session' ? <>
       <StateRegion id="evidence.totals-calculation" label="Evidence totals" state={readyState} shape="metrics"><EvidenceSummary events={selectedEvents} /></StateRegion>
       {matchingSessions.length ? <EvidenceTimeline sessions={matchingSessions} events={selectedEvents} window={evidence.kind === 'window' ? evidence.window : undefined} selectedId={detail.id} onSelect={select} /> : <NoObservations />}

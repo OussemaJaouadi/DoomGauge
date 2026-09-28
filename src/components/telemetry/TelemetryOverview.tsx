@@ -20,7 +20,7 @@ interface OverviewProps {
   comparisonAvailable?: boolean;
   totals: ReturnType<typeof observationTotals> | (() => ReturnType<typeof observationTotals>);
   previous: ReturnType<typeof observationTotals> | (() => ReturnType<typeof observationTotals>);
-  rates: ReturnRate[] | (() => ReturnRate[]);
+  rates: ReturnRate[];
   selected?: Evidence;
   onInspect: (evidence: Evidence) => void;
 }
@@ -57,7 +57,7 @@ export function TelemetryOverview({ totals, previous, rates, selected, onInspect
         icon={<Hint label="About quick skips" text={measurementHints.quickSkip} accent="amber" />} />;
     }}</StateRegion>
     <StateRegion state={readyState} id="telemetry.returns" label="Returns" shape="metrics">{() =>
-      <ReturnsControl rates={typeof rates === 'function' ? rates() : rates}
+      <ReturnsControl rates={rates}
         selected={selected?.kind === 'returns' ? selected.minutes : undefined}
         onInspect={minutes => onInspect({ kind: 'returns', minutes })} />
     }</StateRegion>

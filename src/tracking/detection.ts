@@ -3,7 +3,7 @@ import type { Platform } from '../types/models';
 import type { ReelCandidate } from '../types/tracking';
 
 // Tokens & Meta
-import { PLAYER_BOUNDS_TOLERANCE_PX } from '../config/tracking';
+import { MIN_PLAYER_VIDEO_AREA_FRACTION, PLAYER_BOUNDS_TOLERANCE_PX } from '../config/tracking';
 
 // Utilities & Helpers
 import { reelIdentity, visibleFraction } from '../utils/reelDetection';
@@ -27,11 +27,13 @@ function isPlayerSurface(video: HTMLVideoElement, hit: Element | null, rect: DOM
     return false;
   }
   const bounds = container.getBoundingClientRect();
-  const matchesPlayerBounds = Math.abs(bounds.left - rect.left) <= PLAYER_BOUNDS_TOLERANCE_PX
-    && Math.abs(bounds.right - rect.right) <= PLAYER_BOUNDS_TOLERANCE_PX
-    && Math.abs(bounds.top - rect.top) <= PLAYER_BOUNDS_TOLERANCE_PX
-    && Math.abs(bounds.bottom - rect.bottom) <= PLAYER_BOUNDS_TOLERANCE_PX;
-  if (!matchesPlayerBounds) {
+  const withinContainer = rect.left >= bounds.left - PLAYER_BOUNDS_TOLERANCE_PX
+    && rect.right <= bounds.right + PLAYER_BOUNDS_TOLERANCE_PX
+    && rect.top >= bounds.top - PLAYER_BOUNDS_TOLERANCE_PX
+    && rect.bottom <= bounds.bottom + PLAYER_BOUNDS_TOLERANCE_PX;
+  const containerArea = bounds.width * bounds.height;
+  const playerFraction = containerArea > 0 ? rect.width * rect.height / containerArea : 0;
+  if (!withinContainer || playerFraction < MIN_PLAYER_VIDEO_AREA_FRACTION) {
     return false;
   }
   const videos = container.querySelectorAll('video');

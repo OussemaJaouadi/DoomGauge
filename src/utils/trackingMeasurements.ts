@@ -5,7 +5,7 @@ import type { Visit } from '../types/tracking';
 
 export function toObservation(visit: Visit): Observation {
   return {
-    id: visit.id, platform: visit.platform, ts: visit.startedAt, endedTs: visit.observedAt,
+    id: visit.id, reelId: visit.reelId, platform: visit.platform, ts: visit.startedAt, endedTs: visit.observedAt,
     durationMs: visit.activeMs, videoDurationMs: visit.videoDurationMs ?? null,
     skipped: isQuickSkip(visit), status: visit.status,
     activeIntervals: visit.intervals, countInScope: true,

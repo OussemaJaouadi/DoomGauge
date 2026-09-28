@@ -16,7 +16,7 @@
 - Exclude home feeds, messages and previews; nearby reel links never qualify a video.
 - Require a supported host, exact reel route and one unambiguous visible player; uncertain identity adds no count.
 - Center hit-testing accepts the video or its own controls, including SVG/transparent layers; unrelated overlays remain excluded.
-- A controls container must contain only that video and match its bounds within 2px; page wrappers never qualify.
+- A controls container must contain only that video; the video must occupy at least half its area. Page wrappers never qualify.
 - One ID per viewing visit; switching reels or leaving/reopening the viewer starts another, even for the same reel ID.
 - Loops, pause/resume, temporary tab switches and same-reel player replacement retain visit identity.
 - Start visits only on qualifying playback; no records for paused or buffering impressions.
@@ -55,9 +55,11 @@
 - Group sessions before filtering: gaps **≤60s** join against the latest end.
 - Apply platform/date/OR-combined dayparts consistently.
 - Compare equal-length periods at matching final-day cutoffs, with sufficient coverage.
-- Returns: **5 / 15 / 30 minutes**; require full follow-up coverage.
+- Returns: **5 / 15 / 30 minutes**. Show observed return counts without an absence claim; percentages require full follow-up coverage.
 - Return filters: select origins; keep all return targets.
-- Recurrence: **≥3 eligible days**, **≥30% frequency**, **30-minute** start bins.
+- Read the maximum return horizon past a selected period so late targets remain visible to the calculation.
+- Recurrence: **≥3 recorded-activity days**, **≥30% of recorded-activity days**, **30-minute** start bins; label the denominator.
+- Repeat visits: count a later visit with the same platform and reel ID within the selected data; loops remain one visit.
 - Merge adjacent recurrence bins; never cross midnight.
 - Missing coverage/mechanics are unavailable, not zero. Summaries are rebuildable.
 
@@ -73,9 +75,10 @@
 ## R7 · Telemetry
 
 - Overview plus platform pages; retain each page's selections.
-- Visible Time windows / Trends / Sessions / Viewing; Day / 7d / 30d ranges.
+- Visible Time windows / Trends / Sessions / Viewing / Records; Day / 7d / 30d ranges. Default to Trends.
+- Records open directly for the selected range; show known repeat visits and keep session drill-down.
 - Full-width left alignment; collapsible sidebar.
-- Sessions: duration histogram. Trends: distinguish previous lines and unknown buckets.
+- Sessions: duration histogram. Trends: distinguish previous lines when comparison coverage exists; show unknown buckets otherwise.
 - Wide evidence dialog: focus containment, Escape/Close and opener focus restoration.
 - Multi-day evidence: seven-column calendar, one selected-day timeline and session details.
 - Records: pagination on top; **10 / 25 / 50** rows; default **10**.

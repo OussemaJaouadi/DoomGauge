@@ -5,7 +5,9 @@
 .records-dates label { display: grid; gap: 4px; }
 .records-dates input { color-scheme: inherit; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 8px; font: inherit; }
 .records-viewport { max-height: 440px; overflow: auto; border: 1px solid var(--border-subtle); }
-.records-viewport table { width: 100%; min-width: 460px; border-collapse: separate; border-spacing: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.records-viewport table { width: 100%; min-width: 620px; border-collapse: separate; border-spacing: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.record-reel-id { display: block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-repeat { display: block; margin-top: 4px; color: var(--chart-overview); white-space: nowrap; }
 .records-viewport th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-raised); text-align: left; color: var(--text-secondary); font-size: 13px; }
 .records-viewport th, .records-viewport td { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); }
 .records-viewport tr:last-child td { border-bottom: 0; }

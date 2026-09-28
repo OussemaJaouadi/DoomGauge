@@ -2,7 +2,7 @@ declare function describe(name: string, fn: () => void): void;
 declare function test(name: string, fn: () => void): void;
 declare function expect(value: unknown): { toBe(value: unknown): void; toEqual(value: unknown): void; toBeCloseTo(value: number, precision?: number): void };
 import { hasObservationCoverage, rankedRecurringWindows, sessionConcentration, sessionReturnRates } from '../utils/telemetryInsights';
-import { selectObservations } from '../utils/telemetryPreview';
+import { recordedActivityDates, selectObservations } from '../utils/telemetryPreview';
 import { DAYPARTS } from '../types/telemetry';
 import type { ObservationSession, PreviewObservation } from '../types/telemetryPreview';
 
@@ -51,7 +51,9 @@ describe('intervention insight denominators', () => {
     const sessions = [session('origin', 0), session('return', 3)];
     const rates = sessionReturnRates(sessions, [sessions[0]!], [{ startTs: 0, endTs: 6 * minute }], 'overview');
     expect(rates.map(rate => rate.percentage)).toEqual([100, null, null]);
+    expect(rates.map(rate => rate.observedCount)).toEqual([1, 1, 1]);
     expect(sessionReturnRates(sessions, [sessions[0]!], [], 'overview')[0]!.percentage).toBe(null);
+    expect(sessionReturnRates(sessions, [sessions[0]!], [], 'overview')[0]!.observedCount).toBe(1);
   });
   test('observed quiet follow-up is a zero return, not missing data', () => {
     const origin = session('origin', 0);
@@ -65,5 +67,13 @@ describe('intervention insight denominators', () => {
     expect(windows.map(window => window.startMinute)).toEqual([1200, 480]);
     expect(windows.map(window => window.sharePct)).toEqual([75, 25]);
     expect(windows[0]!.matchingDates.length).toBe(3);
+  });
+  test('recorded activity days follow the selected platform and ignore clipped starts', () => {
+    const dates = ['2026-09-01', '2026-09-02', '2026-09-03'];
+    const first = view('first', new Date('2026-09-01T08:00:00').getTime());
+    const clipped = { ...view('clipped', new Date('2026-09-02T08:00:00').getTime()), countInScope: false };
+    const third = view('third', new Date('2026-09-03T08:00:00').getTime());
+    expect(recordedActivityDates([first, clipped, third], dates)).toEqual([dates[0], dates[2]]);
+    expect(recordedActivityDates([third], dates)).toEqual([dates[2]]);
   });
 });

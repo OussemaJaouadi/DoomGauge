@@ -1,3 +1,4 @@
+// Types & Models
 import type {
   ObservationCoverage,
   ObservationSession,
@@ -7,6 +8,11 @@ import type {
   SessionReturn,
   ReturnRate,
 } from '../types/telemetryPreview';
+
+// Tokens & Meta
+import { RETURN_WINDOWS_MINUTES } from '../config/tracking';
+
+// Utilities & Helpers
 import { localDateKey } from './time';
 import { minuteOfDay, observationTotals, recurringWindows } from './telemetryPreview';
 
@@ -28,8 +34,13 @@ export function sessionConcentration(sessions: readonly ObservationSession[]) {
 
 /** A missing interval cannot be interpreted as time away from reels. */
 export function hasObservationCoverage(coverage: readonly ObservationCoverage[], start: number, end: number): boolean {
+  const sorted = [...coverage].sort((a, b) => a.startTs - b.startTs);
+  return coversSortedIntervals(sorted, start, end);
+}
+
+function coversSortedIntervals(coverage: readonly ObservationCoverage[], start: number, end: number): boolean {
   let coveredUntil = start;
-  for (const interval of [...coverage].sort((a, b) => a.startTs - b.startTs)) {
+  for (const interval of coverage) {
     if (interval.endTs <= coveredUntil) continue;
     if (interval.startTs > coveredUntil) return false;
     coveredUntil = interval.endTs;
@@ -44,21 +55,25 @@ export function sessionReturnRates(fullSessions: readonly ObservationSession[], 
   const candidates = [...fullSessions].filter(session => page === 'overview' || session.events.some(event => event.platform === page))
     .sort((a, b) => a.startTs - b.startTs);
   const pairs = candidates.flatMap((origin, index) => originIds.has(origin.id) ? [{ origin, next: candidates[index + 1] }] : []);
-  return [5, 15, 30].map(minutes => {
+  const sortedCoverage = [...coverage].sort((a, b) => a.startTs - b.startTs);
+  return RETURN_WINDOWS_MINUTES.map(minutes => {
     const horizonMs = minutes * 60_000;
-    const eligible = pairs.filter(pair => hasObservationCoverage(coverage, pair.origin.endTs, pair.origin.endTs + horizonMs));
-    const matches = eligible.flatMap(({ origin, next }) => next && next.startTs >= origin.endTs && next.startTs - origin.endTs <= horizonMs
+    const observedMatches = pairs.flatMap(({ origin, next }) => next && next.startTs >= origin.endTs && next.startTs - origin.endTs <= horizonMs
       ? [{ origin, next, gapMs: next.startTs - origin.endTs }] : []);
-    return { minutes, eligibleCount: eligible.length, returnedCount: matches.length,
+    const eligible = pairs.filter(pair => coversSortedIntervals(sortedCoverage, pair.origin.endTs, pair.origin.endTs + horizonMs));
+    const eligibleIds = new Set(eligible.map(pair => pair.origin.id));
+    const matches = observedMatches.filter(match => eligibleIds.has(match.origin.id));
+    return { minutes, observedCount: observedMatches.length, observedMatches,
+      eligibleCount: eligible.length, returnedCount: matches.length,
       percentage: eligible.length ? matches.length / eligible.length * 100 : null, matches };
   });
 }
 
-export function rankedRecurringWindows(events: readonly PreviewObservation[], completeDates: readonly string[]): RankedRecurringWindow[] {
-  const eligibleDates = new Set(completeDates);
+export function rankedRecurringWindows(events: readonly PreviewObservation[], activityDates: readonly string[]): RankedRecurringWindow[] {
+  const eligibleDates = new Set(activityDates);
   const completedEvents = events.filter(event => eligibleDates.has(localDateKey(new Date(event.ts))));
   const denominatorMs = observationTotals(completedEvents).activeMs;
-  return recurringWindows(completedEvents, completeDates).map(window => {
+  return recurringWindows(completedEvents, activityDates).map(window => {
     const totalActiveMs = observationTotals(completedEvents.filter(event => minuteOfDay(event.ts) >= window.startMinute && minuteOfDay(event.ts) < window.endMinute)).activeMs;
     return { ...window, totalActiveMs, sharePct: denominatorMs ? totalActiveMs / denominatorMs * 100 : null };
   }).sort((a, b) => b.totalActiveMs - a.totalActiveMs || a.startMinute - b.startMinute);

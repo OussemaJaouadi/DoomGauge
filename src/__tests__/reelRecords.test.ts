@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ReelRecords } from '../components/telemetry/ReelRecords';
-import { filterReelRecords, recordPage, type RecordFilters } from '../utils/reelRecords';
+import { filterReelRecords, recordPage, repeatVisitNumbers, type RecordFilters } from '../utils/reelRecords';
 import type { PreviewObservation } from '../types/telemetryPreview';
 
 declare function test(name: string, fn: () => void): void;
@@ -41,4 +41,22 @@ test('table initially renders only 10 records and exposes accessible sorting and
   expect(html.includes('aria-sort="ascending"')).toBe(true);
   expect(html.includes('aria-label="Next page"')).toBe(true);
   expect(html.includes('aria-label="Rows per page"')).toBe(true);
+});
+
+test('A → B → A marks a known repeat without merging visits or other platforms', () => {
+  const records = [
+    event(1, { reelId: 'A' }),
+    event(2, { reelId: 'B' }),
+    event(3, { reelId: 'A' }),
+    event(4, { reelId: 'A', platform: 'instagram' }),
+    event(5),
+  ];
+  const numbers = repeatVisitNumbers(records);
+  expect([...numbers.values()]).toEqual([1, 1, 2, 1]);
+  const html = renderToStaticMarkup(createElement(ReelRecords, { events: records, scopeLabel: 'selection' }));
+  expect(html.includes('1 known repeats')).toBe(true);
+  expect(html.includes('Repeat #2')).toBe(true);
+  expect(html.includes('Unknown')).toBe(true);
+  const otherScope = repeatVisitNumbers(records.slice(2));
+  expect(otherScope.get('3')).toBe(1);
 });

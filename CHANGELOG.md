@@ -2,6 +2,15 @@
 
 > Append-only. One entry per iteration: date + commit subject + what changed.
 
+## 2026-09-28 — 🐛 fix: show observed insights and repeat reel visits
+
+- Show recorded return counts; use selected activity days for recurring windows, default to Trends and hide unsupported comparison lines.
+- Open paginated Records directly and identify known repeated reel IDs within the selection.
+- Allow bounded player controls around the video; process video mutations without rescanning the page.
+- Remove unused mock-era scoring code and move preview randomness to a shared utility.
+- Security review found no concrete issue; real-site tracking and visual acceptance remain open.
+- Verified: 188 tests, typecheck and dev/actual builds; live platform checks remain pending.
+
 ## 2026-09-15 — 🐛 fix: accept controls covering the reel player
 
 - Accept SVG and transparent controls inside a bounded, single-video player; reject page wrappers and unrelated overlays.

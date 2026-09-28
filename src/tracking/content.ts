@@ -201,20 +201,52 @@ export function startCollector(platform: Platform): () => void {
   };
   const observed = new Set<HTMLVideoElement>();
   const intersections = new IntersectionObserver(schedule, { threshold: [0, .5, 1] });
-  function syncVideos() {
+  function observeVideo(video: HTMLVideoElement): boolean {
+    if (observed.has(video)) {
+      return false;
+    }
+    observed.add(video);
+    intersections.observe(video);
+    return true;
+  }
+
+  function syncVideos(records?: MutationRecord[]) {
+    let videoChanged = false;
     for (const video of observed) {
       if (!video.isConnected) {
         intersections.unobserve(video);
         observed.delete(video);
+        videoChanged = true;
       }
     }
-    for (const video of document.querySelectorAll('video')) {
-      if (!observed.has(video)) {
-        observed.add(video);
-        intersections.observe(video);
+    if (!records) {
+      for (const video of document.querySelectorAll('video')) {
+        videoChanged = observeVideo(video) || videoChanged;
+      }
+    } else {
+      for (const record of records) {
+        if (record.type === 'attributes' && record.target instanceof HTMLVideoElement) {
+          videoChanged = true;
+        }
+        if (record.type !== 'childList') {
+          continue;
+        }
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element)) {
+            continue;
+          }
+          if (node instanceof HTMLVideoElement) {
+            videoChanged = observeVideo(node) || videoChanged;
+          }
+          for (const video of node.querySelectorAll('video')) {
+            videoChanged = observeVideo(video) || videoChanged;
+          }
+        }
       }
     }
-    schedule();
+    if (videoChanged) {
+      schedule();
+    }
   }
   const mutations = new MutationObserver(syncVideos);
   mutations.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });

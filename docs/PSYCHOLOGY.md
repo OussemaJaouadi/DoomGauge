@@ -14,7 +14,7 @@
 | --- | --- |
 | Active time | Recorded foreground playback |
 | Quick skips | Completed visits below three active seconds |
-| Returns | Session gaps with observed follow-up |
+| Returns | Counts of recorded next sessions; quiet gaps remain unknown |
 | Repeated windows | Descriptive patterns in eligible history |
 
 - No inference of intent, dopamine levels, compulsion or diagnosis.

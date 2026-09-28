@@ -153,8 +153,6 @@ body:has(.evidence-modal[open]) { overflow: hidden; }
 .telemetry-return-values button > strong { font-size: 24px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .workspace-shell .telemetry-return-values button:hover { border-color: var(--chart-overview); background: var(--bg-surface-raised); }
 .workspace-shell .telemetry-return-values button[aria-pressed="true"] { border-color: var(--chart-overview); background: var(--bg-surface-raised); }
-.return-tile-meter { display: block; width: 100%; height: 3px; margin-top: 2px; background: var(--border-subtle); }
-.return-tile-meter > span { display: block; height: 100%; background: var(--chart-overview); }
 .workspace-view-buttons { border-bottom: 1px solid var(--border-subtle); }
 .workspace-shell .workspace-view-buttons .analysis-choices { padding: 0; gap: 18px; background: transparent; border: 0; }
 .workspace-shell .workspace-view-buttons .analysis-choices button { padding: 9px 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; font-size: 14px; }

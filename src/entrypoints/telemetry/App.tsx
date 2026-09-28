@@ -19,6 +19,7 @@ import { TelemetryFilters } from '../../components/telemetry/TelemetryFilters';
 // Tokens & Meta
 import { hintFacts } from '../../components/ui/hintContent';
 import { platformMeta } from '../../components/platformMeta';
+import { MAX_RETURN_WINDOW_MS } from '../../config/tracking';
 
 // Utilities & Helpers
 import {
@@ -27,6 +28,7 @@ import {
   observationRollups,
   observationSessions,
   periodBounds,
+  recordedActivityDates,
   RANGE_LENGTH,
   scopedSessions,
   selectObservations,
@@ -53,7 +55,7 @@ export default function App() {
   const [destination, setDestination] = useState<'analysis' | 'settings'>('analysis');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selections, setSelections] = useState<Record<TelemetryPage, PageSelection>>(() =>
-    Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'windows' }])) as Record<TelemetryPage, PageSelection>
+    Object.fromEntries(pages.map(p => [p, { range: '7d', endDate: now, view: 'trends' }])) as Record<TelemetryPage, PageSelection>
   );
   const [daypart, setDaypart] = useState<Daypart[]>(() => DAYPARTS.map(option => option.id));
   const { range, endDate, view } = selections[page];
@@ -70,20 +72,15 @@ export default function App() {
   const historyEnd = bounds.cutoff.getTime();
   const queryEnd = new Date(endDate);
   queryEnd.setHours(24, 0, 0, 0);
-  const live = useTracking(historyStart, queryEnd.getTime(), !preview);
+  const live = useTracking(historyStart, queryEnd.getTime() + MAX_RETURN_WINDOW_MS, !preview);
   const dataset = preview ? buildPreviewDataset(new Date(historyStart), new Date(historyEnd)) : live;
-  const coveredDates = preview
-    ? bounds.completeDates
-    : bounds.completeDates.filter(date => {
-        const start = new Date(`${date}T00:00:00`);
-        return hasObservationCoverage(dataset.coverage, start.getTime(), shiftDate(start, 1).getTime());
-      });
-  const comparisonAvailable = preview || hasObservationCoverage(dataset.coverage, bounds.previousStart.getTime(), historyEnd);
   const observations = dataset.events;
+  const comparisonAvailable = preview || hasObservationCoverage(dataset.coverage, bounds.previousStart.getTime(), historyEnd);
   const fullSessions = useMemo(() => observationSessions(observations), [observations]);
   const selectedEvents = selectObservations(observations, bounds.start.getTime(), historyEnd, page, daypart);
   const selectedPrevious = selectObservations(observations, bounds.previousStart.getTime(), bounds.previousCutoff.getTime(), page, daypart);
   const events = preset === 'zero' || preset === 'filtered' || preset === 'previousOnly' ? [] : preset === 'insufficient' ? selectedEvents.slice(0, 2) : selectedEvents;
+  const activityDates = recordedActivityDates(events, bounds.completeDates);
   const previous = preset === 'zero' || preset === 'filtered' || preset === 'insufficient' ? [] : selectedPrevious;
   const sessions = scopedSessions(fullSessions, events);
   const previousDates = bounds.dates.map((_, i) => localDateKey(shiftDate(bounds.previousStart, i)));
@@ -142,7 +139,7 @@ export default function App() {
         </div>
         {!preview && <p className="tracking-status" role="status">{live.savingFailed ? 'Saving interrupted. Keep tracking tabs open to retry.' : 'Recorded activity · gaps in tracking remain unknown'}<Hint label="About live measurements" text="Live totals include unfinished visits. Quick skips use completed visits. Comparisons and return insights require observed coverage." /></p>}
         <ActivityReadProvider value={preview ? undefined : live}><ActivityReadNotice />
-        <AnalysisWorkspace comparisonAvailable={comparisonAvailable} key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={preset === 'insufficient' ? [] : dataset.coverage} dates={bounds.dates} previousDates={previousDates} completeDates={preset === 'insufficient' ? coveredDates.slice(-1) : coveredDates} page={page} throughHour={isToday ? now.getHours() : 23} filterEmpty={!events.length && daypart.length < DAYPARTS.length} onClearFilters={() => setDaypart(DAYPARTS.map(option => option.id))} />
+        <AnalysisWorkspace comparisonAvailable={comparisonAvailable} key={context} context={context} view={view} onViewChange={value => update({ view: value })} events={events} previous={previous} sessions={sessions} fullSessions={fullSessions} coverage={preset === 'insufficient' ? [] : dataset.coverage} dates={bounds.dates} previousDates={previousDates} activityDates={preset === 'insufficient' ? activityDates.slice(-1) : activityDates} page={page} throughHour={isToday ? now.getHours() : 23} filterEmpty={!events.length && daypart.length < DAYPARTS.length} onClearFilters={() => setDaypart(DAYPARTS.map(option => option.id))} />
         </ActivityReadProvider>
         </>}
       </div>

@@ -5,8 +5,8 @@
 | Collection | Three platforms; focused playback; viewing visits | Real-feed acceptance |
 | Reliability | Checkpoints, deduplication, interrupted recovery | Forced-close acceptance; backup/restore |
 | Popup | Today, Signals, Hourly; platform detail | Real-history visual acceptance |
-| Telemetry | Platform pages; Time windows, Trends, Sessions, Viewing | Coverage/insight acceptance |
-| Evidence | Calendar, selected-day timeline, paginated records | — |
+| Telemetry | Platform pages; Time windows, Trends, Sessions, Viewing, Records | Live insight acceptance |
+| Evidence | Calendar, selected-day timeline, paginated records; known repeat visits | — |
 | Settings | Saved System / Light / Dark | Stop-loss enforcement; editor is a mock |
 | Development | Env-selected fixtures and state previews | — |
 | Export | Selected-scope rollups as JSON | All-history export |

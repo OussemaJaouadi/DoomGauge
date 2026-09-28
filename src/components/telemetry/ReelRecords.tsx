@@ -18,7 +18,7 @@ import { StateRegion } from '../ui/StateRegion';
 import { platformMeta } from '../platformMeta';
 
 // Utilities & Helpers
-import { filterReelRecords, recordPage } from '../../utils/reelRecords';
+import { filterReelRecords, recordPage, repeatVisitNumbers } from '../../utils/reelRecords';
 import { formatTime, localDateKey } from '../../utils/time';
 import { hintFacts } from '../ui/hintContent';
 import { readyState, contentState, ratioState } from '../../utils/uiState';
@@ -31,7 +31,7 @@ const defaults: RecordFilters = { platforms, quickSkips: false, from: '', to: ''
 const dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 const timeFormat = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 
-export function ReelRecords({ events }: { events: readonly PreviewObservation[] }) {
+export function ReelRecords({ events, scopeLabel = 'session' }: { events: readonly PreviewObservation[]; scopeLabel?: string }) {
   const [filters, setFilters] = useState(defaults);
   const [sort, setSort] = useState<RecordSort>('started');
   const [descending, setDescending] = useState(false);
@@ -41,6 +41,8 @@ export function ReelRecords({ events }: { events: readonly PreviewObservation[] 
   const available = useMemo(() => platforms.filter(platform => events.some(event => event.platform === platform)), [events]);
   const dates = useMemo(() => [...new Set(events.map(event => localDateKey(new Date(event.ts))))].sort(), [events]);
   const filtered = useMemo(() => filterReelRecords(events, filters, sort, descending), [events, filters, sort, descending]);
+  const repeatNumbers = useMemo(() => repeatVisitNumbers(events), [events]);
+  const repeatCount = [...repeatNumbers.values()].filter(number => number > 1).length;
   const result = recordPage(filtered, page, size);
   const changePage = (next: number) => { setPage(next); viewport.current?.scrollTo({ top: 0 }); };
   const changeFilters = (next: RecordFilters) => { setFilters(next); changePage(0); };
@@ -49,7 +51,7 @@ export function ReelRecords({ events }: { events: readonly PreviewObservation[] 
   const sortHeader = (key: RecordSort, label: string) => <th scope="col" className={key === 'started' ? '' : 'record-number'} aria-sort={sort === key ? descending ? 'descending' : 'ascending' : 'none'}><button type="button" onClick={() => changeSort(key)}>{label}{sort === key ? descending ? <ArrowDown size={14} /> : <ArrowUp size={14} /> : <ArrowUpDown size={14} />}</button></th>;
 
   return <section className="records-panel" aria-label="Reel records">
-    <div className="records-heading"><h3>Reel records</h3><span>{events.length.toLocaleString()} in session</span><Hint label="About reel records" text={hintFacts([['Active', 'Viewing time without pauses'], ['Elapsed', 'Start to end, including pauses'], ['Scope', 'Full session; local start dates']])} /></div>
+    <div className="records-heading"><h3>Reel records</h3><span>{events.length.toLocaleString()} in {scopeLabel} · {repeatCount} known repeats</span><Hint label="About reel records" text={hintFacts([['Active', 'Viewing time without pauses'], ['Elapsed', 'Start to end, including pauses'], ['Repeat', 'Same platform and reel ID earlier in this selection']], 'Unknown reel IDs cannot be classified.') } /></div>
     {events.length > 0 && <div className="records-filters">
       {available.length > 1 && <div className="analysis-choices" role="group" aria-label="Filter record platforms">{available.map(platform => <button type="button" key={platform} aria-pressed={filters.platforms.includes(platform)} onClick={() => changeFilters({ ...filters, platforms: filters.platforms.includes(platform) ? filters.platforms.filter(item => item !== platform) : [...filters.platforms, platform] })}><i style={{ background: platformMeta[platform].color }} />{platformMeta[platform].label}</button>)}</div>}
       <div className="analysis-choices"><button type="button" aria-pressed={filters.quickSkips} onClick={() => changeFilters({ ...filters, quickSkips: !filters.quickSkips })}>Quick skips &lt;3s</button></div>
@@ -61,10 +63,44 @@ export function ReelRecords({ events }: { events: readonly PreviewObservation[] 
       <nav aria-label="Reel record pages"><button type="button" aria-label="First page" disabled={result.page === 0} onClick={() => changePage(0)}><ChevronsLeft size={18} /></button><button type="button" aria-label="Previous page" disabled={result.page === 0} onClick={() => changePage(result.page - 1)}><ChevronLeft size={18} /></button><span>{result.page + 1} / {result.pageCount}</span><button type="button" aria-label="Next page" disabled={result.page + 1 === result.pageCount} onClick={() => changePage(result.page + 1)}><ChevronRight size={18} /></button><button type="button" aria-label="Last page" disabled={result.page + 1 === result.pageCount} onClick={() => changePage(result.pageCount - 1)}><ChevronsRight size={18} /></button></nav>
     </div>
     <StateRegion state={contentState(result.total, hasFilters)} id="evidence.records" label="Reel records" shape="table" skeletonCount={size} reasons={["activity", "filters", "session"]} onClearFilters={() => changeFilters(defaults)}><div className="records-viewport" ref={viewport} tabIndex={0} role="region" aria-label="Reel records table">
-      <table><caption className="records-sr-only">Reel records from the full session. Times are local.</caption><thead><tr>{sortHeader('started', 'Started')}<th scope="col">Platform</th>{sortHeader('active', 'Active')}{sortHeader('elapsed', 'Elapsed')}<th scope="col">Status</th></tr></thead>
-        <tbody>{result.rows.map(event => <tr key={event.id}><td><time dateTime={new Date(event.ts).toISOString()}><b>{timeFormat.format(event.ts)}</b><span>{dateFormat.format(event.ts)}</span></time></td><td><span className="record-platform"><i style={{ background: platformMeta[event.platform].color }} />{platformMeta[event.platform].label}</span></td><td className="record-number">{formatTime(event.durationMs)}</td><td className="record-number">{formatTime(event.endedTs - event.ts)}</td><td>{event.status === 'open' ? 'In progress' : event.status === 'interrupted' ? 'Interrupted' : 'Completed'}</td></tr>)}
-          {!result.total && <tr><td colSpan={5} className="records-empty">{events.length ? 'No reels match these filters.' : 'No reel records in this session.'}</td></tr>}
-        </tbody></table>
+      <table>
+        <caption className="records-sr-only">Reel records from the selected scope. Times are local.</caption>
+        <thead><tr>
+          {sortHeader('started', 'Started')}
+          <th scope="col">Platform</th>
+          <th scope="col">Reel</th>
+          {sortHeader('active', 'Active')}
+          {sortHeader('elapsed', 'Elapsed')}
+          <th scope="col">Status</th>
+        </tr></thead>
+        <tbody>
+          {result.rows.map(event => {
+            const repeatNumber = repeatNumbers.get(event.id);
+            const status = event.status === 'open' ? 'In progress'
+              : event.status === 'interrupted' ? 'Interrupted' : 'Completed';
+            return <tr key={event.id}>
+              <td><time dateTime={new Date(event.ts).toISOString()}>
+                <b>{timeFormat.format(event.ts)}</b>
+                <span>{dateFormat.format(event.ts)}</span>
+              </time></td>
+              <td><span className="record-platform">
+                <i style={{ background: platformMeta[event.platform].color }} />
+                {platformMeta[event.platform].label}
+              </span></td>
+              <td>
+                <span className="record-reel-id" title={event.reelId}>{event.reelId ?? 'Unknown'}</span>
+                {repeatNumber && repeatNumber > 1 && <small className="record-repeat">Repeat #{repeatNumber}</small>}
+              </td>
+              <td className="record-number">{formatTime(event.durationMs)}</td>
+              <td className="record-number">{formatTime(event.endedTs - event.ts)}</td>
+              <td>{status}</td>
+            </tr>;
+          })}
+          {!result.total && <tr><td colSpan={6} className="records-empty">
+            {events.length ? 'No reels match these filters.' : 'No reel records in this selection.'}
+          </td></tr>}
+        </tbody>
+      </table>
     </div></StateRegion>
   </section>;
 }

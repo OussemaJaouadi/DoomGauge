@@ -90,9 +90,9 @@ test('SVG and transparent controls qualify one visible player among seven videos
     expect(findReel('instagram', document as unknown as Document)?.video).toBe(video);
     hit = player;
     expect(findReel('instagram', document as unknown as Document)?.video).toBe(video);
-    player.width = 101;
+    player.width = 120;
     expect(findReel('instagram', document as unknown as Document)?.video).toBe(video);
-    player.width = 200;
+    player.width = 220;
     expect(findReel('instagram', document as unknown as Document)).toBe(undefined);
     player.width = 100;
     const overlay = new PlayerElement('DIV');

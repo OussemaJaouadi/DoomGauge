@@ -27,6 +27,7 @@ import { ChoiceGroup, NoObservations } from './Primitives';
 import { Hint } from '../ui/Hint';
 import { StateRegion } from '../ui/StateRegion';
 import { TimelinePlot } from './SessionTimeline';
+import { ReelRecords } from './ReelRecords';
 import { useStatePreview } from '../ui/StatePreview';
 
 // Tokens & Meta
@@ -41,15 +42,16 @@ import { measurementHints } from '../ui/hintContent';
 import { readyState, contentState, ratioState } from '../../utils/uiState';
 
 interface CanvasProps {
+  comparisonAvailable?: boolean;
   coverage?: {startTs:number;endTs:number}[];
   onClearFilters?: () => void;
   filterEmpty?: boolean;
   view: WorkspaceView; events: PreviewObservation[]; previous: PreviewObservation[];
   sessions: ObservationSession[]; windows: RankedRecurringWindow[]; dates: string[]; previousDates: string[];
-  completeDates: string[]; page: TelemetryPage; throughHour: number; selected?: Evidence;
+  activityDates: string[]; page: TelemetryPage; throughHour: number; selected?: Evidence;
   onInspect: (evidence: Evidence) => void;
 }
-const titles: Record<WorkspaceView, string> = { windows: 'When your time accumulates', trends: 'How your active time changes', sessions: 'Session length distribution', viewing: 'How long you watch each reel' };
+const titles: Record<WorkspaceView, string> = { windows: 'When your time accumulates', trends: 'How your active time changes', sessions: 'Session length distribution', viewing: 'How long you watch each reel', records: 'Reel records' };
 const hints = { windows: measurementHints.windows, trends: measurementHints.trends, sessions: measurementHints.sessions, viewing: measurementHints.viewing };
 
 function PlatformBar({ events, maximum, count = false }: { events: PreviewObservation[]; maximum: number; count?: boolean }) {
@@ -60,12 +62,16 @@ function PlatformBar({ events, maximum, count = false }: { events: PreviewObserv
   })}</span>;
 }
 
-export function WorkspaceCanvas({ view, events, previous, sessions, windows, dates, previousDates, completeDates, page, throughHour, selected, onInspect, onClearFilters, filterEmpty, coverage }: CanvasProps) {
+export function WorkspaceCanvas({ view, events, previous, sessions, windows, dates, previousDates, activityDates, page, throughHour, selected, onInspect, onClearFilters, filterEmpty, coverage, comparisonAvailable = true }: CanvasProps) {
   const { preset, setPreset } = useStatePreview();
   const [measurement, setMeasurement] = useState<'count' | 'time'>('count');
+  if (view === 'records') {
+    const records = events.filter(event => event.countInScope !== false);
+    return <section className="workspace-canvas" aria-label="Reel records"><ReelRecords events={records} scopeLabel="selection" /></section>;
+  }
   const daily = dates.length === 1;
-  const hasVisibleData = events.length > 0 || (view === 'trends' && previous.length > 0);
-  const insufficientHistory = view === 'windows' && !daily && completeDates.length < 3;
+  const hasVisibleData = events.length > 0 || (view === 'trends' && comparisonAvailable && previous.length > 0);
+  const insufficientHistory = view === 'windows' && !daily && activityDates.length < 3;
   const canvasState = !hasVisibleData
     ? contentState(0, filterEmpty || preset === 'filtered')
     : insufficientHistory ? ratioState(0, 'history') : readyState;
@@ -79,7 +85,7 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
   return <section className="workspace-canvas" aria-label={titles[view]}>
     <header className="workspace-chart-heading"><h2>{titles[view]}</h2><Hint label={`About ${titles[view].toLowerCase()}`} text={hints[view]} accent="blue" /></header>
     <div className="workspace-chart-meta">
-      <span>{view === 'windows' ? daily ? 'Session intervals · local time' : 'Active time · completed days' : view === 'sessions' ? `${sessions.length} sessions · count by active duration` : view === 'trends' ? 'Active minutes' : 'Active viewing duration'}</span>
+      <span>{view === 'windows' ? daily ? 'Session intervals · local time' : 'Active time · days with recorded activity' : view === 'sessions' ? `${sessions.length} sessions · count by active duration` : view === 'trends' ? 'Active minutes' : 'Active viewing duration'}</span>
       {view !== 'trends' && view !== 'sessions' && <div className="workspace-legend">{(page === 'overview' ? PLATFORMS : [page]).map(platform => <span key={platform}><i style={{ background: platformMeta[platform].color }} />{platformMeta[platform].label}</span>)}</div>}
     </div>
     <StateRegion state={canvasState} id={`telemetry.canvas.${view}`} label={titles[view]} shape="chart" reasons={view === 'windows' ? ['history', 'activity', 'filters', 'unobserved'] : ['activity', 'filters', 'unobserved']} onClearFilters={() => { onClearFilters?.(); setPreset("normal"); }}>
@@ -93,11 +99,11 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
         <PlatformBar events={matching} maximum={windows[0]!.totalActiveMs} />
         <span className="workspace-row-value"><strong>{formatTime(window.totalActiveMs)}</strong><small>{window.sharePct?.toFixed(1)}% · {formatTime(window.medianActiveMs)} typical</small></span>
       </button>;
-    })}</div> : <NoObservations>{completeDates.length < 3 ? 'At least 3 completed observed days are needed for recurring windows.' : 'No recurring windows qualify in this selection.'}</NoObservations>)}
+    })}</div> : <NoObservations>{activityDates.length < 3 ? 'At least 3 days with recorded activity are needed for recurring windows.' : 'No recurring windows qualify in this selection.'}</NoObservations>)}
     {view === 'sessions' && (sessions.length ? <div className="session-distribution" aria-label="Session counts by active-duration bucket">{sessionBuckets.map((bucket, index) => <button type="button" key={bucket.label} className="session-bin" aria-label={`${bucket.label}: ${bucket.sessions.length} sessions`} aria-pressed={selected?.kind === 'sessionBucket' && selected.index === index} onClick={() => onInspect({ kind: 'sessionBucket', index })}>
       <span className="session-bin-plot"><span className="session-bin-bar" style={{ height: `${bucket.sessions.length / maxSessions * 100}%` }} /><strong style={{ bottom: `${bucket.sessions.length / maxSessions * 100}%` }}>{bucket.sessions.length}</strong></span><span>{bucket.label}</span>
     </button>)}</div> : <NoObservations />)}
-    {view === 'trends' && <TrendPlot coverage={coverage} events={events} previous={previous} dates={dates} previousDates={previousDates} throughHour={throughHour} page={page} selected={selected} onInspect={onInspect} />}
+    {view === 'trends' && <TrendPlot coverage={coverage} events={events} previous={previous} dates={dates} previousDates={previousDates} throughHour={throughHour} page={page} selected={selected} onInspect={onInspect} comparisonAvailable={comparisonAvailable} />}
     {view === 'viewing' && <>
       <div className="workspace-measurement"><ChoiceGroup label="Distribution measurement" value={measurement} onChange={setMeasurement} choices={[{ value: 'count', label: 'Reels' }, { value: 'time', label: 'Active time' }]} /><button type="button" className="workspace-text-button" onClick={() => onInspect({ kind: 'curve' })}>Inspect duration curve</button></div>
       {events.length ? <div className="workspace-ranked-list">{buckets.map((bucket, index) => <button type="button" className="workspace-rank-row" key={bucket.label} aria-pressed={selected?.kind === 'bucket' && selected.index === index} onClick={() => onInspect({ kind: 'bucket', index })}>
@@ -108,9 +114,10 @@ export function WorkspaceCanvas({ view, events, previous, sessions, windows, dat
   </section>;
 }
 
-function TrendPlot({ events, previous, dates, previousDates, throughHour, page, selected, onInspect, coverage }: Pick<CanvasProps, 'events' | 'previous' | 'dates' | 'previousDates' | 'throughHour' | 'page' | 'selected' | 'onInspect' | 'coverage'>) {
+function TrendPlot({ events, previous, dates, previousDates, throughHour, page, selected, onInspect, coverage, comparisonAvailable }: Pick<CanvasProps, 'events' | 'previous' | 'dates' | 'previousDates' | 'throughHour' | 'page' | 'selected' | 'onInspect' | 'coverage' | 'comparisonAvailable'>) {
   const daily = dates.length === 1;
-  const rows = trajectoryRows(events, previous, dates, previousDates, daily, 'time', throughHour).map((row, index) => {
+  const comparablePrevious = comparisonAvailable ? previous : [];
+  const rows = trajectoryRows(events, comparablePrevious, dates, previousDates, daily, 'time', throughHour).map((row, index) => {
     const isCovered = (keys: readonly string[]) => {
       const dateKey = keys[daily ? 0 : index];
       const start = new Date(`${dateKey}T00:00:00`);
@@ -128,7 +135,7 @@ function TrendPlot({ events, previous, dates, previousDates, throughHour, page, 
 
     const current = row.youtube + row.instagram + row.facebook;
     const currentCovered = current > 0 || isCovered(dates);
-    const previousCovered = row.previous > 0 || isCovered(previousDates);
+    const previousCovered = comparisonAvailable && (row.previous > 0 || isCovered(previousDates));
 
     return {
       ...row,
@@ -147,16 +154,17 @@ function TrendPlot({ events, previous, dates, previousDates, throughHour, page, 
     }
   };
 
-  if (!events.length && !previous.length) {
+  if (!events.length && !comparablePrevious.length) {
     return <NoObservations />;
   }
   const color = `var(--chart-${page})`;
   return <>
-    <div className="workspace-trend-key"><span style={{ borderBottom: `3px solid ${color}` }}>Selected period</span><span style={{ borderBottom: '2px dashed var(--chart-previous)' }}>Previous period</span></div>
+    <div className="workspace-trend-key"><span style={{ borderBottom: `3px solid ${color}` }}>Selected period</span>{comparisonAvailable && <span style={{ borderBottom: '2px dashed var(--chart-previous)' }}>Previous period</span>}</div>
     <ResponsiveContainer width="100%" height={340}><LineChart data={rows} margin={{ top: 16, right: 18, left: 0, bottom: 8 }} onClick={state => { if (state.activeTooltipIndex !== undefined && state.activeTooltipIndex !== null) inspect(Number(state.activeTooltipIndex)); }}>
       <CartesianGrid stroke="var(--border-grid)" vertical={false} /><XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} minTickGap={24} tickLine={false} axisLine={false} /><YAxis width={46} tick={{ fill: 'var(--text-secondary)', fontSize: 13 }} tickLine={false} axisLine={false} />
       <Tooltip content={({ active, payload, label }) => active && payload?.length ? <div className="analysis-tooltip"><b>{label}</b>{payload.map(item => <span key={String(item.dataKey)}><i className="series-marker" style={{ background: item.color }} />{item.name}: {formatTime(Number(item.value) * 60000)}</span>)}</div> : null} />
-      <Line type="linear" name="Selected" dataKey="current" stroke={color} strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 6 }} isAnimationActive={false} /><Line type="linear" name="Previous" dataKey="previous" stroke="var(--chart-previous)" strokeDasharray="6 5" strokeWidth={2} dot={false} isAnimationActive={false} />
+      <Line type="linear" name="Selected" dataKey="current" stroke={color} strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 6 }} isAnimationActive={false} />
+      {comparisonAvailable && <Line type="linear" name="Previous" dataKey="previous" stroke="var(--chart-previous)" strokeDasharray="6 5" strokeWidth={2} dot={false} isAnimationActive={false} />}
     </LineChart></ResponsiveContainer>
     <div className="workspace-point-index" aria-label="Inspect trend observations">{rows.map((row, index) => <button type="button" key={row.label} onClick={() => inspect(index)} aria-pressed={selected?.kind === 'day' && (daily ? selected.hour === index : selected.date === dates[index])}>{row.label}<strong>{row.current === null ? '—' : formatTime(row.current * 60000)}</strong></button>)}</div>
   </>;

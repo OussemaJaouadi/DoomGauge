@@ -3,11 +3,12 @@ import type { TelemetryEvent, TimeRange, Daypart } from './telemetry';
 
 export type TelemetryPage = 'overview' | Platform;
 export type TelemetryTab = 'patterns' | 'sessions' | 'viewing';
-export type WorkspaceView = 'windows' | 'trends' | 'sessions' | 'viewing';
+export type WorkspaceView = 'windows' | 'trends' | 'sessions' | 'viewing' | 'records';
 export type TelemetryMetric = 'time' | 'reels';
 export type DaypartFilter = 'all' | Daypart | readonly Daypart[];
 export interface ObservationCoverage { startTs: number; endTs: number }
 export interface PreviewObservation extends TelemetryEvent {
+  reelId?: string;
   status?: 'open' | 'completed' | 'interrupted';
   activeIntervals?: { start: number; end: number }[];
   countInScope?: boolean;
@@ -68,6 +69,8 @@ export interface SessionReturn {
 
 export interface ReturnRate {
   minutes: number;
+  observedCount: number;
+  observedMatches: SessionReturn[];
   eligibleCount: number;
   returnedCount: number;
   percentage: number | null;
@@ -82,4 +85,3 @@ export interface RecordFilters {
   from: string;
   to: string;
 }
-

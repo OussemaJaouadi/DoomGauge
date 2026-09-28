@@ -21,6 +21,8 @@
 - [x] R13: quiet operation, indexed reads, migration rollback/newer-version protection and reconnect handling; 195 tests, typecheck, both builds.
 - [x] R1–R3: dedicated-viewer detection, qualifying playback and separate repeat visits; automated collector/detection regressions.
 - [x] Player controls: SVG/transparent overlays and seven-video regression fixture; 199 tests, typecheck and actual build pass.
+- [x] Recorded return counts, activity-day windows, direct Records access and repeat reel IDs; no false return percentages.
+- [x] Video-only mutation observation, shared return thresholds and removal of unused mock-era scoring utilities.
 
 ## Retained files — future purpose (do NOT delete, do NOT flag as dead)
 
@@ -40,6 +42,7 @@ Resolved: the old positioned `ChartTooltip` export in `ui/Tooltip.tsx` was remov
 
 - [ ] Logged-in feeds: navigation, rapid scrolling, loops, buffering on all platforms.
 - [ ] Verify messages/home feeds count zero; A → B → A counts three; confirm real viewer hit-testing on all platforms.
+- [ ] Check the wider player-container rule against real Instagram, Facebook and YouTube controls.
 - [ ] Focus changes, browser close/reopen and forced worker restart.
 - [ ] WXT reload: receiver availability, startup speed and theme read/save Retry.
 - [ ] Real-history coverage/insight eligibility; popup latency target.

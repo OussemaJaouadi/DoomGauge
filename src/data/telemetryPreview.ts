@@ -2,7 +2,7 @@ import type { ObservationCoverage, PreviewObservation } from '../types/telemetry
 import { PLATFORMS } from '../types/models';
 import { localDateKey } from '../utils/time';
 import { shiftDate, startOfDay } from '../utils/telemetryPreview';
-import { seededRandom } from './mock';
+import { seededRandom } from '../utils/random';
 
 /** Simulated scenarios, stable for a calendar date regardless of the selected range. */
 export function buildPreviewDay(date: Date): PreviewObservation[] {
@@ -27,7 +27,7 @@ export function buildPreviewDay(date: Date): PreviewObservation[] {
       const endedTs = cursor + durationMs + pause;
       // Bound the synthetic day's observations; real overnight grouping is supported by the adapter.
       if (endedTs >= shiftDate(startOfDay(date), 1).getTime()) break;
-      events.push({ id: `${key}-${sessionIndex}-${i}`, platform, ts: cursor, endedTs, durationMs,
+      events.push({ id: `${key}-${sessionIndex}-${i}`, reelId: `${key}-${sessionIndex}-${i}`, platform, ts: cursor, endedTs, durationMs,
         videoDurationMs: random() < 0.8 ? Math.max(durationMs, 15000 + Math.floor(random() * 90000)) : null,
         skipped, commentOpenMs,
         replayCount: random() < 0.8 ? (random() < 0.12 ? 1 : 0) : undefined,
@@ -45,7 +45,10 @@ export function buildPreviewDay(date: Date): PreviewObservation[] {
         const durationMs = 1000 + Math.floor(random() * 15000);
         const endedTs = returnedAt + durationMs;
         if (endedTs + 60_000 >= nextBoundary.getTime()) break;
-        events.push({ id: `${key}-${sessionIndex}-return-${i}`, platform: returnPlatform, ts: returnedAt, endedTs, durationMs,
+        const reelId = i === 0 && returnPlatform === primary
+          ? `${key}-${sessionIndex}-0`
+          : `${key}-${sessionIndex}-return-${i}`;
+        events.push({ id: `${key}-${sessionIndex}-return-${i}`, reelId, platform: returnPlatform, ts: returnedAt, endedTs, durationMs,
           skipped: durationMs < 3000, videoDurationMs: null, entryRoute: i === 0 ? 'Reels feed' : undefined });
         returnedAt = endedTs + 4000;
       }
